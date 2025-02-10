@@ -10,9 +10,9 @@ import (
 
 func InitRedis() *redis.Client {
 	client := redis.NewClient(&redis.Options{
-		Addr:     config.RHost + ":" + config.RPort,
-		Password: config.RPassWord,
-		DB:       config.RDataBase,
+		Addr:     config.CfgRedis.Host + ":" + config.CfgRedis.Port,
+		Password: config.CfgRedis.Password,
+		DB:       config.CfgRedis.Database,
 	})
 	ping := client.Ping(context.Background())
 	err := ping.Err()

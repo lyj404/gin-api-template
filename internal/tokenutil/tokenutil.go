@@ -29,7 +29,7 @@ func CreateAccessToken(user *domain.User, secret string, expire int) (accessToke
 		return "", err
 	}
 	// 添加前缀，以方便后续处理
-	tokenWithPrefix := config.TokenPrefix + t
+	tokenWithPrefix := config.CfgToken.TokenPrefix + t
 	return tokenWithPrefix, nil
 }
 
@@ -51,7 +51,7 @@ func CreateRefreshToken(user *domain.User, secret string, expire int) (refreshTo
 		return "", err
 	}
 	// 添加前缀，以方便后续处理
-	tokenWithPrefix := config.TokenPrefix + rt
+	tokenWithPrefix := config.CfgToken.TokenPrefix + rt
 	return tokenWithPrefix, nil
 }
 

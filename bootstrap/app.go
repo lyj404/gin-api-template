@@ -16,10 +16,10 @@ func App() Application {
 	app := &Application{}
 
 	// 初始化数据库
-	app.Db = NewMySQLDataBase()
+	app.Db = NewDataBase()
 
 	// 按需初始化Redis
-	if config.REnabled {
+	if config.CfgRedis.Enabled {
 		app.Cache = InitRedis()
 	}
 

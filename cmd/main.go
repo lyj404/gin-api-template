@@ -16,11 +16,11 @@ func main() {
 	defer app.CloseConnection()
 
 	// 设置超时时间
-	timeout := time.Duration(config.ContextTimeOut) * time.Second
+	timeout := time.Duration(config.CfgTimeout.ContextTimeout) * time.Second
 
 	gin := gin.Default()
 
 	route.SetUp(timeout, app, gin)
 
-	gin.Run(config.HttpPort)
+	gin.Run(config.CfgServer.HttpPort)
 }

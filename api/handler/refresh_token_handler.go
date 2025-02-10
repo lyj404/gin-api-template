@@ -25,7 +25,7 @@ func (rtc *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 	}
 
 	// 通过token获取用户id
-	id, err := rtc.RefreshTokenService.ExtractIDFromToken(request.RefreshToken, config.RefreshTokenSecret)
+	id, err := rtc.RefreshTokenService.ExtractIDFromToken(request.RefreshToken, config.CfgToken.RefreshTokenSecret)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusUnauthorized, "User not found")
 		return
@@ -39,14 +39,14 @@ func (rtc *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 	}
 
 	// 创建新的访问token
-	accessToken, err := rtc.RefreshTokenService.CreateAccessToken(&user, config.AccessTokenSecret, config.AccessTokenExpiryHour)
+	accessToken, err := rtc.RefreshTokenService.CreateAccessToken(&user, config.CfgToken.AccessTokenSecret, config.CfgToken.AccessTokenExpiryHour)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// 创建新的刷新token
-	refreshToken, err := rtc.RefreshTokenService.CreateRefreshToken(&user, config.RefreshTokenSecret, config.RefreshTokenExpiryHour)
+	refreshToken, err := rtc.RefreshTokenService.CreateRefreshToken(&user, config.CfgToken.RefreshTokenSecret, config.CfgToken.RefreshTokenExpiryHour)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

@@ -40,14 +40,14 @@ func (u *UserHandler) Login(c *gin.Context) {
 	}
 
 	// 创建访问token
-	accessToken, err := u.RefreshTokenUseCase.CreateAccessToken(&user, config.AccessTokenSecret, config.AccessTokenExpiryHour)
+	accessToken, err := u.RefreshTokenUseCase.CreateAccessToken(&user, config.CfgToken.AccessTokenSecret, config.CfgToken.AccessTokenExpiryHour)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// 创建刷新token
-	refreshToken, err := u.RefreshTokenUseCase.CreateRefreshToken(&user, config.RefreshTokenSecret, config.RefreshTokenExpiryHour)
+	refreshToken, err := u.RefreshTokenUseCase.CreateRefreshToken(&user, config.CfgToken.RefreshTokenSecret, config.CfgToken.RefreshTokenExpiryHour)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -105,14 +105,14 @@ func (u *UserHandler) Signup(c *gin.Context) {
 	}
 
 	// 创建accessToken
-	accessToken, err := u.RefreshTokenUseCase.CreateAccessToken(&user, config.AccessTokenSecret, config.AccessTokenExpiryHour)
+	accessToken, err := u.RefreshTokenUseCase.CreateAccessToken(&user, config.CfgToken.AccessTokenSecret, config.CfgToken.AccessTokenExpiryHour)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// 创建refreshToken
-	refreshToken, err := u.RefreshTokenUseCase.CreateRefreshToken(&user, config.RefreshTokenSecret, config.RefreshTokenExpiryHour)
+	refreshToken, err := u.RefreshTokenUseCase.CreateRefreshToken(&user, config.CfgToken.RefreshTokenSecret, config.CfgToken.RefreshTokenExpiryHour)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
