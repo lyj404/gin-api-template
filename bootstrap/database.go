@@ -3,25 +3,41 @@ package bootstrap
 import (
 	"fmt"
 	"gin-api-template/config"
-	"gin-api-template/domain"
+	"gin-api-template/domain/entity"
 	"log"
 	"time"
 
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func NewMySQLDataBase() *gorm.DB {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
-		config.DbUser, config.DbPassWord, config.DbHost, config.DbPort, config.DbName,
-	)
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+func NewDataBase() *gorm.DB {
+	var dsn string
+	var db *gorm.DB
+	var err error
+
+	switch config.CfgDatabase.Type {
+	case "mysql":
+		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+			config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Host, config.CfgDatabase.Port, config.CfgDatabase.Name)
+		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	case "postgres":
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
+			config.CfgDatabase.Host, config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Name, config.CfgDatabase.Port)
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	default:
+		log.Fatal("不支持的数据库类型:", config.CfgDatabase.Type)
+	}
+
 	if err != nil {
 		log.Fatal("连接数据库失败:", err)
 	}
-	// 设置自动迁移
-	db.AutoMigrate(&domain.User{})
 
+	// 设置自动迁移
+	db.AutoMigrate(&entity.User{})
+
+	// 设置数据库连接池
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Fatal("配置数据库失败:", err)

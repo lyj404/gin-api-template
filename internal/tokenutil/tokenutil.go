@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"gin-api-template/config"
 	"gin-api-template/domain"
+	"gin-api-template/domain/entity"
 	"strconv"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 )
 
 // CreateAccessToken创建一个访问令牌
-func CreateAccessToken(user *domain.User, secret string, expire int) (accessToken string, err error) {
+func CreateAccessToken(user *entity.User, secret string, expire int) (accessToken string, err error) {
 	// 创建自定义声明，其中包含用户信息和过期时间
 	claims := &domain.JwtCustomClaims{
 		ID:   strconv.FormatUint(uint64(user.ID), 16), //用户ID，转换为十六进制字符
@@ -29,12 +30,12 @@ func CreateAccessToken(user *domain.User, secret string, expire int) (accessToke
 		return "", err
 	}
 	// 添加前缀，以方便后续处理
-	tokenWithPrefix := config.TokenPrefix + t
+	tokenWithPrefix := config.CfgToken.TokenPrefix + t
 	return tokenWithPrefix, nil
 }
 
 // CreateRefreshToken创建一个刷新令牌
-func CreateRefreshToken(user *domain.User, secret string, expire int) (refreshToken string, err error) {
+func CreateRefreshToken(user *entity.User, secret string, expire int) (refreshToken string, err error) {
 	// 创建自定义声明，其中包含用户信息和过期时间
 	claimsRefresh := &domain.JwtCustomRefreshClaims{
 		ID: strconv.FormatUint(uint64(user.ID), 16), //用户ID，转换为十六进制字符
@@ -51,7 +52,7 @@ func CreateRefreshToken(user *domain.User, secret string, expire int) (refreshTo
 		return "", err
 	}
 	// 添加前缀，以方便后续处理
-	tokenWithPrefix := config.TokenPrefix + rt
+	tokenWithPrefix := config.CfgToken.TokenPrefix + rt
 	return tokenWithPrefix, nil
 }
 

@@ -17,38 +17,38 @@ type RefreshTokenHandler struct {
 func (rtc *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 	var request dto.RefreshTokenRequest
 
-	// 获取请求
+	// 获取请求参数
 	err := c.ShouldBind(&request)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, result.ErrorResponse{Message: err.Error()})
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// 通过token获取用户id
-	id, err := rtc.RefreshTokenService.ExtractIDFromToken(request.RefreshToken, config.RefreshTokenSecret)
+	id, err := rtc.RefreshTokenService.ExtractIDFromToken(request.RefreshToken, config.CfgToken.RefreshTokenSecret)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, result.ErrorResponse{Message: "User not found"})
+		result.ErrorResponse(c, http.StatusUnauthorized, "User not found")
 		return
 	}
 
 	// 通过ID获取用户信息
 	user, err := rtc.RefreshTokenService.GetUserByID(c, id)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, result.ErrorResponse{Message: "User not found"})
+		result.ErrorResponse(c, http.StatusUnauthorized, "User not found")
 		return
 	}
 
 	// 创建新的访问token
-	accessToken, err := rtc.RefreshTokenService.CreateAccessToken(&user, config.AccessTokenSecret, config.AccessTokenExpiryHour)
+	accessToken, err := rtc.RefreshTokenService.CreateAccessToken(&user, config.CfgToken.AccessTokenSecret, config.CfgToken.AccessTokenExpiryHour)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, result.ErrorResponse{Message: err.Error()})
+		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	// 创建新的刷新token
-	refreshToken, err := rtc.RefreshTokenService.CreateRefreshToken(&user, config.RefreshTokenSecret, config.RefreshTokenExpiryHour)
+	refreshToken, err := rtc.RefreshTokenService.CreateRefreshToken(&user, config.CfgToken.RefreshTokenSecret, config.CfgToken.RefreshTokenExpiryHour)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, result.ErrorResponse{Message: err.Error()})
+		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -57,5 +57,5 @@ func (rtc *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 		RefreshToken: refreshToken,
 	}
 
-	c.JSON(http.StatusOK, refreshTokenResponse)
+	result.SuccessResponse[dto.RefreshTokenResponse](c, "Refresh token created successfully", &refreshTokenResponse)
 }

@@ -26,7 +26,7 @@ func JwtAuthMiddleware(secret string) gin.HandlerFunc {
 				userID, err := tokenutil.ExtractIDFromToken(authToken, secret)
 				if err != nil {
 					// 如果提取用户 ID 时出错，返回未授权错误
-					c.JSON(http.StatusUnauthorized, result.ErrorResponse{Message: err.Error()})
+					result.ErrorResponse(c, http.StatusUnauthorized, err.Error())
 					c.Abort()
 					return
 				}
@@ -37,12 +37,12 @@ func JwtAuthMiddleware(secret string) gin.HandlerFunc {
 				return
 			}
 			// 如果授权失败，返回未授权错误
-			c.JSON(http.StatusUnauthorized, result.ErrorResponse{Message: err.Error()})
+			result.ErrorResponse(c, http.StatusUnauthorized, err.Error())
 			c.Abort()
 			return
 		}
 		// 如果 Authorization 格式不正确，返回未授权错误
-		c.JSON(http.StatusUnauthorized, result.ErrorResponse{Message: "Not authorized"})
+		result.ErrorResponse(c, http.StatusUnauthorized, "Not authorized")
 		c.Abort()
 	}
 }

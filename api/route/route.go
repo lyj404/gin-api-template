@@ -16,6 +16,6 @@ func SetUp(timeout time.Duration, app bootstrap.Application, gin *gin.Engine) {
 
 	protectedRouter := gin.Group("")
 	// 需要鉴权的路由
-	protectedRouter.Use(middleware.JwtAuthMiddleware(config.AccessTokenSecret))
+	protectedRouter.Use(middleware.JwtAuthMiddleware(config.CfgToken.AccessTokenSecret))
 	NewTestRouter(timeout, app, protectedRouter)
 }
