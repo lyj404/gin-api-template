@@ -18,7 +18,7 @@ var (
 	DbPassWord string
 	DbName     string
 
-	REnabled bool
+	REnabled  bool
 	RHost     string
 	RPort     string
 	RPassWord string
@@ -41,8 +41,7 @@ func init() {
 	}
 
 	// 构造配置文件的完整路径
-	// 从当前目录返回上一级，然后进入config文件夹
-	configPath := filepath.Join(dir, "..", "config", "config.ini")
+	configPath := filepath.Join(dir, "config", "config.ini")
 	file, err := ini.Load(configPath)
 	if err != nil {
 		log.Fatal("配置文件读取错误，请检查文件路径:", err)
