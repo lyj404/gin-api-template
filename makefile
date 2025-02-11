@@ -38,3 +38,9 @@ clean:
 	@echo "🧹 清理构建文件..."
 	rm -rf $(BUILD_DIR)
 	@echo "✅ 清理完成！"
+
+# 清除日志文件
+clean-logs:
+	@echo "🧹 清理日志文件..."
+	@rm -rf ./logs/*
+	@echo "✅ 成功清理日志文件！"
