@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"gin-api-template/domain"
+	"gin-api-template/domain/entity"
 	"gin-api-template/internal/tokenutil"
 	"time"
 )
@@ -19,17 +20,17 @@ func NewRefreshTokenService(userRepo domain.UserRepo, timeout time.Duration) dom
 	}
 }
 
-func (rtu *refreshTokenService) GetUserByID(c context.Context, email string) (domain.User, error) {
+func (rtu *refreshTokenService) GetUserByID(c context.Context, email string) (entity.User, error) {
 	ctx, cancel := context.WithTimeout(c, rtu.contextTimeout)
 	defer cancel()
 	return rtu.userRepo.GetByID(ctx, email)
 }
 
-func (rtu *refreshTokenService) CreateAccessToken(user *domain.User, secret string, expiry int) (accessToken string, err error) {
+func (rtu *refreshTokenService) CreateAccessToken(user *entity.User, secret string, expiry int) (accessToken string, err error) {
 	return tokenutil.CreateAccessToken(user, secret, expiry)
 }
 
-func (rtu *refreshTokenService) CreateRefreshToken(user *domain.User, secret string, expiry int) (refreshToken string, err error) {
+func (rtu *refreshTokenService) CreateRefreshToken(user *entity.User, secret string, expiry int) (refreshToken string, err error) {
 	return tokenutil.CreateRefreshToken(user, secret, expiry)
 }
 

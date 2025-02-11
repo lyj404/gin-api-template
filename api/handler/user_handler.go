@@ -4,6 +4,7 @@ import (
 	"gin-api-template/config"
 	"gin-api-template/domain"
 	"gin-api-template/domain/dto"
+	"gin-api-template/domain/entity"
 	"gin-api-template/domain/result"
 	"net/http"
 
@@ -91,7 +92,7 @@ func (u *UserHandler) Signup(c *gin.Context) {
 	// 将加密后的密码赋值给注册信息
 	request.Password = string(encryptedPassword)
 
-	user := domain.User{
+	user := entity.User{
 		Name:     request.Name,
 		Email:    request.Email,
 		PassWord: request.Password,

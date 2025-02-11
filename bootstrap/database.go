@@ -3,7 +3,7 @@ package bootstrap
 import (
 	"fmt"
 	"gin-api-template/config"
-	"gin-api-template/domain"
+	"gin-api-template/domain/entity"
 	"log"
 	"time"
 
@@ -35,7 +35,7 @@ func NewDataBase() *gorm.DB {
 	}
 
 	// 设置自动迁移
-	db.AutoMigrate(&domain.User{})
+	db.AutoMigrate(&entity.User{})
 
 	// 设置数据库连接池
 	sqlDB, err := db.DB()
