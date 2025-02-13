@@ -1,0 +1,380 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/hello": {
+            "get": {
+                "description": "返回一个简单的消息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "hello"
+                ],
+                "summary": "测试",
+                "responses": {
+                    "200": {
+                        "description": "成功响应",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器错误",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "description": "处理用户登录请求，验证凭据并返回访问token和刷新token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "用户登录",
+                "parameters": [
+                    {
+                        "description": "登录请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_dto.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "登录成功响应",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "401": {
+                        "description": "凭据无效",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "404": {
+                        "description": "用户未找到",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/refresh-token": {
+            "post": {
+                "description": "使用刷新令牌获取新的访问令牌和刷新令牌",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "刷新令牌",
+                "parameters": [
+                    {
+                        "description": "刷新令牌请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_dto.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "刷新令牌成功响应",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_RefreshTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "401": {
+                        "description": "令牌无效或已过期",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/signup": {
+            "post": {
+                "description": "处理新用户注册请求，创建用户账户并返回访问token和刷新token",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "用户注册",
+                "parameters": [
+                    {
+                        "description": "注册请求参数",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_dto.SignupRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "注册成功响应",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_SignupResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "409": {
+                        "description": "邮箱已存在",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "gin-api-template_domain_dto.LoginRequest": {
+            "description": "登录时请求的参数",
+            "type": "object",
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "description": "@Description 用户邮箱\n@Required",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "@Description 用户密码\n@Required",
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
+        "gin-api-template_domain_dto.LoginResponse": {
+            "description": "登录成功后的响应数据",
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "description": "@Description 访问令牌",
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "description": "@Description 刷新令牌",
+                    "type": "string"
+                }
+            }
+        },
+        "gin-api-template_domain_dto.RefreshTokenRequest": {
+            "description": "刷新token时请求的参数",
+            "type": "object",
+            "required": [
+                "refreshToken"
+            ],
+            "properties": {
+                "refreshToken": {
+                    "description": "@Description 刷新token\n@Required",
+                    "type": "string"
+                }
+            }
+        },
+        "gin-api-template_domain_dto.RefreshTokenResponse": {
+            "description": "刷新token成功之后的响应数据",
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "description": "@Description 访问token",
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "description": "@Description 刷新token",
+                    "type": "string"
+                }
+            }
+        },
+        "gin-api-template_domain_dto.SignupRequest": {
+            "description": "注册时请求的参数",
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "description": "@Description 邮箱\n@Required",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "@Description 用户名\n@Required",
+                    "type": "string",
+                    "minLength": 3
+                },
+                "password": {
+                    "description": "@Description 密码\n@Required",
+                    "type": "string",
+                    "minLength": 6
+                }
+            }
+        },
+        "gin-api-template_domain_dto.SignupResponse": {
+            "description": "注册成功后的响应数据",
+            "type": "object",
+            "properties": {
+                "accessToken": {
+                    "description": "@Description 访问token",
+                    "type": "string"
+                },
+                "refreshToken": {
+                    "description": "@Description 刷新token",
+                    "type": "string"
+                }
+            }
+        },
+        "gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_LoginResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/gin-api-template_domain_dto.LoginResponse"
+                        }
+                    ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
+        "gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/gin-api-template_domain_dto.RefreshTokenResponse"
+                        }
+                    ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
+        "gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_SignupResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/gin-api-template_domain_dto.SignupResponse"
+                        }
+                    ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
+        "gin-api-template_domain_result.ResponseResult-string": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "type": "string"
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

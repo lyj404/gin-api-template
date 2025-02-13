@@ -1,5 +1,5 @@
 # 定义伪目标
-.PHONY: all build run clean
+.PHONY: all build run clean swagger
 
 # 项目名称
 PROJECT_NAME := gin-api-template
@@ -44,3 +44,8 @@ clean-logs:
 	@echo "🧹 清理日志文件..."
 	@rm -rf ./logs/*
 	@echo "✅ 成功清理日志文件！"
+
+swagger:
+	@echo "📚 生成 Swagger 文档..."
+	swag init -g ./cmd/main.go --parseDependency
+	@echo "✅ Swagger 文档生成完成！"

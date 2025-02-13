@@ -10,6 +10,5 @@ import (
 
 func NewTestRouter(timeout time.Duration, app bootstrap.Application, group *gin.RouterGroup) {
 	testHandler := &handler.HelloHandler{}
-	group.GET("/test", testHandler.TestRequest)
 	group.GET("/hello", testHandler.HelloRequest)
 }

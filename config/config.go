@@ -41,6 +41,12 @@ type TokenConfig struct {
 	TokenPrefix            string
 }
 
+type PasswordConfig struct {
+	SaltPrefix string
+	SaltSuffix string
+	Cost       int
+}
+
 // 全局配置变量
 var (
 	CfgServer   ServerConfig
@@ -48,6 +54,7 @@ var (
 	CfgRedis    RedisConfig
 	CfgTimeout  TimeoutConfig
 	CfgToken    TokenConfig
+	CfgPassword PasswordConfig
 )
 
 func init() {
@@ -75,6 +82,7 @@ func LoadConfig(file *ini.File) {
 	LoadSection(file, "redis", &CfgRedis)
 	LoadSection(file, "timeout", &CfgTimeout)
 	LoadSection(file, "token", &CfgToken)
+	LoadSection(file, "password", &CfgPassword)
 }
 
 // LoadSection 加载具体配置

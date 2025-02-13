@@ -1,14 +1,11 @@
 package main
 
 import (
-	"gin-api-template/api/middleware"
 	"gin-api-template/api/route"
 	"gin-api-template/bootstrap"
 	"gin-api-template/config"
 	"gin-api-template/domain"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -23,11 +20,11 @@ func main() {
 	// 设置超时时间
 	timeout := time.Duration(config.CfgTimeout.ContextTimeout) * time.Second
 
-	gin := gin.New()
-	// 使用自定义日志
-	gin.Use(middleware.LoggerMiddleware(logger))
+	// 设置swagger文档
+	config.SetUpSwag()
 
-	route.SetUp(timeout, app, gin)
-
-	gin.Run(config.CfgServer.HttpPort)
+	// 设置路由
+	router := route.SetUp(timeout, app, logger)
+	// 运行web服务
+	router.Run(config.CfgServer.HttpPort)
 }

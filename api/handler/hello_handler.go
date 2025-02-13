@@ -9,10 +9,14 @@ import (
 type HelloHandler struct {
 }
 
-func (handler *HelloHandler) TestRequest(c *gin.Context) {
-	result.SuccessResponse[string](c, "test", nil)
-}
-
+// @Summary 测试
+// @Description 返回一个简单的消息
+// @Tags hello
+// @Accept json
+// @Produce json
+// @Success 200 {object} result.ResponseResult[string] "成功响应"
+// @Failure 500 {object} result.ResponseResult[string] "服务器错误"
+// @Router /hello [get]
 func (handler *HelloHandler) HelloRequest(c *gin.Context) {
-	result.SuccessResponse[string](c, "Hello World", nil)
+	result.SimpleSuccessResponse(c, "Hello World")
 }

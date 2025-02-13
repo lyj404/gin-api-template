@@ -21,5 +21,5 @@ func NewUserRouter(timeout time.Duration, app bootstrap.Application, group *gin.
 	}
 	group.POST("/login", userHandler.Login)
 	group.POST("/signup", userHandler.Signup)
-	group.POST("/refresh", refreshTokenHandler.RefreshToken)
+	group.POST("/refresh-token", refreshTokenHandler.RefreshToken)
 }
