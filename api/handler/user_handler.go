@@ -6,10 +6,10 @@ import (
 	"gin-api-template/domain/dto"
 	"gin-api-template/domain/entity"
 	"gin-api-template/domain/result"
+	"gin-api-template/util"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type UserHandler struct {
@@ -35,7 +35,7 @@ func (u *UserHandler) Login(c *gin.Context) {
 	}
 
 	// 验证密码
-	if bcrypt.CompareHashAndPassword([]byte(user.PassWord), []byte(request.Password)) != nil {
+	if util.ComparePassword(user.PassWord, request.Password) != nil {
 		result.ErrorResponse(c, http.StatusUnauthorized, "Invalid credentials")
 		return
 	}
@@ -80,10 +80,7 @@ func (u *UserHandler) Signup(c *gin.Context) {
 	}
 
 	// 加密密码
-	encryptedPassword, err := bcrypt.GenerateFromPassword(
-		[]byte(request.Password),
-		bcrypt.DefaultCost,
-	)
+	encryptedPassword, err := util.HashPassword(request.Password)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

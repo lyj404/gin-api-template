@@ -59,10 +59,13 @@ func CreateRefreshToken(user *entity.User, secret string, expire int) (refreshTo
 // IsAuthorized验证令牌是否有效
 func IsAuthorized(requestToken string, secret string) (bool, error) {
 	// 解析令牌并验证签名方法
-	_, err := parseToken(requestToken, secret)
+	token, err := parseToken(requestToken, secret)
 	if err != nil {
 		// 令牌解析错误
 		return false, err
+	}
+	if !token.Valid {
+		return false, fmt.Errorf("token is invalid")
 	}
 	return true, nil
 }

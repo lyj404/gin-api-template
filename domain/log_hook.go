@@ -3,6 +3,7 @@ package domain
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -36,6 +37,9 @@ func (hook *LogHook) Fire(entry *logrus.Entry) error {
 	if err != nil {
 		return fmt.Errorf("failed to format log entry: %v", err)
 	}
+
+	// 移除 ANSI 转义字符
+	line = removeANSICodes(line)
 
 	// 将日志写入到普通日志文件
 	if _, err := hook.file.Write([]byte(line)); err != nil {
@@ -96,6 +100,16 @@ func (hook *LogHook) rotateFiles(timer string) error {
 
 	hook.fileDate = timer
 	return nil
+}
+
+// removeANSICodes 移除 ANSI 转义字符
+func removeANSICodes(str string) string {
+	return strings.Map(func(r rune) rune {
+		if r == '\x1b' {
+			return -1 // 删除 ANSI 转义字符
+		}
+		return r
+	}, str)
 }
 
 // InitLogger 初始化并配置 logrus.Logger
