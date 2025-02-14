@@ -56,20 +56,6 @@ func CreateRefreshToken(user *entity.User, secret string, expire int) (refreshTo
 	return tokenWithPrefix, nil
 }
 
-// IsAuthorized验证令牌是否有效
-func IsAuthorized(requestToken string, secret string) (bool, error) {
-	// 解析令牌并验证签名方法
-	token, err := parseToken(requestToken, secret)
-	if err != nil {
-		// 令牌解析错误
-		return false, err
-	}
-	if !token.Valid {
-		return false, fmt.Errorf("token is invalid")
-	}
-	return true, nil
-}
-
 // ExtractIDFromToken从token提取用户ID
 func ExtractIDFromToken(requestToken string, secret string) (string, error) {
 	// 解析令牌并验证签名方法
@@ -84,6 +70,19 @@ func ExtractIDFromToken(requestToken string, secret string) (string, error) {
 	if !ik || !token.Valid {
 		return "", fmt.Errorf("invalid token")
 	}
+
+	// 获取过期时间
+	expiredAt, ok := claims["exp"].(float64)
+	if !ok {
+		return "", fmt.Errorf("exp not found in token")
+	}
+
+	// 检查是否过期
+	if float64(time.Now().Unix()) >= expiredAt {
+		return "", fmt.Errorf("token is expired")
+	}
+
+	// 获取用户ID
 	id, ok := claims["id"].(string)
 	if !ok {
 		return "", fmt.Errorf("id not found in token")

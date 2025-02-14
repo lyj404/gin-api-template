@@ -27,7 +27,11 @@ func (rtc *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 	// 通过token获取用户id
 	id, err := rtc.RefreshTokenService.ExtractIDFromToken(request.RefreshToken, config.CfgToken.RefreshTokenSecret)
 	if err != nil {
-		result.ErrorResponse(c, http.StatusUnauthorized, "User not found")
+		if err.Error() == "token is expired" {
+			result.ErrorResponse(c, http.StatusUnauthorized, "Token is expired")
+		} else {
+			result.ErrorResponse(c, http.StatusUnauthorized, "User not found")
+		}
 		return
 	}
 
@@ -57,5 +61,5 @@ func (rtc *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 		RefreshToken: refreshToken,
 	}
 
-	result.SuccessResponse[dto.RefreshTokenResponse](c, "Refresh token created successfully", &refreshTokenResponse)
+	result.SuccessResponse(c, "Refresh token created successfully", &refreshTokenResponse)
 }

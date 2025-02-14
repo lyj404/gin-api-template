@@ -60,7 +60,7 @@ func (u *UserHandler) Login(c *gin.Context) {
 	}
 
 	// 返回成功响应
-	result.SuccessResponse[dto.LoginResponse](c, "Login successful", &loginResponse)
+	result.SuccessResponse(c, "Login successful", &loginResponse)
 }
 
 func (u *UserHandler) Signup(c *gin.Context) {

@@ -10,9 +10,9 @@ type HelloHandler struct {
 }
 
 func (handler *HelloHandler) TestRequest(c *gin.Context) {
-	result.SuccessResponse[string](c, "test", nil)
+	result.SimpleSuccessResponse(c, "test")
 }
 
 func (handler *HelloHandler) HelloRequest(c *gin.Context) {
-	result.SuccessResponse[string](c, "Hello World", nil)
+	result.SimpleSuccessResponse(c, "Hello World")
 }

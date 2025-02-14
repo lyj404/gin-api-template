@@ -29,3 +29,11 @@ func SuccessResponse[T any](ctx *gin.Context, message string, data *T) {
 		Data:    data,
 	})
 }
+
+// SimpleSuccessResponse 返回简单的成功响应
+func SimpleSuccessResponse(ctx *gin.Context, message string) {
+	ctx.JSON(http.StatusOK, ResponseResult[any]{
+		Code:    http.StatusOK,
+		Message: message,
+	})
+}
