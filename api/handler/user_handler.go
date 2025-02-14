@@ -121,5 +121,5 @@ func (u *UserHandler) Signup(c *gin.Context) {
 		RefreshToken: refreshToken,
 	}
 
-	result.SuccessResponse[dto.SignupResponse](c, "Signup successful", &signupResponse)
+	result.SuccessResponse(c, "Signup successful", &signupResponse)
 }
