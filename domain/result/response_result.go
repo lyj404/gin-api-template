@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ResponseResult 是通用响应结构体
 type ResponseResult[T any] struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
