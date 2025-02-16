@@ -17,6 +17,18 @@ type UserHandler struct {
 	RefreshTokenUseCase domain.RefreshTokenService
 }
 
+// @Summary 用户登录
+// @Description 处理用户登录请求，验证凭据并返回访问token和刷新token
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param request body dto.LoginRequest true "登录请求参数"
+// @Success 200 {object} result.ResponseResult[dto.LoginResponse] "登录成功响应"
+// @Failure 400 {object} result.ResponseResult[string] "请求参数错误"
+// @Failure 404 {object} result.ResponseResult[string] "用户未找到"
+// @Failure 401 {object} result.ResponseResult[string] "凭据无效"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /login [post]
 func (u *UserHandler) Login(c *gin.Context) {
 	var request dto.LoginRequest
 
@@ -63,6 +75,17 @@ func (u *UserHandler) Login(c *gin.Context) {
 	result.SuccessResponse(c, "Login successful", &loginResponse)
 }
 
+// @Summary 用户注册
+// @Description 处理新用户注册请求，创建用户账户并返回访问token和刷新token
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param request body dto.SignupRequest true "注册请求参数"
+// @Success 200 {object} result.ResponseResult[dto.SignupResponse] "注册成功响应"
+// @Failure 400 {object} result.ResponseResult[string] "请求参数错误"
+// @Failure 409 {object} result.ResponseResult[string] "邮箱已存在"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /signup [post]
 func (u *UserHandler) Signup(c *gin.Context) {
 	var request dto.SignupRequest
 	// 获取请求参数

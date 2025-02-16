@@ -7,10 +7,14 @@ import (
 )
 
 // ResponseResult 是通用响应结构体
+// @Description 统一的API响应格式
 type ResponseResult[T any] struct {
-	Code    int    `json:"code"`
+	// @Description 响应状态码
+	Code int `json:"code"`
+	// @Description 响应信息
 	Message string `json:"message"`
-	Data    *T     `json:"data,omitempty"`
+	// @Description 响应数据
+	Data *T `json:"data,omitempty"`
 }
 
 // ErrorResponse 返回错误响应

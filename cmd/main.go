@@ -20,6 +20,9 @@ func main() {
 	// 设置超时时间
 	timeout := time.Duration(config.CfgTimeout.ContextTimeout) * time.Second
 
+	// 设置swagger文档
+	config.SetUpSwag()
+
 	// 设置路由
 	router := route.SetUp(timeout, app, logger)
 	// 运行web服务

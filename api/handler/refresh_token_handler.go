@@ -14,6 +14,17 @@ type RefreshTokenHandler struct {
 	RefreshTokenService domain.RefreshTokenService
 }
 
+// @Summary 刷新令牌
+// @Description 使用刷新令牌获取新的访问令牌和刷新令牌
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param request body dto.RefreshTokenRequest true "刷新令牌请求参数"
+// @Success 200 {object} result.ResponseResult[dto.RefreshTokenResponse] "刷新令牌成功响应"
+// @Failure 400 {object} result.ResponseResult[string] "请求参数错误"
+// @Failure 401 {object} result.ResponseResult[string] "令牌无效或已过期"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /refresh-token [post]
 func (rtc *RefreshTokenHandler) RefreshToken(c *gin.Context) {
 	var request dto.RefreshTokenRequest
 
