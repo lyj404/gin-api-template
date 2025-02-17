@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"gin-api-template/config"
+	"gin-api-template/pkg/lib"
 
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -16,17 +17,17 @@ func App() Application {
 	app := &Application{}
 
 	// 初始化数据库
-	app.Db = NewDataBase()
+	app.Db = lib.NewDataBase()
 
 	// 按需初始化Redis
 	if config.CfgRedis.Enabled {
-		app.Cache = InitRedis()
+		app.Cache = lib.InitRedis()
 	}
 
 	return *app
 }
 
 func (app *Application) CloseConnection() {
-	CloseMySQLConnection(app.Db)
-	CloseRedisConnection(app.Cache)
+	lib.CloseMySQLConnection(app.Db)
+	lib.CloseRedisConnection(app.Cache)
 }

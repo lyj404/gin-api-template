@@ -4,7 +4,7 @@ import (
 	"gin-api-template/api/route"
 	"gin-api-template/bootstrap"
 	"gin-api-template/config"
-	"gin-api-template/domain"
+	"gin-api-template/pkg/lib/logger"
 	"time"
 )
 
@@ -12,7 +12,7 @@ func main() {
 	app := bootstrap.App()
 
 	// 初始化自定义日志
-	logger := domain.InitLogger()
+	logger := logger.InitLogger()
 
 	// 程序结束时关闭MySQL和Redis连接
 	defer app.CloseConnection()
