@@ -2,7 +2,6 @@ package route
 
 import (
 	"gin-api-template/api/middleware"
-	"gin-api-template/bootstrap"
 	"gin-api-template/config"
 	_ "gin-api-template/docs"
 	"time"
@@ -13,23 +12,31 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetUp(timeout time.Duration, app bootstrap.Application, logger *logrus.Logger) *gin.Engine {
+func SetUp(timeout time.Duration, logger *logrus.Logger) *gin.Engine {
+	// 设置gin运行模式
+	gin.SetMode(config.CfgServer.Mode)
 	router := gin.New()
+
+	// 使用Recovery中间件
+	router.Use(gin.Recovery())
 
 	// 使用自定义日志
 	router.Use(middleware.LoggerMiddleware(logger))
+
+	// 使用CORS中间件
+	router.Use(middleware.CorsMiddleware())
 
 	// 设置swagger路由
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	publicRouter := router.Group("")
 	// 不需要鉴权的路由
-	NewUserRouter(timeout, app, publicRouter)
+	NewUserRouter(timeout, publicRouter)
 
 	protectedRouter := router.Group("")
 	// 需要鉴权的路由
 	protectedRouter.Use(middleware.JwtAuthMiddleware(config.CfgToken.AccessTokenSecret))
-	NewTestRouter(timeout, app, protectedRouter)
+	NewTestRouter(timeout, protectedRouter)
 
 	return router
 }

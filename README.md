@@ -3,12 +3,13 @@
 # 功能特性
 1. 支持Logrus日志
 2. 支持请求超时控制
-3. 支持配置文件读取
+3. 支持配置yaml文件读取
 4. 支持Swagger的API文档
-5. 统一的响应格式和参数校验
-6. 实现了基于GORM的分页构造器组件
-7. 双Token（访问令牌和刷新）认证机制
-8. 支持MySQL、PostgreSQL、Redis连接管理
+5. 支持基于cors的跨域组件
+6. 统一的响应格式和参数校验
+7. 实现基于GORM的分页构造器组件
+8. 双Token（访问令牌和刷新）认证机制
+9. 支持MySQL、PostgreSQL、Redis连接管理
 # 目录结构
 ```
 .
@@ -24,6 +25,7 @@
 │   ├── dto         # 请求处理器的请求和响应结构体
 │   ├── entity      # 数据库实体对应的结构体
 │   └── result      # 通用的响应结构体
+├── global			# 存放全局变量
 ├── internal
 │   ├── redisutil   # Redis工具类
 │   └── tokenutil   # token工具类

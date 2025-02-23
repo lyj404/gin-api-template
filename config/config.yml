@@ -1,0 +1,33 @@
+server:
+  HttpPort: ":8181"
+  Mode: "debug" # gin运行模式
+
+database:
+  Type: mysql  # 可选值：mysql / postgres
+  Host: localhost
+  Port: 3306
+  User: root
+  Password: "123456"
+  Name: study
+
+redis:
+  Enabled: false  # 是否启用Redis
+  Host: 127.0.0.1
+  Port: 6379
+  Password: ""
+  DataBase: 0
+
+timeout:
+  ContextTimeOut: 3
+
+token:
+  AccessTokenExpiryHour: 2
+  RefreshTokenExpiryHour: 168
+  AccessTokenSecret: "z8qT7XpLm2VnR4sK9wYbG6hJ3cU1dE5"
+  RefreshTokenSecret: "k4rF9vNcX0jHwZ8bQ2lP7yM6oD1iS3t"
+  TokenPrefix: "Bearer "
+
+password:
+  SaltPrefix: "xY7kL9pM"
+  SaltSuffix: "qR4sT8vN"
+  Cost: 12  # 成本因子

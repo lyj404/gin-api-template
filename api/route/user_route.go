@@ -2,7 +2,7 @@ package route
 
 import (
 	"gin-api-template/api/handler"
-	"gin-api-template/bootstrap"
+	"gin-api-template/global"
 	"gin-api-template/repo"
 	"gin-api-template/service"
 	"time"
@@ -10,8 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewUserRouter(timeout time.Duration, app bootstrap.Application, group *gin.RouterGroup) {
-	userRepo := repo.NewUserRepo(app.Db)
+func NewUserRouter(timeout time.Duration, group *gin.RouterGroup) {
+	userRepo := repo.NewUserRepo(global.G_DB)
 	userHandler := &handler.UserHandler{
 		UserService:         service.NewUserService(userRepo, timeout),
 		RefreshTokenUseCase: service.NewRefreshTokenService(userRepo, timeout),
