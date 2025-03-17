@@ -66,7 +66,7 @@ var (
 	CfgPassword PasswordConfig
 )
 
-func init() {
+func InitConfig() {
 	// 获取当前目录
 	dir, err := os.Getwd()
 	if err != nil {
