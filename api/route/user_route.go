@@ -3,7 +3,7 @@ package route
 import (
 	"gin-api-template/api/handler"
 	"gin-api-template/global"
-	"gin-api-template/repo"
+	"gin-api-template/repository"
 	"gin-api-template/service"
 	"time"
 
@@ -11,7 +11,7 @@ import (
 )
 
 func NewUserRouter(timeout time.Duration, group *gin.RouterGroup) {
-	userRepo := repo.NewUserRepo(global.G_DB)
+	userRepo := repository.NewUserRepo(global.G_DB)
 	userHandler := &handler.UserHandler{
 		UserService:         service.NewUserService(userRepo, timeout),
 		RefreshTokenUseCase: service.NewRefreshTokenService(userRepo, timeout),
