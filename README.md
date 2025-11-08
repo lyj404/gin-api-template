@@ -65,6 +65,8 @@ go run cmd/main.go
 # 使用make启动项目
 make run
 ```
+> 想要执行`make`命令需要安装`GNU Make`工具
+
 ## Makefile 命令
 项目提供了一下make命令用于简化操作：
 ```

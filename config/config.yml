@@ -3,11 +3,11 @@ server:
   Mode: "debug" # gin运行模式
 
 database:
-  Type: mysql  # 可选值：mysql / postgres
+  Type: postgres  # 可选值：mysql / postgres
   Host: localhost
-  Port: 3306
-  User: root
-  Password: "123456"
+  Port: 5432
+  User: postgres
+  Password: "postgres"
   Name: study
 
 redis:

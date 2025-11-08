@@ -67,14 +67,17 @@ var (
 )
 
 func InitConfig() {
-	// 获取当前目录
-	dir, err := os.Getwd()
+	// 获取当前可执行文件的绝对路径
+	execPath, err := os.Executable()
 	if err != nil {
-		log.Fatalf("获取工作目录时出错: %v", err)
+		log.Fatalf("无法获取可执行文件路径: %v", err)
 	}
-
+	execDir := filepath.Dir(execPath)
+	log.Printf("INFO: 可执行文件所在目录: %s", execDir)
+	// 项目根路径
+	projectDir := filepath.Join(execDir, "..")
 	// 拼接配置文件路径
-	configPath := filepath.Join(dir, "config", "config.yml")
+	configPath := filepath.Join(projectDir, "config", "config.yml")
 	// 读取配置文件
 	data, err := os.ReadFile(configPath)
 	if err != nil {

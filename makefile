@@ -11,9 +11,6 @@ GO := go
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 
-# 配置文件路径
-CONFIG_PATH := ./config/config.ini
-
 # 构建目标目录
 BUILD_DIR := ./bin
 BINARY_NAME := $(PROJECT_NAME)
