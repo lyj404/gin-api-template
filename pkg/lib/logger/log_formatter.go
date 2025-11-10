@@ -1,58 +1,53 @@
 package logger
 
 import (
-	"bytes"
-	"fmt"
-	"path"
-
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap/zapcore"
 )
 
 // LogFormatter 自定义日志格式
 type LogFormatter struct{}
 
-// Format 实现 logrus.Formatter 接口，用于自定义日志格式
-func (LogFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	var levelColor int
-	// 根据日志级别设置颜色
-	switch entry.Level {
-	case logrus.DebugLevel, logrus.TraceLevel:
-		levelColor = 37 // 灰色
-	case logrus.WarnLevel:
-		levelColor = 33 // 黄色
-	case logrus.ErrorLevel, logrus.FatalLevel, logrus.PanicLevel:
-		levelColor = 31 // 红色
-	default:
-		levelColor = 36 // 蓝色
-	}
-
-	// 初始化用于存储日志的 buffer
-	var b *bytes.Buffer
-	if entry.Buffer != nil {
-		b = entry.Buffer
-	} else {
-		b = &bytes.Buffer{}
-	}
-
+// Format 实现 zapcore.ObjectEncoder 接口，用于自定义日志格式
+func (f *LogFormatter) Format(entry zapcore.Entry, enc zapcore.PrimitiveArrayEncoder) error {
 	// 格式化日志时间
 	timestamp := entry.Time.Format("2006-01-02 15:04:05")
 
-	// 格式化日志字段
-	var fields string
-	if len(entry.Data) > 0 {
-		for key, value := range entry.Data {
-			fields += fmt.Sprintf("[%s: %v] ", key, value)
-		}
+	// 添加日志级别
+	enc.AppendString("level")
+	enc.AppendString(entry.Level.String())
+
+	// 添加时间戳
+	enc.AppendString("timestamp")
+	enc.AppendString(timestamp)
+
+	// 添加日志消息
+	enc.AppendString("message")
+	enc.AppendString(entry.Message)
+
+	// 添加调用者信息
+	if entry.Caller.Defined {
+		enc.AppendString("caller")
+		enc.AppendString(entry.Caller.String())
 	}
 
-	// 如果日志包含调用者信息，则格式化并添加到日志中
-	if entry.HasCaller() {
-		funcVal := entry.Caller.Function
-		fileVal := fmt.Sprintf("%s:%d", path.Base(entry.Caller.File), entry.Caller.Line)
-		fmt.Fprintf(b, "\x1b[%dm[%s] [%s] %s %s %s\x1b[0m\n", levelColor, timestamp, entry.Level, funcVal, fileVal, fields)
-	} else {
-		fmt.Fprintf(b, "\x1b[%dm[%s] [%s] %s\x1b[0m\n", levelColor, timestamp, entry.Level, fields)
+	return nil
+}
+
+// NewJSONEncoder 创建自定义JSON编码器
+func NewJSONEncoder() zapcore.Encoder {
+	encoderConfig := zapcore.EncoderConfig{
+		TimeKey:        "timestamp",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "message",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.LowercaseLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	return b.Bytes(), nil
+	return zapcore.NewJSONEncoder(encoderConfig)
 }

@@ -9,11 +9,15 @@ import (
 )
 
 func main() {
+	// 初始化配置
+	config.InitConfig()
+
 	// 初始化数据库和缓存
 	bootstrap.Boot()
 
-	// 初始化自定义日志
-	logger := logger.InitLogger()
+	// 初始化zap日志
+	logger := logger.InitZapLogger()
+	defer logger.Sync()
 
 	// 程序结束时关闭MySQL和Redis连接
 	defer bootstrap.CloseConnection()

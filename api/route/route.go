@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"go.uber.org/zap"
 )
 
-func SetUp(timeout time.Duration, logger *logrus.Logger) *gin.Engine {
+func SetUp(timeout time.Duration, logger *zap.Logger) *gin.Engine {
 	// 设置gin运行模式
 	gin.SetMode(config.CfgServer.Mode)
 	router := gin.New()
