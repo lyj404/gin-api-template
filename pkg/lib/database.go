@@ -10,6 +10,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/schema"
 )
 
 func NewDataBase() *gorm.DB {
@@ -21,11 +22,19 @@ func NewDataBase() *gorm.DB {
 	case "mysql":
 		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 			config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Host, config.CfgDatabase.Port, config.CfgDatabase.Name)
-		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
+		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
+			NamingStrategy: schema.NamingStrategy{
+				SingularTable: true, // 使用单数表名
+			},
+		})
 	case "postgres":
 		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
 			config.CfgDatabase.Host, config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Name, config.CfgDatabase.Port)
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
+			NamingStrategy: schema.NamingStrategy{
+				SingularTable: true, // 使用单数表名
+			},
+		})
 	default:
 		log.Fatal("不支持的数据库类型:", config.CfgDatabase.Type)
 	}
@@ -52,7 +61,7 @@ func NewDataBase() *gorm.DB {
 	return db
 }
 
-func CloseMySQLConnection(db *gorm.DB) {
+func CloseDataBaseConnection(db *gorm.DB) {
 	if db == nil {
 		return
 	}

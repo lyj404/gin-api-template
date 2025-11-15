@@ -1,11 +1,9 @@
 package entity
 
-import (
-	"gorm.io/gorm"
-)
+import "gin-api-template/global"
 
 type User struct {
-	gorm.Model
+	global.G_MODEL
 	Name     string `gorm:"type:varchar(15);"`
 	Email    string `gorm:"type:varchar(50);"`
 	PassWord string `gorm:"type:varchar(100);column:password;"`

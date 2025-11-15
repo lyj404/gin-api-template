@@ -21,6 +21,6 @@ func Boot() {
 }
 
 func CloseConnection() {
-	lib.CloseMySQLConnection(global.G_DB)
+	lib.CloseDataBaseConnection(global.G_DB)
 	lib.CloseRedisConnection(global.G_REDIS)
 }
