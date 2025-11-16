@@ -22,4 +22,5 @@ func NewUserRouter(timeout time.Duration, group *gin.RouterGroup) {
 	group.POST("/login", userHandler.Login)
 	group.POST("/signup", userHandler.Signup)
 	group.POST("/refresh-token", refreshTokenHandler.RefreshToken)
+	group.GET("/captcha", userHandler.GenerateMathCaptcha)
 }

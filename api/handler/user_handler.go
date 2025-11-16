@@ -6,8 +6,12 @@ import (
 	"gin-api-template/domain/dto"
 	"gin-api-template/domain/entity"
 	"gin-api-template/domain/result"
+	"gin-api-template/pkg/lib/captcha"
 	"gin-api-template/util"
 	"net/http"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -36,6 +40,36 @@ func (u *UserHandler) Login(c *gin.Context) {
 	// 请求传递的参数错误
 	if err != nil {
 		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	// 验证验证码
+	session, err := captcha.Store.Get(c.Request, "captcha-session")
+	if err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, "Session Error")
+	}
+	captchaData, ok := session.Values[captcha.CaptchaSessionKey].(map[string]interface{})
+	if !ok {
+		result.ErrorResponse(c, http.StatusBadRequest, "Verification code has expired, please refresh")
+		return
+	}
+
+	// 检查时间有效性
+	generateTime, ok := captchaData["time"].(int64)
+	if !ok || time.Now().Unix()-generateTime > 300 {
+		result.ErrorResponse(c, http.StatusBadRequest, "Verification code has expired, please refresh")
+		return
+	}
+
+	storedAnswer, ok := captchaData["answer"].(int)
+	if !ok {
+		result.ErrorResponse(c, http.StatusInternalServerError, "Verification code data error")
+		return
+	}
+
+	userAnswer, err := strconv.Atoi(strings.TrimSpace(request.Captcha))
+	if err != nil || userAnswer != storedAnswer {
+		result.ErrorResponse(c, http.StatusBadRequest, "Incorrect verification code")
 		return
 	}
 
@@ -145,4 +179,47 @@ func (u *UserHandler) Signup(c *gin.Context) {
 	}
 
 	result.SuccessResponse(c, "Signup successful", &signupResponse)
+}
+
+// @Summary 验证码
+// @Description 生成验证码防止反复登录
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param request body dto.SignupRequest true "注册请求参数"
+// @Success 200 {object} result.ResponseResult[captcha.CaptchaReponse] "验证码成功响应"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /signup [post]
+func (u *UserHandler) GenerateMathCaptcha(c *gin.Context) {
+	// 获取 session
+	session, err := captcha.Store.Get(c.Request, "captcha-session")
+	if err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, "Session Error")
+	}
+
+	// 生成数学问题
+	problem := captcha.GenerateMathProblem()
+	// 生成验证码图片
+	imageURL, err := captcha.GenerateCaptchaImage(problem.Question)
+	if err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, "Failed to generate verification code image")
+	}
+	// 存储问题到 session
+	session.Values[captcha.CaptchaSessionKey] = map[string]interface{}{
+		"answer":   problem.Answer,
+		"question": problem.Question,
+		"type":     int(problem.Type),
+		"time":     time.Now().Unix(),
+	}
+	// 保存 session
+	if err := session.Save(c.Request, c.Writer); err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, "Failed to save session")
+		return
+	}
+	response := captcha.CaptchaReponse{
+		ImageUrl:   imageURL,
+		Question:   problem.Question,
+		ExpireTime: 300,
+	}
+	result.SuccessResponse(c, "success", &response)
 }

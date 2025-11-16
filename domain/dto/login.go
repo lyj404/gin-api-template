@@ -9,6 +9,9 @@ type LoginRequest struct {
 	// @Description 用户密码
 	// @Required
 	Password string `json:"password" binding:"required,min=6"`
+	// @Description 验证码
+	// @Required
+	Captcha string `json:"captcha" binding:"required"`
 }
 
 // LoginResponse 登录响应

@@ -156,7 +156,7 @@ const docTemplate = `{
         },
         "/signup": {
             "post": {
-                "description": "处理新用户注册请求，创建用户账户并返回访问token和刷新token",
+                "description": "生成验证码防止反复登录",
                 "consumes": [
                     "application/json"
                 ],
@@ -166,7 +166,7 @@ const docTemplate = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "用户注册",
+                "summary": "验证码",
                 "parameters": [
                     {
                         "description": "注册请求参数",
@@ -180,21 +180,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "注册成功响应",
+                        "description": "验证码成功响应",
                         "schema": {
-                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_SignupResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "请求参数错误",
-                        "schema": {
-                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
-                        }
-                    },
-                    "409": {
-                        "description": "邮箱已存在",
-                        "schema": {
-                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-string"
+                            "$ref": "#/definitions/gin-api-template_domain_result.ResponseResult-gin-api-template_pkg_lib_captcha_CaptchaReponse"
                         }
                     },
                     "500": {
@@ -212,10 +200,15 @@ const docTemplate = `{
             "description": "登录时请求的参数",
             "type": "object",
             "required": [
+                "captcha",
                 "email",
                 "password"
             ],
             "properties": {
+                "captcha": {
+                    "description": "@Description 验证码\n@Required",
+                    "type": "string"
+                },
                 "email": {
                     "description": "@Description 用户邮箱\n@Required",
                     "type": "string"
@@ -370,6 +363,27 @@ const docTemplate = `{
                 }
             }
         },
+        "gin-api-template_domain_result.ResponseResult-gin-api-template_pkg_lib_captcha_CaptchaReponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/gin-api-template_pkg_lib_captcha.CaptchaReponse"
+                        }
+                    ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
         "gin-api-template_domain_result.ResponseResult-string": {
             "type": "object",
             "properties": {
@@ -383,6 +397,20 @@ const docTemplate = `{
                 },
                 "message": {
                     "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
+        "gin-api-template_pkg_lib_captcha.CaptchaReponse": {
+            "type": "object",
+            "properties": {
+                "expire_time": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "question": {
                     "type": "string"
                 }
             }
