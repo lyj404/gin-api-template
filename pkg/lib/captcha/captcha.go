@@ -65,18 +65,18 @@ func GenerateCaptchaImage(question string) (string, error) {
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{255, 255, 255, 255}}, image.Point{}, draw.Src)
 
 	// 添加干扰线
-	rand.Seed(time.Now().UnixNano())
+	rng.Seed(time.Now().UnixNano())
 	for i := 0; i < 5; i++ {
-		x1 := rand.Intn(width)
-		y1 := rand.Intn(height)
-		x2 := rand.Intn(width)
-		y2 := rand.Intn(height)
+		x1 := rng.Intn(width)
+		y1 := rng.Intn(height)
+		x2 := rng.Intn(width)
+		y2 := rng.Intn(height)
 
 		// 随机颜色
 		lineColor := color.RGBA{
-			R: uint8(rand.Intn(128)),
-			G: uint8(rand.Intn(128)),
-			B: uint8(rand.Intn(128)),
+			R: uint8(rng.Intn(128)),
+			G: uint8(rng.Intn(128)),
+			B: uint8(rng.Intn(128)),
 			A: 255,
 		}
 
@@ -85,13 +85,13 @@ func GenerateCaptchaImage(question string) (string, error) {
 
 	// 添加干扰点
 	for i := 0; i < 50; i++ {
-		x := rand.Intn(width)
-		y := rand.Intn(height)
+		x := rng.Intn(width)
+		y := rng.Intn(height)
 
 		dotColor := color.RGBA{
-			R: uint8(rand.Intn(256)),
-			G: uint8(rand.Intn(256)),
-			B: uint8(rand.Intn(256)),
+			R: uint8(rng.Intn(256)),
+			G: uint8(rng.Intn(256)),
+			B: uint8(rng.Intn(256)),
 			A: 255,
 		}
 
