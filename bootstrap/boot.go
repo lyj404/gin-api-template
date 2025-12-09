@@ -1,9 +1,9 @@
 package bootstrap
 
 import (
-	"gin-api-template/config"
-	"gin-api-template/global"
-	"gin-api-template/pkg/lib"
+	"github.com/lyj404/gin-api-template/config"
+	"github.com/lyj404/gin-api-template/global"
+	"github.com/lyj404/gin-api-template/pkg/lib"
 )
 
 func Boot() {

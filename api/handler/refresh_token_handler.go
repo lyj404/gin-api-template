@@ -1,11 +1,12 @@
 package handler
 
 import (
-	"gin-api-template/config"
-	"gin-api-template/domain"
-	"gin-api-template/domain/dto"
-	"gin-api-template/domain/result"
 	"net/http"
+
+	"github.com/lyj404/gin-api-template/config"
+	"github.com/lyj404/gin-api-template/domain"
+	"github.com/lyj404/gin-api-template/domain/dto"
+	"github.com/lyj404/gin-api-template/domain/result"
 
 	"github.com/gin-gonic/gin"
 )

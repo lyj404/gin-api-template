@@ -1,7 +1,7 @@
 package util
 
 import (
-	"gin-api-template/config"
+	"github.com/lyj404/gin-api-template/config"
 
 	"golang.org/x/crypto/bcrypt"
 )

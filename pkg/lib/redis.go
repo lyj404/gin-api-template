@@ -2,8 +2,9 @@ package lib
 
 import (
 	"context"
-	"gin-api-template/config"
 	"log"
+
+	"github.com/lyj404/gin-api-template/config"
 
 	"github.com/redis/go-redis/v9"
 )

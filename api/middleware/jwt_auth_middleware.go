@@ -1,10 +1,11 @@
 package middleware
 
 import (
-	"gin-api-template/domain/result"
-	"gin-api-template/internal/tokenutil"
 	"net/http"
 	"strings"
+
+	"github.com/lyj404/gin-api-template/domain/result"
+	"github.com/lyj404/gin-api-template/internal/tokenutil"
 
 	"github.com/gin-gonic/gin"
 )

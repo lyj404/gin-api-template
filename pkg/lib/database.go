@@ -2,10 +2,11 @@ package lib
 
 import (
 	"fmt"
-	"gin-api-template/config"
-	"gin-api-template/domain/entity"
 	"log"
 	"time"
+
+	"github.com/lyj404/gin-api-template/config"
+	"github.com/lyj404/gin-api-template/domain/entity"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"

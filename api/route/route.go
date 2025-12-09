@@ -1,10 +1,11 @@
 package route
 
 import (
-	"gin-api-template/api/middleware"
-	"gin-api-template/config"
-	_ "gin-api-template/docs"
 	"time"
+
+	"github.com/lyj404/gin-api-template/api/middleware"
+	"github.com/lyj404/gin-api-template/config"
+	_ "github.com/lyj404/gin-api-template/docs"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"

@@ -1,11 +1,12 @@
 package main
 
 import (
-	"gin-api-template/api/route"
-	"gin-api-template/bootstrap"
-	"gin-api-template/config"
-	"gin-api-template/pkg/lib/logger"
 	"time"
+
+	"github.com/lyj404/gin-api-template/api/route"
+	"github.com/lyj404/gin-api-template/bootstrap"
+	"github.com/lyj404/gin-api-template/config"
+	"github.com/lyj404/gin-api-template/pkg/lib/logger"
 )
 
 func main() {

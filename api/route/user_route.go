@@ -1,11 +1,12 @@
 package route
 
 import (
-	"gin-api-template/api/handler"
-	"gin-api-template/global"
-	"gin-api-template/repository"
-	"gin-api-template/service"
 	"time"
+
+	"github.com/lyj404/gin-api-template/api/handler"
+	"github.com/lyj404/gin-api-template/global"
+	"github.com/lyj404/gin-api-template/repository"
+	"github.com/lyj404/gin-api-template/service"
 
 	"github.com/gin-gonic/gin"
 )

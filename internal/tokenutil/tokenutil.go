@@ -2,11 +2,12 @@ package tokenutil
 
 import (
 	"fmt"
-	"gin-api-template/config"
-	"gin-api-template/domain"
-	"gin-api-template/domain/entity"
 	"strconv"
 	"time"
+
+	"github.com/lyj404/gin-api-template/config"
+	"github.com/lyj404/gin-api-template/domain"
+	"github.com/lyj404/gin-api-template/domain/entity"
 
 	jwt "github.com/golang-jwt/jwt/v5"
 )

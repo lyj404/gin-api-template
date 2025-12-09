@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"gin-api-template/domain/result"
+	"github.com/lyj404/gin-api-template/domain/result"
 
 	"github.com/gin-gonic/gin"
 )

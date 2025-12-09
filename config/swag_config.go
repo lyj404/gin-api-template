@@ -1,6 +1,6 @@
 package config
 
-import "gin-api-template/docs"
+import "github.com/lyj404/gin-api-template/docs"
 
 func SetUpSwag() {
 	docs.SwaggerInfo.Title = "gin-api-template"

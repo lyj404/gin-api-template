@@ -1,4 +1,4 @@
-module gin-api-template
+module github.com/lyj404/gin-api-template
 
 go 1.23
 

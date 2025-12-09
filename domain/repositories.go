@@ -2,7 +2,8 @@ package domain
 
 import (
 	"context"
-	"gin-api-template/domain/entity"
+
+	"github.com/lyj404/gin-api-template/domain/entity"
 )
 
 type UserRepo interface {

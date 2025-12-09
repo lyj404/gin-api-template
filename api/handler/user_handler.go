@@ -1,17 +1,18 @@
 package handler
 
 import (
-	"gin-api-template/config"
-	"gin-api-template/domain"
-	"gin-api-template/domain/dto"
-	"gin-api-template/domain/entity"
-	"gin-api-template/domain/result"
-	"gin-api-template/pkg/lib/captcha"
-	"gin-api-template/util"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lyj404/gin-api-template/config"
+	"github.com/lyj404/gin-api-template/domain"
+	"github.com/lyj404/gin-api-template/domain/dto"
+	"github.com/lyj404/gin-api-template/domain/entity"
+	"github.com/lyj404/gin-api-template/domain/result"
+	"github.com/lyj404/gin-api-template/pkg/lib/captcha"
+	"github.com/lyj404/gin-api-template/util"
 
 	"github.com/gin-gonic/gin"
 )

@@ -1,6 +1,6 @@
 package entity
 
-import "gin-api-template/global"
+import "github.com/lyj404/gin-api-template/global"
 
 type User struct {
 	global.G_MODEL

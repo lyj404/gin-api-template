@@ -2,8 +2,9 @@ package repository
 
 import (
 	"context"
-	"gin-api-template/domain"
-	"gin-api-template/domain/entity"
+
+	"github.com/lyj404/gin-api-template/domain"
+	"github.com/lyj404/gin-api-template/domain/entity"
 
 	"gorm.io/gorm"
 )
