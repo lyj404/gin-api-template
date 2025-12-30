@@ -10,12 +10,15 @@ import (
 	"go.uber.org/zap"
 )
 
+// ErrorResponse 错误响应结构
+
 type ErrorResponse struct {
 	Error   string `json:"error"`
 	Message string `json:"message"`
 	TraceID string `json:"trace_id,omitempty"`
 }
 
+// ErrorHandlerMiddleware 错误处理中间件
 func ErrorHandlerMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
@@ -51,6 +54,7 @@ func ErrorHandlerMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	}
 }
 
+// RecoveryMiddleware 异常恢复中间件
 func RecoveryMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
@@ -77,6 +81,7 @@ func RecoveryMiddleware(logger *zap.Logger) gin.HandlerFunc {
 	}
 }
 
+// NewError 创建错误
 func NewError(err error) error {
 	return errors.New(err.Error())
 }

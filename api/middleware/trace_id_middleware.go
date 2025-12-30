@@ -7,6 +7,7 @@ import (
 
 const TraceIDKey = "trace_id"
 
+// TraceIDMiddleware 追踪 ID 中间件
 func TraceIDMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		traceID := c.GetHeader("X-Trace-ID")

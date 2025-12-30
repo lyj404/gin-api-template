@@ -11,6 +11,7 @@ import (
 	"github.com/lyj404/gin-api-template/global"
 )
 
+// RateLimiter 限流器结构
 type RateLimiter struct {
 	mu      sync.Mutex
 	clients map[string]*ClientInfo
@@ -23,12 +24,14 @@ type ClientInfo struct {
 
 var limiter *RateLimiter
 
+// InitRateLimiter 初始化限流器
 func InitRateLimiter() {
 	limiter = &RateLimiter{
 		clients: make(map[string]*ClientInfo),
 	}
 }
 
+// RateLimitMiddleware 基于内存的限流中间件
 func RateLimitMiddleware(requestsPerMinute int) gin.HandlerFunc {
 	if limiter == nil {
 		InitRateLimiter()
@@ -73,6 +76,7 @@ func RateLimitMiddleware(requestsPerMinute int) gin.HandlerFunc {
 	}
 }
 
+// RateLimitMiddlewareWithRedis 基于 Redis 的限流中间件
 func RateLimitMiddlewareWithRedis(requestsPerMinute int) gin.HandlerFunc {
 	if global.G_REDIS == nil {
 		return RateLimitMiddleware(requestsPerMinute)
