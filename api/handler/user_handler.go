@@ -22,6 +22,13 @@ type UserHandler struct {
 	RefreshTokenUseCase domain.RefreshTokenService
 }
 
+func NewUserHandler(userService domain.LoginService, refreshTokenService domain.RefreshTokenService) *UserHandler {
+	return &UserHandler{
+		UserService:         userService,
+		RefreshTokenUseCase: refreshTokenService,
+	}
+}
+
 // @Summary 用户登录
 // @Description 处理用户登录请求，验证凭据并返回访问token和刷新token
 // @Tags user
@@ -48,6 +55,7 @@ func (u *UserHandler) Login(c *gin.Context) {
 	session, err := captcha.Store.Get(c.Request, "captcha-session")
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, "Session Error")
+		return
 	}
 	captchaData, ok := session.Values[captcha.CaptchaSessionKey].(map[string]interface{})
 	if !ok {

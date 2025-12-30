@@ -21,10 +21,10 @@ func NewRefreshTokenService(userRepo domain.UserRepo, timeout time.Duration) dom
 	}
 }
 
-func (rtu *refreshTokenService) GetUserByID(c context.Context, email string) (entity.User, error) {
+func (rtu *refreshTokenService) GetUserByID(c context.Context, id string) (entity.User, error) {
 	ctx, cancel := context.WithTimeout(c, rtu.contextTimeout)
 	defer cancel()
-	return rtu.userRepo.GetByID(ctx, email)
+	return rtu.userRepo.GetByID(ctx, id)
 }
 
 func (rtu *refreshTokenService) CreateAccessToken(user *entity.User, secret string, expiry int) (accessToken string, err error) {

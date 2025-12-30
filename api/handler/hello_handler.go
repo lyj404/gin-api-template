@@ -9,6 +9,10 @@ import (
 type HelloHandler struct {
 }
 
+func NewHelloHandler() *HelloHandler {
+	return &HelloHandler{}
+}
+
 // @Summary 测试
 // @Description 返回一个简单的消息
 // @Tags hello

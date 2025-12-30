@@ -1,6 +1,10 @@
 server:
   HttpPort: ":8181"
   Mode: "debug" # gin运行模式
+  AllowedOrigins: # 允许的跨域域名，留空表示允许所有（不推荐生产环境使用）
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+  RateLimit: 60 # 每分钟最大请求数，0表示不限流
 
 database:
   Type: postgres  # 可选值：mysql / postgres
@@ -9,6 +13,10 @@ database:
   User: postgres
   Password: "postgres"
   Name: study
+  MaxOpenConns: 100      # 最大打开连接数
+  MaxIdleConns: 10      # 最大空闲连接数
+  ConnMaxLifetime: 3600  # 连接最大存活时间（秒）
+  ConnMaxIdleTime: 600   # 连接最大空闲时间（秒）
 
 redis:
   Enabled: false  # 是否启用Redis
@@ -26,6 +34,9 @@ token:
   AccessTokenSecret: "z8qT7XpLm2VnR4sK9wYbG6hJ3cU1dE5"
   RefreshTokenSecret: "k4rF9vNcX0jHwZ8bQ2lP7yM6oD1iS3t"
   TokenPrefix: "Bearer "
+
+session:
+  SessionSecret: "djkfdjk23215da113~232"
 
 password:
   SaltPrefix: "xY7kL9pM"

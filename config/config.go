@@ -5,21 +5,28 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
 
 type ServerConfig struct {
-	HttpPort string `yaml:"HttpPort"`
-	Mode     string `yaml:"Mode"`
+	HttpPort       string   `yaml:"HttpPort"`
+	Mode           string   `yaml:"Mode"`
+	AllowedOrigins []string `yaml:"AllowedOrigins"`
+	RateLimit      int      `yaml:"RateLimit"`
 }
 
 type DatabaseConfig struct {
-	Type     string `yaml:"Type"`
-	Host     string `yaml:"Host"`
-	Port     string `yaml:"Port"`
-	User     string `yaml:"User"`
-	Password string `yaml:"Password"`
-	Name     string `yaml:"Name"`
+	Type            string `yaml:"Type"`
+	Host            string `yaml:"Host"`
+	Port            string `yaml:"Port"`
+	User            string `yaml:"User"`
+	Password        string `yaml:"Password"`
+	Name            string `yaml:"Name"`
+	MaxOpenConns    int    `yaml:"MaxOpenConns"`
+	MaxIdleConns    int    `yaml:"MaxIdleConns"`
+	ConnMaxLifetime int    `yaml:"ConnMaxLifetime"`
+	ConnMaxIdleTime int    `yaml:"ConnMaxIdleTime"`
 }
 
 type RedisConfig struct {
@@ -58,6 +65,10 @@ type LogConfig struct {
 	Compress   bool   `yaml:"Compress"`   // compress backups
 }
 
+type SessionConfig struct {
+	SessionSecret string `yaml:"SessionSecret"`
+}
+
 type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
@@ -65,6 +76,7 @@ type Config struct {
 	Timeout  TimeoutConfig  `yaml:"timeout"`
 	Token    TokenConfig    `yaml:"token"`
 	Password PasswordConfig `yaml:"password"`
+	Session  SessionConfig  `yaml:"session"`
 	Log      LogConfig      `yaml:"log"`
 }
 
@@ -75,10 +87,16 @@ var (
 	CfgTimeout  TimeoutConfig
 	CfgToken    TokenConfig
 	CfgPassword PasswordConfig
+	CfgSession  SessionConfig
 	CfgLog      LogConfig
 )
 
 func InitConfig() {
+	// 加载.env文件
+	if err := godotenv.Load(); err != nil {
+		log.Println("未找到.env文件，使用配置文件默认值")
+	}
+
 	// 获取当前工作目录
 	wd, err := os.Getwd()
 	if err != nil {
@@ -106,6 +124,20 @@ func InitConfig() {
 	err = yaml.Unmarshal(data, &cfg)
 	if err != nil {
 		log.Fatal("配置文件解析错误:", err)
+	}
+
+	// 从环境变量覆盖敏感配置
+	if dbPassword := os.Getenv("DB_PASSWORD"); dbPassword != "" {
+		cfg.Database.Password = dbPassword
+	}
+	if accessTokenSecret := os.Getenv("ACCESS_TOKEN_SECRET"); accessTokenSecret != "" {
+		cfg.Token.AccessTokenSecret = accessTokenSecret
+	}
+	if refreshTokenSecret := os.Getenv("REFRESH_TOKEN_SECRET"); refreshTokenSecret != "" {
+		cfg.Token.RefreshTokenSecret = refreshTokenSecret
+	}
+	if sessionSecret := os.Getenv("SESSION_SECRET"); sessionSecret != "" {
+		CfgSession.SessionSecret = sessionSecret
 	}
 
 	CfgServer = cfg.Server

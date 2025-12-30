@@ -15,6 +15,12 @@ type RefreshTokenHandler struct {
 	RefreshTokenService domain.RefreshTokenService
 }
 
+func NewRefreshTokenHandler(refreshTokenService domain.RefreshTokenService) *RefreshTokenHandler {
+	return &RefreshTokenHandler{
+		RefreshTokenService: refreshTokenService,
+	}
+}
+
 // @Summary 刷新令牌
 // @Description 使用刷新令牌获取新的访问令牌和刷新令牌
 // @Tags user

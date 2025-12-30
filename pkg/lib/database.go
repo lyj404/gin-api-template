@@ -52,12 +52,30 @@ func NewDataBase() *gorm.DB {
 	if err != nil {
 		log.Fatal("配置数据库失败:", err)
 	}
-	// 设置连接池中最大闲置连接数
-	sqlDB.SetMaxIdleConns(10)
-	// 设置数据库连接池最大连接数
-	sqlDB.SetMaxOpenConns(100)
-	// 设置连接可重用的最大时间
-	sqlDB.SetConnMaxLifetime(10 * time.Second)
+
+	// 从配置读取连接池参数，如果未配置则使用默认值
+	maxOpenConns := config.CfgDatabase.MaxOpenConns
+	if maxOpenConns <= 0 {
+		maxOpenConns = 100
+	}
+	maxIdleConns := config.CfgDatabase.MaxIdleConns
+	if maxIdleConns <= 0 {
+		maxIdleConns = 10
+	}
+	connMaxLifetime := config.CfgDatabase.ConnMaxLifetime
+	if connMaxLifetime <= 0 {
+		connMaxLifetime = 3600
+	}
+	connMaxIdleTime := config.CfgDatabase.ConnMaxIdleTime
+	if connMaxIdleTime <= 0 {
+		connMaxIdleTime = 600
+	}
+
+	// 设置连接池参数
+	sqlDB.SetMaxOpenConns(maxOpenConns)
+	sqlDB.SetMaxIdleConns(maxIdleConns)
+	sqlDB.SetConnMaxLifetime(time.Duration(connMaxLifetime) * time.Second)
+	sqlDB.SetConnMaxIdleTime(time.Duration(connMaxIdleTime) * time.Second)
 
 	return db
 }

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gorilla/sessions"
+	"github.com/lyj404/gin-api-template/config"
 )
 
 // 验证码类型
@@ -31,7 +32,7 @@ type CaptchaReponse struct {
 }
 
 // Session 存储配置
-var Store = sessions.NewCookieStore([]byte("djkfdjk23215da113~232"))
+var Store = sessions.NewCookieStore([]byte(config.CfgSession.SessionSecret))
 
 // 验证码 Session Key
 const CaptchaSessionKey = "captcha_data"
