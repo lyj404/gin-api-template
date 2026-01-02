@@ -7,61 +7,120 @@
 package main
 
 import (
+	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"github.com/lyj404/gin-api-template/api/handler"
+	"github.com/lyj404/gin-api-template/api/route"
 	"github.com/lyj404/gin-api-template/config"
 	"github.com/lyj404/gin-api-template/domain"
 	"github.com/lyj404/gin-api-template/global"
+	"github.com/lyj404/gin-api-template/pkg/lib/logger"
 	"github.com/lyj404/gin-api-template/repository"
 	"github.com/lyj404/gin-api-template/service"
+	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"time"
 )
 
 // Injectors from wire.go:
 
+// InitializeApp 初始化应用，使用 Wire 自动生成依赖注入代码
 func InitializeApp() (*App, error) {
 	db := provideDB()
-	userRepo := repository.NewUserRepo(db)
+	client := provideRedis()
+	logger := provideLogger()
 	duration := provideTimeout()
+	engine := provideRouter(duration, logger)
+	userRepo := repository.NewUserRepo(db)
 	loginService := service.NewUserService(userRepo, duration)
 	refreshTokenService := service.NewRefreshTokenService(userRepo, duration)
 	userHandler := handler.NewUserHandler(loginService, refreshTokenService)
 	helloHandler := handler.NewHelloHandler()
 	refreshTokenHandler := handler.NewRefreshTokenHandler(refreshTokenService)
+	v := provideRouteRegistration(engine, userHandler, helloHandler, refreshTokenHandler)
 	app := &App{
-		DB:          db,
-		UserRepo:    userRepo,
-		UserSvc:     loginService,
-		TokenSvc:    refreshTokenService,
-		UserHdlr:    userHandler,
-		HelloHdlr:   helloHandler,
-		RefreshHdlr: refreshTokenHandler,
+		DB:             db,
+		Redis:          client,
+		Logger:         logger,
+		Router:         engine,
+		UserRepo:       userRepo,
+		UserSvc:        loginService,
+		TokenSvc:       refreshTokenService,
+		UserHdlr:       userHandler,
+		HelloHdlr:      helloHandler,
+		RefreshHdlr:    refreshTokenHandler,
+		RegisterRoutes: v,
 	}
 	return app, nil
 }
 
 // wire.go:
 
+// App 应用结构体，包含所有依赖
 type App struct {
-	DB          *gorm.DB
-	UserRepo    domain.UserRepo
-	UserSvc     domain.LoginService
-	TokenSvc    domain.RefreshTokenService
-	UserHdlr    *handler.UserHandler
-	HelloHdlr   *handler.HelloHandler
-	RefreshHdlr *handler.RefreshTokenHandler
+	DB             *gorm.DB
+	Redis          *redis.Client
+	Logger         *zap.Logger
+	Router         *gin.Engine
+	UserRepo       domain.UserRepo
+	UserSvc        domain.LoginService
+	TokenSvc       domain.RefreshTokenService
+	UserHdlr       *handler.UserHandler
+	HelloHdlr      *handler.HelloHandler
+	RefreshHdlr    *handler.RefreshTokenHandler
+	RegisterRoutes func()
 }
 
+// provideDB 提供 DB 实例
 func provideDB() *gorm.DB {
 	return global.G_DB
 }
 
+// provideRedis 提供 Redis 实例
+func provideRedis() *redis.Client {
+	return global.G_REDIS
+}
+
+// provideLogger 提供 Logger 实例
+func provideLogger() *zap.Logger {
+	return logger.InitZapLogger()
+}
+
+// provideRouter 提供 Router 实例，初始化路由和中间件
+func provideRouter(timeout time.Duration, logger2 *zap.Logger) *gin.Engine {
+	return route.SetUp(timeout, logger2)
+}
+
+// provideRouteRegistration 提供路由注册函数
+func provideRouteRegistration(
+	router *gin.Engine,
+	userHdlr *handler.UserHandler,
+	helloHdlr *handler.HelloHandler,
+	refreshTokenHdlr *handler.RefreshTokenHandler,
+) func() {
+	return func() {
+
+		publicGroup := router.Group("")
+		route.NewUserRouter(userHdlr, refreshTokenHdlr, publicGroup)
+
+		protectedGroup := router.Group("")
+		protectedGroup.Use(route.JwtAuthMiddleware())
+		route.NewTestRouter(helloHdlr, protectedGroup)
+	}
+}
+
+// provideTimeout 提供超时时间
 func provideTimeout() time.Duration {
 	return time.Duration(config.CfgTimeout.ContextTimeout) * time.Second
 }
 
+// providerSet 依赖注入提供者集合
 var providerSet = wire.NewSet(
 	provideDB,
+	provideRedis,
+	provideLogger,
+	provideRouter,
+	provideRouteRegistration,
 	provideTimeout, repository.NewUserRepo, service.NewUserService, service.NewRefreshTokenService, handler.NewUserHandler, handler.NewHelloHandler, handler.NewRefreshTokenHandler,
 )

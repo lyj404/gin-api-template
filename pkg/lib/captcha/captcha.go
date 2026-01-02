@@ -19,24 +19,28 @@ func GenerateMathProblem() CaptchaProblem {
 
 	switch captchaType {
 	case Addition:
+		// 加法：1-10 之间的数相加，结果范围 2-20
 		a := rand.Intn(10) + 1
 		b := rand.Intn(10) + 1
 		question = fmt.Sprintf("%d + %d = ?", a, b)
 		answer = a + b
 
 	case Subtraction:
+		// 减法：保证结果为正数，a 范围 6-20，b 范围 1-a
 		a := rand.Intn(15) + 5
 		b := rand.Intn(a) + 1
 		question = fmt.Sprintf("%d - %d = ?", a, b)
 		answer = a - b
 
 	case Multiplication:
+		// 乘法：1-5 之间的数相乘，结果范围 1-25
 		a := rand.Intn(5) + 1
 		b := rand.Intn(5) + 1
 		question = fmt.Sprintf("%d × %d = ?", a, b)
 		answer = a * b
 
 	case Division:
+		// 除法：保证能整除，除数范围 2-5，被除数是除数的倍数
 		b := rand.Intn(4) + 2
 		a := b * (rand.Intn(5) + 1)
 		question = fmt.Sprintf("%d ÷ %d = ?", a, b)
@@ -57,6 +61,7 @@ func GenerateCaptchaImage(question string) (string, error) {
 
 	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{255, 255, 255, 255}}, image.Point{}, draw.Src)
 
+	// 绘制 5 条随机干扰线，颜色较深
 	for i := 0; i < 5; i++ {
 		x1 := rng.Intn(width)
 		y1 := rng.Intn(height)
@@ -73,6 +78,7 @@ func GenerateCaptchaImage(question string) (string, error) {
 		drawLine(img, x1, y1, x2, y2, lineColor)
 	}
 
+	// 绘制 50 个随机干扰点，增加噪点
 	for i := 0; i < 50; i++ {
 		x := rng.Intn(width)
 		y := rng.Intn(height)
@@ -100,10 +106,12 @@ func GenerateCaptchaImage(question string) (string, error) {
 	return "data:image/png;base64," + base64Str, nil
 }
 
+// drawLine 使用 Bresenham 算法绘制直线
 func drawLine(img *image.RGBA, x1, y1, x2, y2 int, lineColor color.RGBA) {
 	dx := abs(x2 - x1)
 	dy := abs(y2 - y1)
 
+	// 确定步进方向
 	var sx, sy int
 	if x1 < x2 {
 		sx = 1
@@ -175,6 +183,8 @@ func drawSimpleChar(img *image.RGBA, char rune, x, y int, textColor color.RGBA, 
 }
 
 func drawSimpleDigit(img *image.RGBA, digit rune, x, y int, textColor color.RGBA, size int) {
+	// 数字模板：使用 3x6 点阵绘制数字
+	// # 表示绘制点，空格表示空白
 	templates := map[rune][]string{
 		'0': {"###", "# #", "# #", "# #", "# #", "###"},
 		'1': {" # ", "## ", " # ", " # ", " # ", "###"},
@@ -193,6 +203,7 @@ func drawSimpleDigit(img *image.RGBA, digit rune, x, y int, textColor color.RGBA
 		return
 	}
 
+	// 计算单元格尺寸
 	cellWidth := size / 3
 	cellHeight := size / 6
 
@@ -214,6 +225,7 @@ func drawSimpleDigit(img *image.RGBA, digit rune, x, y int, textColor color.RGBA
 }
 
 func drawSimpleSymbol(img *image.RGBA, symbol rune, x, y int, textColor color.RGBA, size int) {
+	// 符号模板：使用 3x6 点阵绘制运算符号
 	templates := map[rune][]string{
 		'+': {" # ", "###", " # ", "   ", "   ", "   "},
 		'-': {"   ", "###", "   ", "   ", "   ", "   "},
@@ -228,6 +240,7 @@ func drawSimpleSymbol(img *image.RGBA, symbol rune, x, y int, textColor color.RG
 		return
 	}
 
+	// 计算单元格尺寸
 	cellWidth := size / 3
 	cellHeight := size / 6
 

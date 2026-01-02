@@ -22,7 +22,7 @@ all: run
 build:
 	@echo "🚀 构建项目中..."
 	@mkdir -p $(BUILD_DIR)
-	GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/$(PROJECT_NAME)
+	GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/...
 	@echo "✅ 构建完成！二进制文件位于 $(BUILD_DIR)/$(BINARY_NAME)"
 
 # 运行项目

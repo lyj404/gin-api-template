@@ -92,7 +92,7 @@ var (
 )
 
 func InitConfig() {
-	// 加载.env文件
+	// 加载.env文件，用于覆盖敏感配置
 	if err := godotenv.Load(); err != nil {
 		log.Println("未找到.env文件，使用配置文件默认值")
 	}
@@ -126,7 +126,8 @@ func InitConfig() {
 		log.Fatal("配置文件解析错误:", err)
 	}
 
-	// 从环境变量覆盖敏感配置
+	// 从环境变量覆盖敏感配置（优先级高于 config.yml）
+	// 这样可以将敏感信息放在 .env 文件中，不提交到版本控制
 	if dbPassword := os.Getenv("DB_PASSWORD"); dbPassword != "" {
 		cfg.Database.Password = dbPassword
 	}

@@ -72,9 +72,13 @@ func NewDataBase() *gorm.DB {
 	}
 
 	// 设置连接池参数
+	// MaxOpenConns: 最大打开连接数
 	sqlDB.SetMaxOpenConns(maxOpenConns)
+	// MaxIdleConns: 最大空闲连接数
 	sqlDB.SetMaxIdleConns(maxIdleConns)
+	// ConnMaxLifetime: 连接最大存活时间（秒），超过后会被关闭
 	sqlDB.SetConnMaxLifetime(time.Duration(connMaxLifetime) * time.Second)
+	// ConnMaxIdleTime: 连接最大空闲时间（秒），超过后会被关闭
 	sqlDB.SetConnMaxIdleTime(time.Duration(connMaxIdleTime) * time.Second)
 
 	return db
