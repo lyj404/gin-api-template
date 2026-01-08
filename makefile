@@ -1,5 +1,5 @@
 # 定义伪目标
-.PHONY: all build run clean swagger
+.PHONY: all build run clean swagger create-admin
 
 # 项目名称
 PROJECT_NAME := gin-api-template
@@ -46,3 +46,9 @@ swagger:
 	@echo "📚 生成 Swagger 文档..."
 	swag init -g ./cmd/main.go --parseDependency
 	@echo "✅ Swagger 文档生成完成！"
+
+# 创建系统管理员
+create-admin:
+	@echo "👑 创建系统管理员..."
+	$(GO) run ./cmd/rbaccli/main.go create-admin
+	@echo "✅ 系统管理员创建完成！"

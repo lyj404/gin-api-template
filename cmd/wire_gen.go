@@ -10,9 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 	"github.com/lyj404/gin-api-template/api/handler"
+	"github.com/lyj404/gin-api-template/api/middleware"
 	"github.com/lyj404/gin-api-template/api/route"
-	"github.com/lyj404/gin-api-template/config"
 	"github.com/lyj404/gin-api-template/domain"
+	"github.com/lyj404/gin-api-template/domain/services"
 	"github.com/lyj404/gin-api-template/global"
 	"github.com/lyj404/gin-api-template/pkg/lib/logger"
 	"github.com/lyj404/gin-api-template/repository"
@@ -38,7 +39,18 @@ func InitializeApp() (*App, error) {
 	userHandler := handler.NewUserHandler(loginService, refreshTokenService)
 	helloHandler := handler.NewHelloHandler()
 	refreshTokenHandler := handler.NewRefreshTokenHandler(refreshTokenService)
-	v := provideRouteRegistration(engine, userHandler, helloHandler, refreshTokenHandler)
+	roleRepository := repository.NewRoleRepository()
+	roleService := service.NewRoleService(roleRepository)
+	roleHandler := handler.NewRoleHandler(roleService)
+	permissionService := service.NewPermissionService()
+	orgUnitRepository := repository.NewOrgUnitRepository()
+	orgUnitService := service.NewOrgUnitService(orgUnitRepository)
+	orgUnitHandler := handler.NewOrgUnitHandler(orgUnitService)
+	auditLogRepository := repository.NewAuditLogRepository()
+	auditLogService := service.NewAuditLogService(auditLogRepository)
+	auditLogHandler := handler.NewAuditLogHandler(auditLogService)
+	userPermissionHandler := handler.NewUserPermissionHandler(permissionService)
+	v := provideRouteRegistration(engine, userHandler, helloHandler, refreshTokenHandler, roleHandler, orgUnitHandler, auditLogHandler, userPermissionHandler)
 	app := &App{
 		DB:             db,
 		Redis:          client,
@@ -50,6 +62,8 @@ func InitializeApp() (*App, error) {
 		UserHdlr:       userHandler,
 		HelloHdlr:      helloHandler,
 		RefreshHdlr:    refreshTokenHandler,
+		RoleHdlr:       roleHandler,
+		PermSvc:        permissionService,
 		RegisterRoutes: v,
 	}
 	return app, nil
@@ -69,6 +83,8 @@ type App struct {
 	UserHdlr       *handler.UserHandler
 	HelloHdlr      *handler.HelloHandler
 	RefreshHdlr    *handler.RefreshTokenHandler
+	RoleHdlr       *handler.RoleHandler
+	PermSvc        services.PermissionService
 	RegisterRoutes func()
 }
 
@@ -98,6 +114,10 @@ func provideRouteRegistration(
 	userHdlr *handler.UserHandler,
 	helloHdlr *handler.HelloHandler,
 	refreshTokenHdlr *handler.RefreshTokenHandler,
+	roleHdlr *handler.RoleHandler,
+	orgHdlr *handler.OrgUnitHandler,
+	auditHdlr *handler.AuditLogHandler,
+	userPermHdlr *handler.UserPermissionHandler,
 ) func() {
 	return func() {
 
@@ -107,12 +127,16 @@ func provideRouteRegistration(
 		protectedGroup := router.Group("")
 		protectedGroup.Use(route.JwtAuthMiddleware())
 		route.NewTestRouter(helloHdlr, protectedGroup)
+		route.NewRoleRouter(roleHdlr, protectedGroup)
+		route.NewOrgUnitRouter(orgHdlr, protectedGroup)
+		route.NewAuditLogRouter(auditHdlr, protectedGroup)
+		route.NewUserPermissionRouter(userPermHdlr, protectedGroup)
 	}
 }
 
 // provideTimeout 提供超时时间
 func provideTimeout() time.Duration {
-	return time.Duration(config.CfgTimeout.ContextTimeout) * time.Second
+	return time.Duration(10) * time.Second
 }
 
 // providerSet 依赖注入提供者集合
@@ -122,5 +146,5 @@ var providerSet = wire.NewSet(
 	provideLogger,
 	provideRouter,
 	provideRouteRegistration,
-	provideTimeout, repository.NewUserRepo, service.NewUserService, service.NewRefreshTokenService, handler.NewUserHandler, handler.NewHelloHandler, handler.NewRefreshTokenHandler,
+	provideTimeout, repository.NewUserRepo, repository.NewRoleRepository, repository.NewOrgUnitRepository, repository.NewAuditLogRepository, service.NewUserService, service.NewRefreshTokenService, service.NewPermissionService, service.NewRoleService, service.NewOrgUnitService, service.NewAuditLogService, middleware.NewRBACMiddleware, handler.NewUserHandler, handler.NewHelloHandler, handler.NewRefreshTokenHandler, handler.NewRoleHandler, handler.NewOrgUnitHandler, handler.NewUserPermissionHandler, handler.NewAuditLogHandler,
 )

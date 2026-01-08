@@ -1,0 +1,204 @@
+package service
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"github.com/lyj404/gin-api-template/config"
+	"github.com/lyj404/gin-api-template/domain/entity"
+	"github.com/lyj404/gin-api-template/domain/services"
+	"github.com/lyj404/gin-api-template/global"
+)
+
+type permissionServiceImpl struct{}
+
+func NewPermissionService() services.PermissionService {
+	return &permissionServiceImpl{}
+}
+
+func (s *permissionServiceImpl) CheckPermission(userID uint, resource string, method string) (bool, error) {
+	permissions, err := s.getUserPermissions(userID)
+	if err != nil {
+		return false, err
+	}
+
+	for _, perm := range permissions {
+		if s.matchPattern(perm.ResourceName, resource) {
+			isWrite := s.isWriteMethod(method)
+			if isWrite && perm.IsWrite {
+				return true, nil
+			} else if !isWrite && perm.IsRead {
+				return true, nil
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (s *permissionServiceImpl) CheckEntityPermission(userID uint, entityType string, entityID uint, action string) (bool, error) {
+	entityResourceName := fmt.Sprintf("entity:%s:%s", entityType, action)
+
+	permissions, err := s.getUserPermissions(userID)
+	if err != nil {
+		return false, err
+	}
+
+	hasPermission := false
+	for _, perm := range permissions {
+		if perm.ResourceName == "entity:all" || s.matchPattern(perm.ResourceName, entityResourceName) {
+			hasPermission = true
+			break
+		}
+	}
+
+	if !hasPermission {
+		return false, nil
+	}
+
+	orgScope, err := s.getUserOrgScope(userID)
+	if err != nil {
+		return false, err
+	}
+
+	if len(orgScope) == 0 {
+		return false, nil
+	}
+
+	var binding entity.OrgEntityBinding
+	err = global.G_DB.Where("entity_type = ? AND entity_id = ?", entityType, entityID).First(&binding).Error
+	if err != nil {
+		return false, nil
+	}
+
+	for _, scope := range orgScope {
+		if scope.OrgUnitID == binding.OrgUnitID {
+			return true, nil
+		}
+
+		if scope.IncludeDescendants {
+			var orgUnit entity.OrgUnit
+			if err := global.G_DB.First(&orgUnit, binding.OrgUnitID).Error; err == nil {
+				if strings.HasPrefix(orgUnit.Path, scope.Path) {
+					return true, nil
+				}
+			}
+		}
+	}
+
+	return false, nil
+}
+
+func (s *permissionServiceImpl) GetUserPermissions(userID uint) ([]services.PermissionInfo, error) {
+	return s.getUserPermissions(userID)
+}
+
+func (s *permissionServiceImpl) GetUserOrgScope(userID uint) ([]services.OrgScopeInfo, error) {
+	return s.getUserOrgScope(userID)
+}
+
+func (s *permissionServiceImpl) ClearUserCache(userID uint) error {
+	if !config.CfgRedis.Enabled {
+		return nil
+	}
+
+	cacheKey := fmt.Sprintf("user:permissions:%d", userID)
+	return global.G_REDIS.Del(context.Background(), cacheKey).Err()
+}
+
+func (s *permissionServiceImpl) getUserPermissions(userID uint) ([]services.PermissionInfo, error) {
+	cacheKey := fmt.Sprintf("user:permissions:%d", userID)
+
+	if config.CfgRedis.Enabled {
+		cached, err := global.G_REDIS.Get(context.Background(), cacheKey).Result()
+		if err == nil && cached != "" {
+			var permissions []services.PermissionInfo
+			if err := json.Unmarshal([]byte(cached), &permissions); err == nil {
+				return permissions, nil
+			}
+		}
+	}
+
+	var userRoles []entity.UserRole
+	err := global.G_DB.Preload("Role.RoleResources.Resource").Where("user_id = ?", userID).Find(&userRoles).Error
+	if err != nil {
+		return nil, err
+	}
+
+	permissionMap := make(map[string]*services.PermissionInfo)
+	for _, userRole := range userRoles {
+		for _, roleResource := range userRole.Role.RoleResources {
+			if perm, exists := permissionMap[roleResource.Resource.Name]; exists {
+				perm.IsRead = perm.IsRead || roleResource.IsRead
+				perm.IsWrite = perm.IsWrite || roleResource.IsWrite
+			} else {
+				permissionMap[roleResource.Resource.Name] = &services.PermissionInfo{
+					ResourceName: roleResource.Resource.Name,
+					IsRead:       roleResource.IsRead,
+					IsWrite:      roleResource.IsWrite,
+				}
+			}
+		}
+	}
+
+	permissions := make([]services.PermissionInfo, 0, len(permissionMap))
+	for _, perm := range permissionMap {
+		permissions = append(permissions, *perm)
+	}
+
+	if config.CfgRedis.Enabled {
+		data, _ := json.Marshal(permissions)
+		global.G_REDIS.Set(context.Background(), cacheKey, data, 0)
+	}
+
+	return permissions, nil
+}
+
+func (s *permissionServiceImpl) getUserOrgScope(userID uint) ([]services.OrgScopeInfo, error) {
+	var userRoles []entity.UserRole
+	err := global.G_DB.Preload("Role.RoleOrgScopes.OrgUnit").Where("user_id = ?", userID).Find(&userRoles).Error
+	if err != nil {
+		return nil, err
+	}
+
+	scopeMap := make(map[uint]*services.OrgScopeInfo)
+	for _, userRole := range userRoles {
+		for _, scope := range userRole.Role.RoleOrgScopes {
+			if info, exists := scopeMap[scope.OrgUnitID]; exists {
+				info.IncludeDescendants = info.IncludeDescendants || scope.IncludeDescendants
+			} else {
+				scopeMap[scope.OrgUnitID] = &services.OrgScopeInfo{
+					OrgUnitID:          scope.OrgUnit.ID,
+					IncludeDescendants: scope.IncludeDescendants,
+					Path:               scope.OrgUnit.Path,
+				}
+			}
+		}
+	}
+
+	scopes := make([]services.OrgScopeInfo, 0, len(scopeMap))
+	for _, scope := range scopeMap {
+		scopes = append(scopes, *scope)
+	}
+
+	return scopes, nil
+}
+
+func (s *permissionServiceImpl) matchPattern(pattern, target string) bool {
+	if pattern == "*" {
+		return true
+	}
+
+	if strings.HasSuffix(pattern, "*") {
+		prefix := strings.TrimSuffix(pattern, "*")
+		return strings.HasPrefix(target, prefix)
+	}
+
+	return pattern == target
+}
+
+func (s *permissionServiceImpl) isWriteMethod(method string) bool {
+	return method != "GET" && method != "HEAD"
+}
