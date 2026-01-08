@@ -13,6 +13,15 @@
 10. 请求追踪（Trace ID）
 11. 统一错误处理
 12. 限流（内存/Redis）
+13. RBAC权限管理系统
+    - 基于角色的访问控制（RBAC）
+    - 支持API路径和业务实体权限
+    - 树形组织结构管理
+    - 读写权限分离
+    - 上级可见下级数据
+    - 通配符权限匹配
+    - 审计日志记录
+    - Redis缓存支持（可选）
 # 📂 目录结构
 ```
 .
@@ -70,6 +79,143 @@ make run
 ```
 > 想要执行`make`命令需要安装`GNU Make`工具
 
+# 🔐 RBAC 权限管理
+
+## 初始化系统管理员
+
+首次运行项目前，创建系统管理员：
+
+```bash
+make create-admin
+```
+
+按照提示输入管理员邮箱和密码。
+
+## 权限模型
+
+### 数据模型
+- **Resource（资源）**：API路径或业务实体，支持通配符（如 `/users/*`）
+- **Role（角色）**：角色定义，可绑定资源和组织范围
+- **OrgUnit（组织）**：树形组织结构，支持任意层级
+- **UserRole（用户角色）**：用户绑定角色，指定生效组织
+- **RoleResource（角色资源）**：角色绑定资源，默认读权限，写权限需单独配置
+- **RoleOrgScope（角色组织范围）**：角色可访问的组织节点，支持包含子级
+- **AuditLog（审计日志）**：记录所有权限变更操作
+
+### 权限检查
+- **API级别**：基于HTTP方法和URL路径的权限验证
+- **实体级别**：基于业务实体的读写权限验证
+- **组织范围**：用户只能看到其所在组织及子组织的数据
+
+## 使用示例
+
+### 创建组织节点
+
+```bash
+POST /org-units
+{
+  "name": "技术部",
+  "parent_id": 1
+}
+```
+
+### 创建角色并绑定权限
+
+```bash
+# 创建角色
+POST /roles
+{
+  "name": "技术管理员",
+  "description": "技术部管理员角色"
+}
+
+# 绑定资源（默认读权限）
+POST /roles/1/resources
+{
+  "role_id": 1,
+  "resource_id": 5,
+  "is_write": false
+}
+
+# 绑定写权限
+POST /roles/1/resources
+{
+  "role_id": 1,
+  "resource_id": 5,
+  "is_write": true
+}
+```
+
+### 分配角色给用户
+
+```bash
+POST /users/1/roles
+{
+  "role_id": 1,
+  "org_unit_id": 2
+}
+```
+
+### 获取用户权限
+
+```bash
+GET /user/permissions
+```
+
+返回用户的所有权限和组织范围，供前端控制UI显示。
+
+## 中间件使用
+
+### API级别权限检查
+
+```go
+router.GET("/users", 
+    middleware.JwtAuthMiddleware(),
+    rbacMiddleware.CheckPermission("/users"),
+    userHandler.ListUsers)
+```
+
+### 实体级别权限检查
+
+```go
+router.DELETE("/users/:id",
+    middleware.JwtAuthMiddleware(),
+    rbacMiddleware.CheckEntityPermission("user", "delete"),
+    userHandler.DeleteUser)
+```
+
+## 组织树可见性
+
+- **上级可见下级**：父节点组织的用户可以看到所有子组织的数据
+- **下级不可见上级**：子节点组织的用户不能看到父组织的数据
+- **同级不可见**：同一级别的组织用户不能互相看到对方的数据
+
+## 审计日志
+
+支持多种查询方式：
+
+```bash
+# 按操作者查询
+GET /audit-logs?operator_id=1
+
+# 按目标查询
+GET /audit-logs/target?target_type=role&target_id=1
+
+# 按时间范围查询
+GET /audit-logs/time?start_time=2024-01-01&end_time=2024-01-31
+```
+
+## 权限缓存
+
+当启用 Redis 时，用户权限会被缓存，提升性能：
+
+```yaml
+redis:
+  Enabled: true
+```
+
+权限变更时自动清除缓存。
+
 ## Makefile 命令
 项目提供了一下make命令用于简化操作：
 ```
@@ -78,6 +224,7 @@ make run            # 运行项目
 make clean          # 清理构建文件
 make clean-logs     # 清理日志文件
 make swagger        # 用户生成Swagger文档
+make create-admin   # 创建系统管理员（首次运行）
 ```
 > 执行`make`命令默认执行`make run`
 
