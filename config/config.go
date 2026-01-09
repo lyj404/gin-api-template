@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
@@ -92,9 +93,9 @@ var (
 )
 
 func InitConfig() {
-	// 加载.env文件，用于覆盖敏感配置
+	// 加载.env文件
 	if err := godotenv.Load(); err != nil {
-		log.Println("未找到.env文件，使用配置文件默认值")
+		log.Println("未找到.env文件，将使用配置文件默认值")
 	}
 
 	// 获取当前工作目录
@@ -126,10 +127,95 @@ func InitConfig() {
 		log.Fatal("配置文件解析错误:", err)
 	}
 
-	// 从环境变量覆盖敏感配置（优先级高于 config.yml）
+	// 从环境变量覆盖配置（优先级高于 config.yml）
 	// 这样可以将敏感信息放在 .env 文件中，不提交到版本控制
+
+	if httpPort := os.Getenv("HTTP_PORT"); httpPort != "" {
+		cfg.Server.HttpPort = httpPort
+	}
+	if mode := os.Getenv("MODE"); mode != "" {
+		cfg.Server.Mode = mode
+	}
+	if rateLimit := os.Getenv("RATE_LIMIT"); rateLimit != "" {
+		if val, err := strconv.Atoi(rateLimit); err == nil {
+			cfg.Server.RateLimit = val
+		}
+	}
+
+	if dbType := os.Getenv("DB_TYPE"); dbType != "" {
+		cfg.Database.Type = dbType
+	}
+	if dbHost := os.Getenv("DB_HOST"); dbHost != "" {
+		cfg.Database.Host = dbHost
+	}
+	if dbPort := os.Getenv("DB_PORT"); dbPort != "" {
+		cfg.Database.Port = dbPort
+	}
+	if dbUser := os.Getenv("DB_USER"); dbUser != "" {
+		cfg.Database.User = dbUser
+	}
 	if dbPassword := os.Getenv("DB_PASSWORD"); dbPassword != "" {
 		cfg.Database.Password = dbPassword
+	}
+	if dbName := os.Getenv("DB_NAME"); dbName != "" {
+		cfg.Database.Name = dbName
+	}
+	if maxOpenConns := os.Getenv("DB_MAX_OPEN_CONNS"); maxOpenConns != "" {
+		if val, err := strconv.Atoi(maxOpenConns); err == nil {
+			cfg.Database.MaxOpenConns = val
+		}
+	}
+	if maxIdleConns := os.Getenv("DB_MAX_IDLE_CONNS"); maxIdleConns != "" {
+		if val, err := strconv.Atoi(maxIdleConns); err == nil {
+			cfg.Database.MaxIdleConns = val
+		}
+	}
+	if connMaxLifetime := os.Getenv("DB_CONN_MAX_LIFETIME"); connMaxLifetime != "" {
+		if val, err := strconv.Atoi(connMaxLifetime); err == nil {
+			cfg.Database.ConnMaxLifetime = val
+		}
+	}
+	if connMaxIdleTime := os.Getenv("DB_CONN_MAX_IDLE_TIME"); connMaxIdleTime != "" {
+		if val, err := strconv.Atoi(connMaxIdleTime); err == nil {
+			cfg.Database.ConnMaxIdleTime = val
+		}
+	}
+
+	if redisEnabled := os.Getenv("REDIS_ENABLED"); redisEnabled != "" {
+		if val, err := strconv.ParseBool(redisEnabled); err == nil {
+			cfg.Redis.Enabled = val
+		}
+	}
+	if redisHost := os.Getenv("REDIS_HOST"); redisHost != "" {
+		cfg.Redis.Host = redisHost
+	}
+	if redisPort := os.Getenv("REDIS_PORT"); redisPort != "" {
+		cfg.Redis.Port = redisPort
+	}
+	if redisPassword := os.Getenv("REDIS_PASSWORD"); redisPassword != "" {
+		cfg.Redis.Password = redisPassword
+	}
+	if redisDatabase := os.Getenv("REDIS_DATABASE"); redisDatabase != "" {
+		if val, err := strconv.Atoi(redisDatabase); err == nil {
+			cfg.Redis.Database = val
+		}
+	}
+
+	if contextTimeout := os.Getenv("CONTEXT_TIMEOUT"); contextTimeout != "" {
+		if val, err := strconv.Atoi(contextTimeout); err == nil {
+			cfg.Timeout.ContextTimeout = val
+		}
+	}
+
+	if accessTokenExpiryHour := os.Getenv("ACCESS_TOKEN_EXPIRY_HOUR"); accessTokenExpiryHour != "" {
+		if val, err := strconv.Atoi(accessTokenExpiryHour); err == nil {
+			cfg.Token.AccessTokenExpiryHour = val
+		}
+	}
+	if refreshTokenExpiryHour := os.Getenv("REFRESH_TOKEN_EXPIRY_HOUR"); refreshTokenExpiryHour != "" {
+		if val, err := strconv.Atoi(refreshTokenExpiryHour); err == nil {
+			cfg.Token.RefreshTokenExpiryHour = val
+		}
 	}
 	if accessTokenSecret := os.Getenv("ACCESS_TOKEN_SECRET"); accessTokenSecret != "" {
 		cfg.Token.AccessTokenSecret = accessTokenSecret
@@ -137,8 +223,24 @@ func InitConfig() {
 	if refreshTokenSecret := os.Getenv("REFRESH_TOKEN_SECRET"); refreshTokenSecret != "" {
 		cfg.Token.RefreshTokenSecret = refreshTokenSecret
 	}
+	if tokenPrefix := os.Getenv("TOKEN_PREFIX"); tokenPrefix != "" {
+		cfg.Token.TokenPrefix = tokenPrefix
+	}
+
 	if sessionSecret := os.Getenv("SESSION_SECRET"); sessionSecret != "" {
-		CfgSession.SessionSecret = sessionSecret
+		cfg.Session.SessionSecret = sessionSecret
+	}
+
+	if saltPrefix := os.Getenv("SALT_PREFIX"); saltPrefix != "" {
+		cfg.Password.SaltPrefix = saltPrefix
+	}
+	if saltSuffix := os.Getenv("SALT_SUFFIX"); saltSuffix != "" {
+		cfg.Password.SaltSuffix = saltSuffix
+	}
+	if cost := os.Getenv("PASSWORD_COST"); cost != "" {
+		if val, err := strconv.Atoi(cost); err == nil {
+			cfg.Password.Cost = val
+		}
 	}
 
 	CfgServer = cfg.Server
