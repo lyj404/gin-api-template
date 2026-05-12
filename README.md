@@ -310,3 +310,89 @@ pagination, err := pagination.NewPaginationBuilder(db).
 9. GroupBy：添加分组
 10. Having：添加HAVING条件
 11. Build：构建分页
+
+# 🌐 前端项目 (web/)
+
+基于 Vue 3 的后台管理系统前端，使用 Vite 构建。
+
+## 技术栈
+
+| 框架 | 版本 | 用途 |
+| :--- | :--- | :--- |
+| Vue 3 | ^3.5 | 渐进式框架 |
+| TypeScript | ^5.0 | 类型安全 |
+| Naive UI | ^2.40 | UI 组件库 |
+| Pinia | ^3.0 | 状态管理 |
+| Vue Router | ^4.0 | 路由管理 |
+| Axios | ^1.7 | HTTP 客户端 |
+| UnoCSS | ^0.65 | 原子化 CSS |
+
+## 项目结构
+
+```
+web/
+├── src/
+│   ├── api/              # API 接口封装
+│   ├── types/           # TypeScript 类型定义
+│   ├── stores/          # Pinia 状态管理
+│   │   ├── auth.ts      # 认证状态 (Token)
+│   │   └── permission.ts # 权限状态 (菜单/权限)
+│   ├── router/          # 路由配置
+│   ├── utils/           # 工具函数
+│   │   ├── http.ts     # Axios 封装 + Token自动刷新
+│   │   └── auth.ts     # JWT 解码
+│   ├── views/           # 页面组件
+│   │   ├── login/       # 登录页
+│   │   ├── dashboard/    # 仪表盘
+│   │   ├── roles/      # 角色管理
+│   │   ├── menus/      # 菜单管理
+│   │   ├── orgs/       # 组织管理
+│   │   ├── resources/  # 资源管理
+│   │   ├── audit-logs/ # 审计日志
+│   │   ├── common/     # 通用页面
+│   │   └── error/     # 错误页面
+│   ├── layouts/         # 布局组件
+│   │   └── DefaultLayout.vue # 默认布局 (侧边栏 + 顶栏)
+│   ├── directives/     # 自定义指令
+│   │   └── permission.ts # v-permission 按钮权限指令
+│   └── styles/         # 样式文件
+└── vite.config.ts      # Vite 配置
+```
+
+## 前端运行
+
+```bash
+# 安装依赖
+cd web
+npm install
+
+# 开发模式
+npm run dev
+
+# 生产构建
+npm run build
+```
+
+## 主要功能
+
+- **登录认证**：邮箱/密码/验证码登录，JWT Token 管理，支持 Token 自动刷新
+- **动态菜单**：根据后端返回的菜单树动态生成侧边栏
+- **权限控制**：按钮级权限控制（`v-permission` 指令），基于 RBAC 模型
+- **页面管理**：角色管理、菜单管理、组织管理、资源管理、审计日志
+- **响应式**：支持侧边栏折叠
+
+## 认证流程
+
+1. 用户输入邮箱、密码和验证码登录
+2. 后端返回 `accessToken` 和 `refreshToken`
+3. `accessToken` 存储于 localStorage，用于 API 请求认证
+4. Token 过期时，Axios 拦截器自动使用 `refreshToken` 刷新
+5. 刷新失败时，自动跳转登录页
+
+## 权限指令
+
+```vue
+<n-button v-permission="['/users', 'POST']">新增用户</n-button>
+```
+
+当用户不具备指定资源权限时，按钮自动隐藏。
