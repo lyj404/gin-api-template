@@ -168,16 +168,35 @@ func createSystemAdmin(email, password string) error {
 
 func createDefaultResources(tx *gorm.DB) error {
 	defaultResources := []entity.Resource{
-		// API 资源
+		// API 资源 - 用户管理
 		{Name: "user:create", Type: "api", Pattern: "/users", Method: "POST", Description: "创建用户"},
 		{Name: "user:read", Type: "api", Pattern: "/users", Method: "GET", Description: "查看用户列表"},
 		{Name: "user:read:detail", Type: "api", Pattern: "/users/:id", Method: "GET", Description: "查看用户详情"},
 		{Name: "user:update", Type: "api", Pattern: "/users/:id", Method: "PUT", Description: "更新用户"},
 		{Name: "user:delete", Type: "api", Pattern: "/users/:id", Method: "DELETE", Description: "删除用户"},
+
+		// API 资源 - 角色管理
 		{Name: "role:manage", Type: "api", Pattern: "/roles/*", Method: "*", Description: "角色管理"},
+
+		// API 资源 - 资源管理
 		{Name: "resource:manage", Type: "api", Pattern: "/resources/*", Method: "*", Description: "资源管理"},
+
+		// API 资源 - 组织管理
 		{Name: "org:manage", Type: "api", Pattern: "/org-units/*", Method: "*", Description: "组织管理"},
+
+		// API 资源 - 审计日志
 		{Name: "audit:read", Type: "api", Pattern: "/audit-logs", Method: "GET", Description: "查看审计日志"},
+
+		// API 资源 - 菜单管理
+		{Name: "menu:read", Type: "api", Pattern: "/menus", Method: "GET", Description: "查看菜单列表"},
+		{Name: "menu:read:tree", Type: "api", Pattern: "/menus/tree", Method: "GET", Description: "查看菜单树"},
+		{Name: "menu:create", Type: "api", Pattern: "/menus", Method: "POST", Description: "创建菜单"},
+		{Name: "menu:update", Type: "api", Pattern: "/menus/:id", Method: "PUT", Description: "更新菜单"},
+		{Name: "menu:delete", Type: "api", Pattern: "/menus/:id", Method: "DELETE", Description: "删除菜单"},
+
+		// API 资源 - 用户权限与菜单
+		{Name: "user:permissions", Type: "api", Pattern: "/user/permissions", Method: "GET", Description: "获取用户权限"},
+		{Name: "user:menus", Type: "api", Pattern: "/user/menus", Method: "GET", Description: "获取用户菜单"},
 
 		// 实体资源
 		{Name: "entity:all", Type: "entity", Pattern: "*", Entity: "*", Action: "*", Description: "所有实体权限"},
