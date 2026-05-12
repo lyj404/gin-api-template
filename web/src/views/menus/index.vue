@@ -1,0 +1,128 @@
+<template>
+  <div class="p-16">
+    <div class="flex justify-between items-center mb-16">
+      <n-h2>菜单管理</n-h2>
+      <n-button type="primary" @click="openModal()">新增菜单</n-button>
+    </div>
+
+    <n-card>
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="false" :row-key="(row: any) => row.id" />
+    </n-card>
+
+    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑菜单' : '新增菜单'" style="width: 600px">
+      <n-form :model="form" label-placement="left" label-width="90">
+        <n-form-item label="菜单名称">
+          <n-input v-model:value="form.name" placeholder="请输入菜单名称" />
+        </n-form-item>
+        <n-form-item label="上级菜单">
+          <n-select v-model:value="form.parent_id" :options="menuOptions" placeholder="请选择上级菜单" clearable />
+        </n-form-item>
+        <n-form-item label="路由路径">
+          <n-input v-model:value="form.path" placeholder="如: /users" />
+        </n-form-item>
+        <n-form-item label="组件路径">
+          <n-input v-model:value="form.component" placeholder="如: views/users/index.vue" />
+        </n-form-item>
+        <n-form-item label="图标">
+          <n-input v-model:value="form.icon" placeholder="如: i-material-symbols:home" />
+        </n-form-item>
+        <n-form-item label="排序">
+          <n-input-number v-model:value="form.order_num" :min="0" />
+        </n-form-item>
+        <n-form-item label="关联资源">
+          <n-select v-model:value="form.resource_id" :options="resourceOptions" placeholder="请选择资源" />
+        </n-form-item>
+        <n-form-item label="是否显示">
+          <n-switch v-model:value="form.is_visible" />
+        </n-form-item>
+      </n-form>
+      <template #footer>
+        <n-button @click="showModal = false">取消</n-button>
+        <n-button type="primary" :loading="saving" class="ml-8" @click="handleSave">保存</n-button>
+      </template>
+    </n-modal>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, h, onMounted, computed } from 'vue'
+import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NH2, NCard, NTag, NSpace, useMessage } from 'naive-ui'
+import type { DataTableColumns, SelectOption } from 'naive-ui'
+import { getMenuTree, createMenu, updateMenu, deleteMenu } from '@/api'
+import type { MenuTreeNode } from '@/types'
+
+const message = useMessage()
+const loading = ref(false)
+const saving = ref(false)
+const showModal = ref(false)
+const editingId = ref<number | null>(null)
+
+const form = reactive({ name: '', parent_id: null as number | null, path: '', component: '', icon: '', order_num: 0, resource_id: null as number | null, is_visible: true })
+const data = ref<MenuTreeNode[]>([])
+
+const menuOptions = computed<SelectOption[]>(() => [{ label: '顶级菜单', value: 0 }, ...data.value.map((m: MenuTreeNode) => ({ label: m.name, value: m.id }))])
+const resourceOptions = ref<SelectOption[]>([])
+
+const columns: DataTableColumns<MenuTreeNode> = [
+  { title: 'ID', key: 'id', width: 80 },
+  { title: '菜单名称', key: 'name' },
+  { title: '路由路径', key: 'path' },
+  { title: '组件路径', key: 'component' },
+  { title: '图标', key: 'icon' },
+  { title: '排序', key: 'order_num', width: 80 },
+  { title: '操作', key: 'actions', width: 160, render: (row: MenuTreeNode) => h(NSpace, null, {
+    default: () => [
+      h(NButton, { size: 'small', onClick: () => openModal(row) }, { default: () => '编辑' }),
+      h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
+    ]
+  }) }
+]
+
+const fetchData = async () => {
+  loading.value = true
+  try {
+    const res = await getMenuTree()
+    data.value = res.data.data || []
+  } finally {
+    loading.value = false
+  }
+}
+
+const openModal = (row?: MenuTreeNode) => {
+  if (row) {
+    editingId.value = row.id
+    Object.assign(form, { name: row.name, parent_id: null, path: row.path, component: row.component, icon: row.icon, order_num: row.order_num, resource_id: null, is_visible: row.is_visible })
+  } else {
+    editingId.value = null
+    Object.assign(form, { name: '', parent_id: null, path: '', component: '', icon: '', order_num: 0, resource_id: null, is_visible: true })
+  }
+  showModal.value = true
+}
+
+const handleSave = async () => {
+  saving.value = true
+  try {
+    const payload: any = { name: form.name, path: form.path, component: form.component, icon: form.icon, order_num: form.order_num, is_visible: form.is_visible }
+    if (form.parent_id) (payload as any).parent_id = form.parent_id === 0 ? null : form.parent_id
+    if (form.resource_id) (payload as any).resource_id = form.resource_id
+    if (editingId.value) {
+      await updateMenu(editingId.value, payload)
+    } else {
+      await createMenu(payload)
+    }
+    message.success(editingId.value ? '更新成功' : '创建成功')
+    showModal.value = false
+    fetchData()
+  } catch (e: any) {
+    message.error(e?.response?.data?.message || '操作失败')
+  } finally {
+    saving.value = false
+  }
+}
+
+const handleDelete = (row: MenuTreeNode) => {
+  deleteMenu(row.id).then(() => { message.success('删除成功'); fetchData() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
+}
+
+onMounted(fetchData)
+</script>
