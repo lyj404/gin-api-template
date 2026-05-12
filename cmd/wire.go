@@ -35,6 +35,11 @@ type App struct {
 	HelloHdlr      *handler.HelloHandler
 	RefreshHdlr    *handler.RefreshTokenHandler
 	RoleHdlr       *handler.RoleHandler
+	OrgHdlr        *handler.OrgUnitHandler
+	AuditHdlr      *handler.AuditLogHandler
+	UserPermHdlr   *handler.UserPermissionHandler
+	MenuHdlr       *handler.MenuHandler
+	RBACMiddleware *middleware.RBACMiddleware
 	PermSvc        domainservices.PermissionService
 	RegisterRoutes func()
 }
@@ -78,6 +83,7 @@ func provideRouteRegistration(
 	orgHdlr *handler.OrgUnitHandler,
 	auditHdlr *handler.AuditLogHandler,
 	userPermHdlr *handler.UserPermissionHandler,
+	menuHdlr *handler.MenuHandler,
 ) func() {
 	return func() {
 		// 注册公共路由
@@ -92,6 +98,7 @@ func provideRouteRegistration(
 		route.NewOrgUnitRouter(orgHdlr, protectedGroup)
 		route.NewAuditLogRouter(auditHdlr, protectedGroup)
 		route.NewUserPermissionRouter(userPermHdlr, protectedGroup)
+		route.NewMenuRouter(menuHdlr, protectedGroup)
 	}
 }
 
@@ -114,6 +121,7 @@ var providerSet = wire.NewSet(
 	repository.NewRoleRepository,
 	repository.NewOrgUnitRepository,
 	repository.NewAuditLogRepository,
+	repository.NewMenuRepository,
 
 	// Service 层
 	service.NewUserService,
@@ -122,6 +130,7 @@ var providerSet = wire.NewSet(
 	service.NewRoleService,
 	service.NewOrgUnitService,
 	service.NewAuditLogService,
+	service.NewMenuService,
 	middleware.NewRBACMiddleware,
 
 	// Handler 层
@@ -132,4 +141,5 @@ var providerSet = wire.NewSet(
 	handler.NewOrgUnitHandler,
 	handler.NewUserPermissionHandler,
 	handler.NewAuditLogHandler,
+	handler.NewMenuHandler,
 )

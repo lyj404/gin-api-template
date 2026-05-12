@@ -5,6 +5,11 @@ import (
 	"github.com/lyj404/gin-api-template/api/handler"
 )
 
+// NewUserPermissionRouter 注册用户权限相关路由
 func NewUserPermissionRouter(userPermHdlr *handler.UserPermissionHandler, group *gin.RouterGroup) {
-	group.GET("/user/permissions", userPermHdlr.GetUserPermissions)
+	user := group.Group("/user")
+	{
+		user.GET("/permissions", userPermHdlr.GetUserPermissions)
+		user.GET("/menus", userPermHdlr.GetUserMenus)
+	}
 }

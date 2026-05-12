@@ -2,16 +2,19 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lyj404/gin-api-template/domain/result"
 	"github.com/lyj404/gin-api-template/domain/services"
 )
 
+// RBACMiddleware 基于角色的访问控制中间件
 type RBACMiddleware struct {
 	permissionService services.PermissionService
 }
 
+// NewRBACMiddleware 创建RBAC中间件实例
 func NewRBACMiddleware(permissionService services.PermissionService) *RBACMiddleware {
 	return &RBACMiddleware{
 		permissionService: permissionService,
@@ -19,6 +22,7 @@ func NewRBACMiddleware(permissionService services.PermissionService) *RBACMiddle
 }
 
 // CheckPermission 检查资源权限中间件
+// 该中间件验证用户是否有权限访问指定的资源路径
 func (m *RBACMiddleware) CheckPermission(resource string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("user_id")
@@ -46,6 +50,7 @@ func (m *RBACMiddleware) CheckPermission(resource string) gin.HandlerFunc {
 }
 
 // CheckEntityPermission 检查实体权限中间件
+// 该中间件验证用户是否有权限对指定实体执行特定操作
 func (m *RBACMiddleware) CheckEntityPermission(entityType string, action string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userID, exists := c.Get("user_id")
@@ -55,14 +60,22 @@ func (m *RBACMiddleware) CheckEntityPermission(entityType string, action string)
 			return
 		}
 
-		entityID := c.Param("id")
-		if entityID == "" {
+		// 从URL参数中解析实体ID
+		entityIDStr := c.Param("id")
+		if entityIDStr == "" {
 			result.ErrorResponse(c, http.StatusBadRequest, "缺少实体ID")
 			c.Abort()
 			return
 		}
 
-		hasPermission, err := m.permissionService.CheckEntityPermission(userID.(uint), entityType, 0, action)
+		entityID, err := strconv.ParseUint(entityIDStr, 10, 64)
+		if err != nil {
+			result.ErrorResponse(c, http.StatusBadRequest, "无效的实体ID")
+			c.Abort()
+			return
+		}
+
+		hasPermission, err := m.permissionService.CheckEntityPermission(userID.(uint), entityType, uint(entityID), action)
 		if err != nil {
 			result.ErrorResponse(c, http.StatusInternalServerError, "权限检查失败")
 			c.Abort()

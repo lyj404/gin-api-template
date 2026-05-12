@@ -1,5 +1,84 @@
 definitions:
-  gin-api-template_domain_dto.LoginRequest:
+  api_handler.PageResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_entity.AuditLog'
+        type: array
+      page:
+        type: integer
+      page_size:
+        type: integer
+      total:
+        type: integer
+    type: object
+  api_handler.UserMenuResponse:
+    properties:
+      menus:
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_services.MenuTreeNode'
+        type: array
+    type: object
+  api_handler.UserPermissionResponse:
+    properties:
+      org_scopes:
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_services.OrgScopeInfo'
+        type: array
+      permissions:
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_services.PermissionInfo'
+        type: array
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.CreateMenuRequest:
+    properties:
+      component:
+        description: 前端组件路径
+        type: string
+      icon:
+        description: 菜单图标
+        type: string
+      is_visible:
+        description: 是否显示
+        type: boolean
+      name:
+        description: 菜单名称（必填）
+        type: string
+      order_num:
+        description: 排序序号
+        type: integer
+      parent_id:
+        description: 父菜单ID
+        type: integer
+      path:
+        description: 前端路由路径
+        type: string
+      resource_id:
+        description: 关联资源ID（必填）
+        type: integer
+    required:
+    - name
+    - resource_id
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.CreateOrgUnitRequest:
+    properties:
+      name:
+        type: string
+      parent_id:
+        type: integer
+    required:
+    - name
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.CreateRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.LoginRequest:
     description: 登录时请求的参数
     properties:
       captcha:
@@ -23,7 +102,7 @@ definitions:
     - email
     - password
     type: object
-  gin-api-template_domain_dto.LoginResponse:
+  github_com_lyj404_gin-api-template_domain_dto.LoginResponse:
     description: 登录成功后的响应数据
     properties:
       accessToken:
@@ -33,7 +112,73 @@ definitions:
         description: '@Description 刷新令牌'
         type: string
     type: object
-  gin-api-template_domain_dto.RefreshTokenRequest:
+  github_com_lyj404_gin-api-template_domain_dto.MenuListResponse:
+    properties:
+      component:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      is_visible:
+        type: boolean
+      name:
+        type: string
+      order_num:
+        type: integer
+      parent_id:
+        type: integer
+      path:
+        type: string
+      resource_id:
+        type: integer
+      resource_name:
+        description: 资源名称
+        type: string
+      status:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.MenuResponse:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.MenuResponse'
+        type: array
+      component:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      is_visible:
+        type: boolean
+      name:
+        type: string
+      order_num:
+        type: integer
+      parent_id:
+        type: integer
+      path:
+        type: string
+      resource_id:
+        type: integer
+      status:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.OrgUnitResponse:
+    properties:
+      id:
+        type: integer
+      level:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+      path:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.RefreshTokenRequest:
     description: 刷新token时请求的参数
     properties:
       refreshToken:
@@ -44,7 +189,7 @@ definitions:
     required:
     - refreshToken
     type: object
-  gin-api-template_domain_dto.RefreshTokenResponse:
+  github_com_lyj404_gin-api-template_domain_dto.RefreshTokenResponse:
     description: 刷新token成功之后的响应数据
     properties:
       accessToken:
@@ -54,7 +199,18 @@ definitions:
         description: '@Description 刷新token'
         type: string
     type: object
-  gin-api-template_domain_dto.SignupRequest:
+  github_com_lyj404_gin-api-template_domain_dto.RoleResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      name:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.SignupRequest:
     description: 注册时请求的参数
     properties:
       email:
@@ -79,7 +235,7 @@ definitions:
     - name
     - password
     type: object
-  gin-api-template_domain_dto.SignupResponse:
+  github_com_lyj404_gin-api-template_domain_dto.SignupResponse:
     description: 注册成功后的响应数据
     properties:
       accessToken:
@@ -89,59 +245,271 @@ definitions:
         description: '@Description 刷新token'
         type: string
     type: object
-  gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_LoginResponse:
+  github_com_lyj404_gin-api-template_domain_dto.UpdateMenuRequest:
+    properties:
+      component:
+        description: 前端组件路径
+        type: string
+      icon:
+        description: 菜单图标
+        type: string
+      is_visible:
+        description: 是否显示
+        type: boolean
+      name:
+        description: 菜单名称
+        type: string
+      order_num:
+        description: 排序序号
+        type: integer
+      parent_id:
+        description: 父菜单ID
+        type: integer
+      path:
+        description: 前端路由路径
+        type: string
+      resource_id:
+        description: 关联资源ID
+        type: integer
+      status:
+        description: 状态：enabled/disabled
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.UpdateOrgUnitRequest:
+    properties:
+      name:
+        type: string
+      parent_id:
+        type: integer
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.UpdateRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_entity.AuditLog:
+    properties:
+      action:
+        description: 操作类型（create, update, delete, assign）
+        type: string
+      after_data:
+        description: 变更后数据（JSON）
+        type: string
+      before_data:
+        description: 变更前数据（JSON）
+        type: string
+      createdAt:
+        type: string
+      description:
+        description: 操作描述
+        type: string
+      id:
+        description: 主键ID
+        type: integer
+      operator_id:
+        description: 操作者ID
+        type: integer
+      operator_name:
+        description: 操作者姓名
+        type: string
+      target_id:
+        description: 目标ID
+        type: integer
+      target_type:
+        description: 目标类型（role, resource, org, user_role）
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_PageResponse:
     properties:
       code:
         description: '@Description 响应状态码'
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/gin-api-template_domain_dto.LoginResponse'
+        - $ref: '#/definitions/api_handler.PageResponse'
         description: '@Description 响应数据'
       message:
         description: '@Description 响应信息'
         type: string
     type: object
-  gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_RefreshTokenResponse:
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_UserMenuResponse:
     properties:
       code:
         description: '@Description 响应状态码'
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/gin-api-template_domain_dto.RefreshTokenResponse'
+        - $ref: '#/definitions/api_handler.UserMenuResponse'
         description: '@Description 响应数据'
       message:
         description: '@Description 响应信息'
         type: string
     type: object
-  gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_SignupResponse:
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_UserPermissionResponse:
     properties:
       code:
         description: '@Description 响应状态码'
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/gin-api-template_domain_dto.SignupResponse'
+        - $ref: '#/definitions/api_handler.UserPermissionResponse'
         description: '@Description 响应数据'
       message:
         description: '@Description 响应信息'
         type: string
     type: object
-  gin-api-template_domain_result.ResponseResult-gin-api-template_pkg_lib_captcha_CaptchaReponse:
+  ? github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_MenuListResponse
+  : properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        description: '@Description 响应数据'
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.MenuListResponse'
+        type: array
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_MenuResponse:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        description: '@Description 响应数据'
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.MenuResponse'
+        type: array
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  ? github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_OrgUnitResponse
+  : properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        description: '@Description 响应数据'
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.OrgUnitResponse'
+        type: array
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_RoleResponse:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        description: '@Description 响应数据'
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleResponse'
+        type: array
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_LoginResponse:
     properties:
       code:
         description: '@Description 响应状态码'
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/gin-api-template_pkg_lib_captcha.CaptchaReponse'
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.LoginResponse'
         description: '@Description 响应数据'
       message:
         description: '@Description 响应信息'
         type: string
     type: object
-  gin-api-template_domain_result.ResponseResult-string:
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_MenuResponse:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.MenuResponse'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_OrgUnitResponse:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.OrgUnitResponse'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  ? github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RefreshTokenResponse
+  : properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.RefreshTokenResponse'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleResponse:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleResponse'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_SignupResponse:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.SignupResponse'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  ? github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_pkg_lib_captcha_CaptchaReponse
+  : properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_pkg_lib_captcha.CaptchaReponse'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-string:
     properties:
       code:
         description: '@Description 响应状态码'
@@ -153,7 +521,44 @@ definitions:
         description: '@Description 响应信息'
         type: string
     type: object
-  gin-api-template_pkg_lib_captcha.CaptchaReponse:
+  github_com_lyj404_gin-api-template_domain_services.MenuTreeNode:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_services.MenuTreeNode'
+        type: array
+      component:
+        type: string
+      icon:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      order_num:
+        type: integer
+      path:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_services.OrgScopeInfo:
+    properties:
+      include_descendants:
+        type: boolean
+      org_unit_id:
+        type: integer
+      path:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_services.PermissionInfo:
+    properties:
+      is_read:
+        type: boolean
+      is_write:
+        type: boolean
+      resource_name:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_pkg_lib_captcha.CaptchaReponse:
     properties:
       expire_time:
         type: integer
@@ -165,6 +570,113 @@ definitions:
 info:
   contact: {}
 paths:
+  /audit-logs:
+    get:
+      description: 根据操作者ID分页查询审计日志
+      parameters:
+      - description: 操作者ID
+        in: query
+        name: operator_id
+        required: true
+        type: integer
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_PageResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 按操作者查询审计日志
+      tags:
+      - 审计
+  /audit-logs/target:
+    get:
+      description: 根据目标类型和ID分页查询审计日志
+      parameters:
+      - description: 目标类型
+        in: query
+        name: target_type
+        required: true
+        type: string
+      - description: 目标ID
+        in: query
+        name: target_id
+        required: true
+        type: integer
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_PageResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 按目标查询审计日志
+      tags:
+      - 审计
+  /audit-logs/time:
+    get:
+      description: 根据时间范围分页查询审计日志
+      parameters:
+      - description: 开始时间
+        in: query
+        name: start_time
+        type: string
+      - description: 结束时间
+        in: query
+        name: end_time
+        type: string
+      - default: 1
+        description: 页码
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 查询成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_PageResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 按时间范围查询审计日志
+      tags:
+      - 审计
   /hello:
     get:
       consumes:
@@ -176,11 +688,11 @@ paths:
         "200":
           description: 成功响应
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
         "500":
           description: 服务器错误
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
       summary: 测试
       tags:
       - hello
@@ -195,33 +707,321 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/gin-api-template_domain_dto.LoginRequest'
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: 登录成功响应
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_LoginResponse'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_LoginResponse'
         "400":
           description: 请求参数错误
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
         "401":
           description: 凭据无效
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
         "404":
           description: 用户未找到
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
         "500":
           description: 服务器内部错误
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
       summary: 用户登录
       tags:
       - user
+  /menus:
+    get:
+      description: 获取所有菜单（平面结构）
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_MenuListResponse'
+      summary: 获取菜单列表
+      tags:
+      - 菜单
+    post:
+      consumes:
+      - application/json
+      description: 创建新菜单
+      parameters:
+      - description: 菜单信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.CreateMenuRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_MenuResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 创建菜单
+      tags:
+      - 菜单
+  /menus/:id:
+    delete:
+      consumes:
+      - application/json
+      description: 删除菜单
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 删除菜单
+      tags:
+      - 菜单
+    get:
+      description: 根据ID获取菜单详情
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_MenuResponse'
+        "404":
+          description: 菜单不存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 获取菜单详情
+      tags:
+      - 菜单
+    put:
+      consumes:
+      - application/json
+      description: 更新菜单信息
+      parameters:
+      - description: 菜单ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 菜单信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.UpdateMenuRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_MenuResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "404":
+          description: 菜单不存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 更新菜单
+      tags:
+      - 菜单
+  /menus/tree:
+    get:
+      description: 获取菜单树形结构
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_MenuResponse'
+      summary: 获取菜单树
+      tags:
+      - 菜单
+  /org-units:
+    get:
+      description: 获取所有组织节点
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_OrgUnitResponse'
+      summary: 获取组织节点列表
+      tags:
+      - 组织
+    post:
+      consumes:
+      - application/json
+      description: 创建新的组织节点
+      parameters:
+      - description: 组织信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.CreateOrgUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_OrgUnitResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 创建组织节点
+      tags:
+      - 组织
+  /org-units/:id:
+    delete:
+      consumes:
+      - application/json
+      description: 删除组织节点
+      parameters:
+      - description: 组织ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 删除组织节点
+      tags:
+      - 组织
+    get:
+      description: 根据ID获取组织节点详情
+      parameters:
+      - description: 组织ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_OrgUnitResponse'
+        "404":
+          description: 组织不存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 获取组织节点详情
+      tags:
+      - 组织
+    put:
+      consumes:
+      - application/json
+      description: 更新组织节点信息
+      parameters:
+      - description: 组织ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 组织信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.UpdateOrgUnitRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_OrgUnitResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "404":
+          description: 组织不存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 更新组织节点
+      tags:
+      - 组织
+  /org-units/tree:
+    get:
+      description: 获取组织结构树
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_OrgUnitResponse'
+      summary: 获取组织树
+      tags:
+      - 组织
   /refresh-token:
     post:
       consumes:
@@ -233,29 +1033,160 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/gin-api-template_domain_dto.RefreshTokenRequest'
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.RefreshTokenRequest'
       produces:
       - application/json
       responses:
         "200":
           description: 刷新令牌成功响应
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-gin-api-template_domain_dto_RefreshTokenResponse'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RefreshTokenResponse'
         "400":
           description: 请求参数错误
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
         "401":
           description: 令牌无效或已过期
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
         "500":
           description: 服务器内部错误
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
       summary: 刷新令牌
       tags:
       - user
+  /roles:
+    get:
+      description: 获取所有角色
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_RoleResponse'
+      summary: 获取角色列表
+      tags:
+      - 角色
+    post:
+      consumes:
+      - application/json
+      description: 创建新角色
+      parameters:
+      - description: 角色信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 创建角色
+      tags:
+      - 角色
+  /roles/:id:
+    delete:
+      consumes:
+      - application/json
+      description: 删除角色
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 删除角色
+      tags:
+      - 角色
+    get:
+      description: 根据ID获取角色详情
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleResponse'
+        "404":
+          description: 角色不存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 获取角色详情
+      tags:
+      - 角色
+    put:
+      consumes:
+      - application/json
+      description: 更新角色信息
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 角色信息
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "404":
+          description: 角色不存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 更新角色
+      tags:
+      - 角色
   /signup:
     post:
       consumes:
@@ -267,19 +1198,61 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/gin-api-template_domain_dto.SignupRequest'
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.SignupRequest'
       produces:
       - application/json
       responses:
         "200":
           description: 验证码成功响应
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-gin-api-template_pkg_lib_captcha_CaptchaReponse'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_pkg_lib_captcha_CaptchaReponse'
         "500":
           description: 服务器内部错误
           schema:
-            $ref: '#/definitions/gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
       summary: 验证码
       tags:
       - user
+  /user/menus:
+    get:
+      description: 根据用户权限过滤，返回用户可见的菜单树
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_UserMenuResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 获取当前用户可见的菜单
+      tags:
+      - 用户
+  /user/permissions:
+    get:
+      description: 获取当前用户的权限列表和组织范围
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_UserPermissionResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 获取当前用户权限
+      tags:
+      - 用户
 swagger: "2.0"
