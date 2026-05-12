@@ -10,12 +10,15 @@ import (
 	"github.com/lyj404/gin-api-template/domain/result"
 	"github.com/lyj404/gin-api-template/domain/services"
 	"github.com/lyj404/gin-api-template/global"
+	"github.com/lyj404/gin-api-template/pkg/pagination"
 )
 
+// RoleHandler 角色处理器，处理角色相关的HTTP请求
 type RoleHandler struct {
 	roleService services.RoleService
 }
 
+// NewRoleHandler 创建角色处理器实例
 func NewRoleHandler(roleService services.RoleService) *RoleHandler {
 	return &RoleHandler{
 		roleService: roleService,
@@ -157,15 +160,39 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 	result.SuccessResponse(c, "获取角色成功", &response)
 }
 
-// ListRoles 获取角色列表
+// ListRoles 获取角色列表（分页）
 // @Summary 获取角色列表
-// @Description 获取所有角色
+// @Description 获取角色列表（支持分页、搜索、排序）
 // @Tags 角色
 // @Produce json
-// @Success 200 {object} result.ResponseResult[[]dto.RoleResponse] "获取成功"
+// @Param page query int false "页码，默认1"
+// @Param page_size query int false "每页数量，默认10，最大100"
+// @Param keyword query string false "搜索关键词（搜索角色名称）"
+// @Param order_by query string false "排序字段"
+// @Param sort query string false "排序方式：asc/desc"
+// @Success 200 {object} result.ResponseResult[dto.PaginationResponse] "获取成功"
 // @Router /roles [get]
 func (h *RoleHandler) ListRoles(c *gin.Context) {
-	roles, err := h.roleService.GetAllRoles()
+	var req dto.PaginationRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	req.SetDefaults()
+
+	var roles []entity.Role
+	builder := pagination.NewPaginationBuilder(global.G_DB).
+		Model(&entity.Role{}).
+		SetPage(req.Page).
+		SetPageSize(req.PageSize).
+		OrderBy(req.OrderBy + " " + req.Sort)
+
+	// 如果有关键词搜索，添加搜索条件
+	if req.Keyword != "" {
+		builder = builder.Where("name LIKE ?", "%"+req.Keyword+"%")
+	}
+
+	paginationResult, err := builder.Build(&roles)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -181,5 +208,10 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 		}
 	}
 
-	result.SuccessResponse(c, "获取角色列表成功", &responses)
+	result.SuccessResponse(c, "获取角色列表成功", dto.NewPaginationResponse(
+		paginationResult.Page,
+		paginationResult.PageSize,
+		paginationResult.Total,
+		responses,
+	))
 }

@@ -5,15 +5,17 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/lyj404/gin-api-template/domain/entity"
+	"github.com/lyj404/gin-api-template/domain/dto"
 	"github.com/lyj404/gin-api-template/domain/result"
 	domainservices "github.com/lyj404/gin-api-template/domain/services"
 )
 
+// AuditLogHandler 审计日志处理器，处理审计日志相关的HTTP请求
 type AuditLogHandler struct {
 	auditLogService domainservices.AuditLogService
 }
 
+// NewAuditLogHandler 创建审计日志处理器实例
 func NewAuditLogHandler(auditLogService domainservices.AuditLogService) *AuditLogHandler {
 	return &AuditLogHandler{
 		auditLogService: auditLogService,
@@ -26,35 +28,38 @@ func NewAuditLogHandler(auditLogService domainservices.AuditLogService) *AuditLo
 // @Tags 审计
 // @Produce json
 // @Param operator_id query int true "操作者ID"
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(10)
-// @Success 200 {object} result.ResponseResult[PageResponse] "查询成功"
+// @Param page query int false "页码，默认1"
+// @Param page_size query int false "每页数量，默认10，最大100"
+// @Success 200 {object} result.ResponseResult[dto.PaginationResponse] "查询成功"
+// @Failure 400 {object} result.ResponseResult[string] "缺少操作者ID"
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /audit-logs [get]
 func (h *AuditLogHandler) GetAuditLogsByOperator(c *gin.Context) {
+	var req dto.PaginationRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	req.SetDefaults()
+
 	operatorID, _ := strconv.Atoi(c.Query("operator_id"))
 	if operatorID == 0 {
 		result.ErrorResponse(c, http.StatusBadRequest, "缺少操作者ID")
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
-
-	logs, total, err := h.auditLogService.GetAuditLogsByOperator(uint(operatorID), page, pageSize)
+	logs, total, err := h.auditLogService.GetAuditLogsByOperator(uint(operatorID), req.Page, req.PageSize)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response := PageResponse{
-		Data:     logs,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
-	}
-
-	result.SuccessResponse(c, "查询审计日志成功", &response)
+	result.SuccessResponse(c, "查询审计日志成功", dto.NewPaginationResponse(
+		req.Page,
+		req.PageSize,
+		total,
+		logs,
+	))
 }
 
 // GetAuditLogsByTarget 按目标查询审计日志
@@ -64,12 +69,20 @@ func (h *AuditLogHandler) GetAuditLogsByOperator(c *gin.Context) {
 // @Produce json
 // @Param target_type query string true "目标类型"
 // @Param target_id query int true "目标ID"
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(10)
-// @Success 200 {object} result.ResponseResult[PageResponse] "查询成功"
+// @Param page query int false "页码，默认1"
+// @Param page_size query int false "每页数量，默认10，最大100"
+// @Success 200 {object} result.ResponseResult[dto.PaginationResponse] "查询成功"
+// @Failure 400 {object} result.ResponseResult[string] "缺少参数"
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /audit-logs/target [get]
 func (h *AuditLogHandler) GetAuditLogsByTarget(c *gin.Context) {
+	var req dto.PaginationRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	req.SetDefaults()
+
 	targetType := c.Query("target_type")
 	if targetType == "" {
 		result.ErrorResponse(c, http.StatusBadRequest, "缺少目标类型")
@@ -82,23 +95,18 @@ func (h *AuditLogHandler) GetAuditLogsByTarget(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
-
-	logs, total, err := h.auditLogService.GetAuditLogsByTarget(targetType, uint(targetID), page, pageSize)
+	logs, total, err := h.auditLogService.GetAuditLogsByTarget(targetType, uint(targetID), req.Page, req.PageSize)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response := PageResponse{
-		Data:     logs,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
-	}
-
-	result.SuccessResponse(c, "查询审计日志成功", &response)
+	result.SuccessResponse(c, "查询审计日志成功", dto.NewPaginationResponse(
+		req.Page,
+		req.PageSize,
+		total,
+		logs,
+	))
 }
 
 // GetAuditLogsByTimeRange 按时间范围查询审计日志
@@ -108,37 +116,32 @@ func (h *AuditLogHandler) GetAuditLogsByTarget(c *gin.Context) {
 // @Produce json
 // @Param start_time query string false "开始时间"
 // @Param end_time query string false "结束时间"
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(10)
-// @Success 200 {object} result.ResponseResult[PageResponse] "查询成功"
+// @Param page query int false "页码，默认1"
+// @Param page_size query int false "每页数量，默认10，最大100"
+// @Success 200 {object} result.ResponseResult[dto.PaginationResponse] "查询成功"
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /audit-logs/time [get]
 func (h *AuditLogHandler) GetAuditLogsByTimeRange(c *gin.Context) {
+	var req dto.PaginationRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	req.SetDefaults()
+
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "10"))
-
-	logs, total, err := h.auditLogService.GetAuditLogsByTimeRange(startTime, endTime, page, pageSize)
+	logs, total, err := h.auditLogService.GetAuditLogsByTimeRange(startTime, endTime, req.Page, req.PageSize)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response := PageResponse{
-		Data:     logs,
-		Total:    total,
-		Page:     page,
-		PageSize: pageSize,
-	}
-
-	result.SuccessResponse(c, "查询审计日志成功", &response)
-}
-
-type PageResponse struct {
-	Data     []entity.AuditLog `json:"data"`
-	Total    int64             `json:"total"`
-	Page     int               `json:"page"`
-	PageSize int               `json:"page_size"`
+	result.SuccessResponse(c, "查询审计日志成功", dto.NewPaginationResponse(
+		req.Page,
+		req.PageSize,
+		total,
+		logs,
+	))
 }

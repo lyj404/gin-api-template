@@ -10,12 +10,15 @@ import (
 	"github.com/lyj404/gin-api-template/domain/result"
 	"github.com/lyj404/gin-api-template/domain/services"
 	"github.com/lyj404/gin-api-template/global"
+	"github.com/lyj404/gin-api-template/pkg/pagination"
 )
 
+// OrgUnitHandler 组织单元处理器，处理组织相关的HTTP请求
 type OrgUnitHandler struct {
 	orgService services.OrgUnitService
 }
 
+// NewOrgUnitHandler 创建组织单元处理器实例
 func NewOrgUnitHandler(orgService services.OrgUnitService) *OrgUnitHandler {
 	return &OrgUnitHandler{
 		orgService: orgService,
@@ -159,15 +162,39 @@ func (h *OrgUnitHandler) GetOrgUnit(c *gin.Context) {
 	result.SuccessResponse(c, "获取组织节点成功", &response)
 }
 
-// ListOrgUnits 获取组织节点列表
+// ListOrgUnits 获取组织节点列表（分页）
 // @Summary 获取组织节点列表
-// @Description 获取所有组织节点
+// @Description 获取组织节点列表（支持分页、搜索、排序）
 // @Tags 组织
 // @Produce json
-// @Success 200 {object} result.ResponseResult[[]dto.OrgUnitResponse] "获取成功"
+// @Param page query int false "页码，默认1"
+// @Param page_size query int false "每页数量，默认10，最大100"
+// @Param keyword query string false "搜索关键词（搜索组织名称）"
+// @Param order_by query string false "排序字段"
+// @Param sort query string false "排序方式：asc/desc"
+// @Success 200 {object} result.ResponseResult[dto.PaginationResponse] "获取成功"
 // @Router /org-units [get]
 func (h *OrgUnitHandler) ListOrgUnits(c *gin.Context) {
-	orgs, err := h.orgService.GetAllOrgUnits()
+	var req dto.PaginationRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	req.SetDefaults()
+
+	var orgs []entity.OrgUnit
+	builder := pagination.NewPaginationBuilder(global.G_DB).
+		Model(&entity.OrgUnit{}).
+		SetPage(req.Page).
+		SetPageSize(req.PageSize).
+		OrderBy(req.OrderBy + " " + req.Sort)
+
+	// 如果有关键词搜索，添加搜索条件
+	if req.Keyword != "" {
+		builder = builder.Where("name LIKE ?", "%"+req.Keyword+"%")
+	}
+
+	paginationResult, err := builder.Build(&orgs)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -184,7 +211,12 @@ func (h *OrgUnitHandler) ListOrgUnits(c *gin.Context) {
 		}
 	}
 
-	result.SuccessResponse(c, "获取组织节点列表成功", &responses)
+	result.SuccessResponse(c, "获取组织节点列表成功", dto.NewPaginationResponse(
+		paginationResult.Page,
+		paginationResult.PageSize,
+		paginationResult.Total,
+		responses,
+	))
 }
 
 // GetOrgTree 获取组织树

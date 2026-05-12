@@ -1,6 +1,7 @@
 package pagination
 
 import (
+	"fmt"
 	"math"
 	"strings"
 
@@ -14,13 +15,13 @@ type PaginationBuilder struct {
 	page        int         // 当前页
 	pageSize    int         // 每页数量
 	model       interface{} // 模型
-	preloads    []string    // 添加预加载
-	joins       []string    // 添加连接查询
-	selects     []string    // 添加查询字段
-	conditions  []Condition // 添加查询条件
+	preloads    []string    // 预加载关系
+	joins       []string    // 连接查询
+	selects     []string    // 查询字段
+	conditions  []Condition // 查询条件
 	orderFields []string    // 排序字段
-	groups      []string    // 添加分组字段
-	havings     []Condition // 添加HAVING条件
+	groups      []string    // 分组字段
+	havings     []Condition // HAVING条件
 }
 
 // NewPaginationBuilder 创建分页构造器的新实例
@@ -51,64 +52,91 @@ func NewPaginationBuilder(db *gorm.DB) *PaginationBuilder {
 //	pagination, err := builder.Build(&users)
 func (p *PaginationBuilder) Build(result interface{}) (*Pagination, error) {
 	var total int64
+
+	// 构建基础查询
 	query := p.db.Model(p.model)
 
-	// 查询条件
-	for _, condition := range p.conditions {
-		query = query.Where(condition.Query, condition.Args...)
-	}
-
-	// 连接查询
+	// 应用连接查询
 	for _, join := range p.joins {
 		query = query.Joins(join)
 	}
 
-	// 查询字段
-	if len(p.selects) > 0 {
-		query = query.Select(strings.Join(p.selects, ","))
+	// 应用查询条件
+	for _, condition := range p.conditions {
+		query = query.Where(condition.Query, condition.Args...)
 	}
 
-	// 添加分组
+	// 应用分组
 	for _, group := range p.groups {
 		query = query.Group(group)
 	}
 
-	// 添加HAVING条件
+	// 应用HAVING条件
 	for _, having := range p.havings {
 		query = query.Having(having.Query, having.Args...)
 	}
 
-	// 克隆查询以计算总记录数
-	countQuery := query
-	if len(p.groups) > 0 {
-		// 如果有分组，则计算分组后的记录数
-		countQuery = countQuery.Session(&gorm.Session{})
+	// 计算总记录数
+	// 如果有JOIN或多表查询，使用子查询确保COUNT准确
+	if p.needDistinctCount() {
+		countQuery, err := p.buildCountQuery()
+		if err != nil {
+			return nil, err
+		}
 		if err := countQuery.Count(&total).Error; err != nil {
 			return nil, err
 		}
 	} else {
-		// 无分组时的普通计数
-		if err := countQuery.Count(&total).Error; err != nil {
+		// 无复杂查询时直接COUNT
+		if err := query.Count(&total).Error; err != nil {
 			return nil, err
 		}
 	}
 
-	// 添加排序
-	for _, field := range p.orderFields {
-		query = query.Order(field)
+	// 构建最终查询
+	dataQuery := p.db.Model(p.model)
+
+	// 应用SELECT字段
+	if len(p.selects) > 0 {
+		dataQuery = dataQuery.Select(strings.Join(p.selects, ","))
 	}
 
-	// 分页查询
-	offset := (p.page - 1) * p.pageSize
-	query = query.Offset(offset).Limit(p.pageSize)
+	// 应用连接查询
+	for _, join := range p.joins {
+		dataQuery = dataQuery.Joins(join)
+	}
 
-	// 预加载
+	// 应用查询条件
+	for _, condition := range p.conditions {
+		dataQuery = dataQuery.Where(condition.Query, condition.Args...)
+	}
+
+	// 应用分组
+	for _, group := range p.groups {
+		dataQuery = dataQuery.Group(group)
+	}
+
+	// 应用HAVING条件
+	for _, having := range p.havings {
+		dataQuery = dataQuery.Having(having.Query, having.Args...)
+	}
+
+	// 应用排序
+	for _, field := range p.orderFields {
+		dataQuery = dataQuery.Order(field)
+	}
+
+	// 应用分页
+	offset := (p.page - 1) * p.pageSize
+	dataQuery = dataQuery.Offset(offset).Limit(p.pageSize)
+
+	// 应用预加载（在分页后执行）
 	for _, preload := range p.preloads {
-		query = query.Preload(preload)
+		dataQuery = dataQuery.Preload(preload)
 	}
 
 	// 执行查询
-	if err := query.Find(result).Error; err != nil {
+	if err := dataQuery.Find(result).Error; err != nil {
 		return nil, err
 	}
 
@@ -121,4 +149,58 @@ func (p *PaginationBuilder) Build(result interface{}) (*Pagination, error) {
 		TotalPage: totalPage,
 		Data:      result,
 	}, nil
+}
+
+// needDistinctCount 判断是否需要使用 DISTINCT 进行计数
+// 当存在 JOIN 查询时，可能产生重复行，需要特殊处理
+func (p *PaginationBuilder) needDistinctCount() bool {
+	return len(p.joins) > 0 || len(p.groups) > 0
+}
+
+// buildCountQuery 构建用于计数的子查询
+// 使用子查询确保多表JOIN时的计数准确性
+func (p *PaginationBuilder) buildCountQuery() (*gorm.DB, error) {
+	// 获取模型对应的表名
+	var tableName string
+	switch m := p.model.(type) {
+	case string:
+		tableName = m
+	default:
+		// 使用 stmt 解析模型获取表名
+		stmt := &gorm.Statement{DB: p.db}
+		if err := stmt.Parse(p.model); err != nil {
+			return nil, err
+		}
+		tableName = stmt.Schema.Table
+		if tableName == "" {
+			return nil, fmt.Errorf("无法确定表名")
+		}
+	}
+
+	// 构建子查询：SELECT DISTINCT 主键 FROM 表 WHERE 条件
+	countSQL := fmt.Sprintf("SELECT COUNT(DISTINCT %s.id) FROM %s", tableName, tableName)
+
+	// 添加WHERE条件
+	if len(p.conditions) > 0 {
+		whereClause := ""
+		args := []interface{}{}
+		for i, condition := range p.conditions {
+			if i > 0 {
+				whereClause += " AND "
+			}
+			switch q := condition.Query.(type) {
+			case string:
+				whereClause += q
+				args = append(args, condition.Args...)
+			default:
+				return nil, fmt.Errorf("不支持的查询条件类型")
+			}
+		}
+		if whereClause != "" {
+			countSQL += " WHERE " + whereClause
+		}
+	}
+
+	// 使用原生SQL构建计数查询
+	return p.db.Raw(countSQL), nil
 }

@@ -35,15 +35,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "description": "页码，默认1",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
+                        "description": "每页数量，默认10，最大100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -52,7 +50,13 @@ const docTemplate = `{
                     "200": {
                         "description": "查询成功",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_PageResponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "缺少操作者ID",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
                         }
                     },
                     "500": {
@@ -91,15 +95,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "description": "页码，默认1",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
+                        "description": "每页数量，默认10，最大100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -108,7 +110,13 @@ const docTemplate = `{
                     "200": {
                         "description": "查询成功",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_PageResponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "缺少参数",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
                         }
                     },
                     "500": {
@@ -145,15 +153,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "description": "页码，默认1",
                         "name": "page",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
+                        "description": "每页数量，默认10，最大100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -162,7 +168,7 @@ const docTemplate = `{
                     "200": {
                         "description": "查询成功",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_PageResponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse"
                         }
                     },
                     "500": {
@@ -263,7 +269,7 @@ const docTemplate = `{
         },
         "/menus": {
             "get": {
-                "description": "获取所有菜单（平面结构）",
+                "description": "获取菜单列表（支持分页、搜索、排序）",
                 "produces": [
                     "application/json"
                 ],
@@ -271,11 +277,43 @@ const docTemplate = `{
                     "菜单"
                 ],
                 "summary": "获取菜单列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量，默认10，最大100",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词（搜索菜单名称）",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方式：asc/desc",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "获取成功",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_MenuListResponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse"
                         }
                     }
                 }
@@ -481,7 +519,7 @@ const docTemplate = `{
         },
         "/org-units": {
             "get": {
-                "description": "获取所有组织节点",
+                "description": "获取组织节点列表（支持分页、搜索、排序）",
                 "produces": [
                     "application/json"
                 ],
@@ -489,11 +527,43 @@ const docTemplate = `{
                     "组织"
                 ],
                 "summary": "获取组织节点列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量，默认10，最大100",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词（搜索组织名称）",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方式：asc/desc",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "获取成功",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_OrgUnitResponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse"
                         }
                     }
                 }
@@ -751,7 +821,7 @@ const docTemplate = `{
         },
         "/roles": {
             "get": {
-                "description": "获取所有角色",
+                "description": "获取角色列表（支持分页、搜索、排序）",
                 "produces": [
                     "application/json"
                 ],
@@ -759,11 +829,43 @@ const docTemplate = `{
                     "角色"
                 ],
                 "summary": "获取角色列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量，默认10，最大100",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词（搜索角色名称）",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段",
+                        "name": "order_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方式：asc/desc",
+                        "name": "sort",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "获取成功",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_RoleResponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse"
                         }
                     }
                 }
@@ -1053,26 +1155,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "api_handler.PageResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_entity.AuditLog"
-                    }
-                },
-                "page": {
-                    "type": "integer"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
         "api_handler.UserMenuResponse": {
             "type": "object",
             "properties": {
@@ -1208,45 +1290,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_lyj404_gin-api-template_domain_dto.MenuListResponse": {
-            "type": "object",
-            "properties": {
-                "component": {
-                    "type": "string"
-                },
-                "icon": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "is_visible": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "order_num": {
-                    "type": "integer"
-                },
-                "parent_id": {
-                    "type": "integer"
-                },
-                "path": {
-                    "type": "string"
-                },
-                "resource_id": {
-                    "type": "integer"
-                },
-                "resource_name": {
-                    "description": "资源名称",
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
         "github_com_lyj404_gin-api-template_domain_dto.MenuResponse": {
             "type": "object",
             "properties": {
@@ -1305,6 +1348,30 @@ const docTemplate = `{
                 },
                 "path": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_dto.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "description": "数据列表"
+                },
+                "page": {
+                    "description": "当前页码",
+                    "type": "integer"
+                },
+                "page_size": {
+                    "description": "每页数量",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "总记录数",
+                    "type": "integer"
+                },
+                "total_page": {
+                    "description": "总页数",
+                    "type": "integer"
                 }
             }
         },
@@ -1454,74 +1521,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_lyj404_gin-api-template_domain_entity.AuditLog": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "description": "操作类型（create, update, delete, assign）",
-                    "type": "string"
-                },
-                "after_data": {
-                    "description": "变更后数据（JSON）",
-                    "type": "string"
-                },
-                "before_data": {
-                    "description": "变更前数据（JSON）",
-                    "type": "string"
-                },
-                "createdAt": {
-                    "type": "string"
-                },
-                "description": {
-                    "description": "操作描述",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "主键ID",
-                    "type": "integer"
-                },
-                "operator_id": {
-                    "description": "操作者ID",
-                    "type": "integer"
-                },
-                "operator_name": {
-                    "description": "操作者姓名",
-                    "type": "string"
-                },
-                "target_id": {
-                    "description": "目标ID",
-                    "type": "integer"
-                },
-                "target_type": {
-                    "description": "目标类型（role, resource, org, user_role）",
-                    "type": "string"
-                },
-                "updatedAt": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_PageResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "@Description 响应状态码",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "@Description 响应数据",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/api_handler.PageResponse"
-                        }
-                    ]
-                },
-                "message": {
-                    "description": "@Description 响应信息",
-                    "type": "string"
-                }
-            }
-        },
         "github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_UserMenuResponse": {
             "type": "object",
             "properties": {
@@ -1564,26 +1563,6 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_MenuListResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "@Description 响应状态码",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "@Description 响应数据",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.MenuListResponse"
-                    }
-                },
-                "message": {
-                    "description": "@Description 响应信息",
-                    "type": "string"
-                }
-            }
-        },
         "github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_MenuResponse": {
             "type": "object",
             "properties": {
@@ -1616,26 +1595,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.OrgUnitResponse"
-                    }
-                },
-                "message": {
-                    "description": "@Description 响应信息",
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_RoleResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "@Description 响应状态码",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "@Description 响应数据",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleResponse"
                     }
                 },
                 "message": {
@@ -1698,6 +1657,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.OrgUnitResponse"
+                        }
+                    ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.PaginationResponse"
                         }
                     ]
                 },

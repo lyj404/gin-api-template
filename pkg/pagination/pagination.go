@@ -112,17 +112,19 @@ func (p *PaginationBuilder) Where(query interface{}, args ...interface{}) *Pagin
 
 // OrderBy 添加排序规则
 // 参数:
-//   - order: string 排序表达式
+//   - order: string 排序表达式，支持 "field ASC" 或 "field DESC" 格式
 //
 // 示例:
 //
-//	builder.OrderBy("created_at", pagination.DESC)
-//	builder.OrderBy("age", pagination.ASC)
+//	builder.OrderBy("created_at DESC")
+//	builder.OrderBy("age ASC")
 //
 // 返回:
 //   - *PaginationBuilder 分页构造器实例(链式调用)
-func (p *PaginationBuilder) OrderBy(field string, order string) *PaginationBuilder {
-	p.orderFields = append(p.orderFields, field+" "+string(order))
+func (p *PaginationBuilder) OrderBy(order string) *PaginationBuilder {
+	if order != "" {
+		p.orderFields = append(p.orderFields, order)
+	}
 	return p
 }
 
