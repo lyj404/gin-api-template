@@ -191,44 +191,37 @@ func (u *UserHandler) Signup(c *gin.Context) {
 }
 
 // @Summary 验证码
-// @Description 生成验证码防止反复登录
+// @Description 生成验证码图片防止反复登录
 // @Tags user
 // @Accept json
-// @Produce json
-// @Param request body dto.SignupRequest true "注册请求参数"
-// @Success 200 {object} result.ResponseResult[captcha.CaptchaReponse] "验证码成功响应"
+// @Produce png
+// @Success 200 {file} "验证码图片"
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
-// @Router /signup [post]
+// @Router /captcha [get]
 func (u *UserHandler) GenerateMathCaptcha(c *gin.Context) {
-	// 获取 session
 	session, err := captcha.Store.Get(c.Request, "captcha-session")
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, "Session Error")
+		return
 	}
 
-	// 生成数学问题
 	problem := captcha.GenerateMathProblem()
-	// 生成验证码图片
-	imageURL, err := captcha.GenerateCaptchaImage(problem.Question)
+	imageData, err := captcha.GenerateCaptchaImageBytes(problem.Question)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, "Failed to generate verification code image")
+		return
 	}
-	// 存储问题到 session
+
 	session.Values[captcha.CaptchaSessionKey] = map[string]interface{}{
-		"answer":   problem.Answer,
-		"question": problem.Question,
-		"type":     int(problem.Type),
-		"time":     time.Now().Unix(),
+		"answer": problem.Answer,
+		"type":  int(problem.Type),
+		"time":  time.Now().Unix(),
 	}
-	// 保存 session
 	if err := session.Save(c.Request, c.Writer); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, "Failed to save session")
 		return
 	}
-	response := captcha.CaptchaReponse{
-		ImageUrl:   imageURL,
-		Question:   problem.Question,
-		ExpireTime: 300,
-	}
-	result.SuccessResponse(c, "success", &response)
+
+	c.Header("Content-Type", "image/png")
+	c.Data(http.StatusOK, "image/png", imageData)
 }

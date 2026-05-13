@@ -32,7 +32,11 @@ type CaptchaReponse struct {
 }
 
 // Session 存储配置
-var Store = sessions.NewCookieStore([]byte(config.CfgSession.SessionSecret))
+var Store *sessions.CookieStore
+
+func InitStore() {
+	Store = sessions.NewCookieStore([]byte(config.CfgSession.SessionSecret))
+}
 
 // 验证码 Session Key
 const CaptchaSessionKey = "captcha_data"

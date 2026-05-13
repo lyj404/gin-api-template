@@ -3,11 +3,15 @@ package main
 import (
 	"github.com/lyj404/gin-api-template/bootstrap"
 	"github.com/lyj404/gin-api-template/config"
+	"github.com/lyj404/gin-api-template/pkg/lib/captcha"
 )
 
 func main() {
 	// 初始化配置
 	config.InitConfig()
+
+	// 初始化验证码 Store
+	captcha.InitStore()
 
 	// 初始化数据库和缓存（用于设置全局变量）
 	bootstrap.Boot()

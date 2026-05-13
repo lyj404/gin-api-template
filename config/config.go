@@ -249,5 +249,6 @@ func InitConfig() {
 	CfgTimeout = cfg.Timeout
 	CfgToken = cfg.Token
 	CfgPassword = cfg.Password
+	CfgSession = cfg.Session
 	CfgLog = cfg.Log
 }

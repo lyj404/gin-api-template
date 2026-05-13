@@ -106,6 +106,55 @@ func GenerateCaptchaImage(question string) (string, error) {
 	return "data:image/png;base64," + base64Str, nil
 }
 
+func GenerateCaptchaImageBytes(question string) ([]byte, error) {
+	width, height := 200, 80
+
+	img := image.NewRGBA(image.Rect(0, 0, width, height))
+
+	draw.Draw(img, img.Bounds(), &image.Uniform{color.RGBA{255, 255, 255, 255}}, image.Point{}, draw.Src)
+
+	for i := 0; i < 5; i++ {
+		x1 := rng.Intn(width)
+		y1 := rng.Intn(height)
+		x2 := rng.Intn(width)
+		y2 := rng.Intn(height)
+
+		lineColor := color.RGBA{
+			R: uint8(rng.Intn(128)),
+			G: uint8(rng.Intn(128)),
+			B: uint8(rng.Intn(128)),
+			A: 255,
+		}
+
+		drawLine(img, x1, y1, x2, y2, lineColor)
+	}
+
+	for i := 0; i < 50; i++ {
+		x := rng.Intn(width)
+		y := rng.Intn(height)
+
+		dotColor := color.RGBA{
+			R: uint8(rng.Intn(256)),
+			G: uint8(rng.Intn(256)),
+			B: uint8(rng.Intn(256)),
+			A: 255,
+		}
+
+		img.Set(x, y, dotColor)
+	}
+
+	if err := drawSimpleText(img, question, width, height); err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
 // drawLine 使用 Bresenham 算法绘制直线
 func drawLine(img *image.RGBA, x1, y1, x2, y2 int, lineColor color.RGBA) {
 	dx := abs(x2 - x1)

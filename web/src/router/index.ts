@@ -1,4 +1,6 @@
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import { usePermissionStore } from '@/stores/permission'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -67,6 +69,41 @@ export const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+const whiteList = ['/login']
+
+router.beforeEach(async (to, from, next) => {
+  const authStore = useAuthStore()
+  const permissionStore = usePermissionStore()
+  const token = authStore.token
+
+  if (token) {
+    if (to.path === '/login') {
+      next({ path: '/' })
+    } else {
+      if (permissionStore.menus.length === 0) {
+        try {
+          await Promise.all([
+            permissionStore.fetchMenus(),
+            permissionStore.fetchPermissions()
+          ])
+          next({ ...to, replace: true })
+        } catch (error) {
+          authStore.clearToken()
+          next(`/login?redirect=${to.path}`)
+        }
+      } else {
+        next()
+      }
+    }
+  } else {
+    if (whiteList.includes(to.path)) {
+      next()
+    } else {
+      next(`/login?redirect=${to.path}`)
+    }
+  }
 })
 
 export default router

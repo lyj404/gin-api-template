@@ -1,5 +1,5 @@
 # 定义伪目标
-.PHONY: all build run clean swagger create-admin
+.PHONY: all build run clean swagger create-admin clean-logs
 
 # 项目名称
 PROJECT_NAME := gin-api-template
@@ -7,48 +7,41 @@ PROJECT_NAME := gin-api-template
 # Go 命令
 GO := go
 
-# 动态检测操作系统和架构
-GOOS := $(shell go env GOOS)
-GOARCH := $(shell go env GOARCH)
-
-# 构建目标目录
-BUILD_DIR := ./bin
-BINARY_NAME := $(PROJECT_NAME)
+# 操作系统检测
+ifeq ($(OS),Windows_NT)
+    SHELL := cmd.exe
+    BINARY_NAME := $(PROJECT_NAME).exe
+    RM := if exist bin rmdir /s /q bin
+    RM_LOGS := if exist logs rmdir /s /q logs
+else
+    BINARY_NAME := $(PROJECT_NAME)
+    RM := rm -rf bin
+    RM_LOGS := rm -rf ./logs/*
+endif
 
 # 默认目标
 all: run
 
 # 构建项目
 build:
-	@echo "🚀 构建项目中..."
-	@mkdir -p $(BUILD_DIR)
-	GOOS=$(GOOS) GOARCH=$(GOARCH) $(GO) build -ldflags "-s -w" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/...
-	@echo "✅ 构建完成！二进制文件位于 $(BUILD_DIR)/$(BINARY_NAME)"
+	$(GO) build -ldflags "-s -w" -o bin/$(BINARY_NAME) ./cmd
 
 # 运行项目
 run:
-	@echo "🏃 运行项目中..."
-	$(GO) run ./cmd/main.go
+	cd cmd && $(GO) run .
 
 # 清理构建文件
 clean:
-	@echo "🧹 清理构建文件..."
-	rm -rf $(BUILD_DIR)
-	@echo "✅ 清理完成！"
+	@$(RM)
 
 # 清除日志文件
 clean-logs:
-	@echo "🧹 清理日志文件..."
-	@rm -rf ./logs/*
-	@echo "✅ 成功清理日志文件！"
+	@$(RM_LOGS)
 
 swagger:
-	@echo "📚 生成 Swagger 文档..."
 	swag init -g ./cmd/main.go --parseDependency
-	@echo "✅ Swagger 文档生成完成！"
 
 # 创建系统管理员
 create-admin:
-	@echo "👑 创建系统管理员..."
 	$(GO) run ./cmd/rbaccli/main.go create-admin
-	@echo "✅ 系统管理员创建完成！"
+
