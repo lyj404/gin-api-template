@@ -28,6 +28,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '仪表盘', icon: 'i-material-symbols:dashboard-outline' }
       },
       {
+        path: 'users',
+        name: 'Users',
+        component: () => import('@/views/users/index.vue'),
+        meta: { title: '用户管理', icon: 'i-material-symbols:group-outline' }
+      },
+      {
         path: 'roles',
         name: 'Roles',
         component: () => import('@/views/roles/index.vue'),

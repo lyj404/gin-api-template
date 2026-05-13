@@ -169,28 +169,80 @@
                 }
             }
         },
-        "/hello": {
+        "/captcha": {
             "get": {
-                "description": "返回一个简单的消息",
+                "description": "生成验证码图片防止反复登录",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
-                    "application/json"
+                    "image/png"
                 ],
                 "tags": [
-                    "hello"
+                    "user"
                 ],
-                "summary": "测试",
+                "summary": "验证码",
                 "responses": {
                     "200": {
-                        "description": "成功响应",
+                        "description": "验证码图片",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                            "type": "file"
                         }
                     },
                     "500": {
-                        "description": "服务器错误",
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard/audit-trend": {
+            "get": {
+                "description": "按日期分组返回最近 7 天的审计日志数量",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "仪表盘"
+                ],
+                "summary": "审计日志 7 天趋势",
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_api_handler_auditTrendItem"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/dashboard/stats": {
+            "get": {
+                "description": "获取用户、角色、菜单、审计日志的总数统计",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "仪表盘"
+                ],
+                "summary": "仪表盘汇总统计",
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_dashboardStats"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
                         "schema": {
                             "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
                         }
@@ -1040,7 +1092,7 @@
         },
         "/signup": {
             "post": {
-                "description": "生成验证码防止反复登录",
+                "description": "处理新用户注册请求，创建用户账户并返回访问token和刷新token",
                 "consumes": [
                     "application/json"
                 ],
@@ -1050,7 +1102,7 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "验证码",
+                "summary": "用户注册",
                 "parameters": [
                     {
                         "description": "注册请求参数",
@@ -1064,9 +1116,21 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "验证码成功响应",
+                        "description": "注册成功响应",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_pkg_lib_captcha_CaptchaReponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_SignupResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "409": {
+                        "description": "邮箱已存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
                         }
                     },
                     "500": {
@@ -1141,6 +1205,239 @@
                     }
                 }
             }
+        },
+        "/users": {
+            "get": {
+                "description": "获取用户列表（支持分页和关键词搜索）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "用户列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码，默认1",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量，默认10，最大100",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词（搜索用户名或邮箱）",
+                        "name": "keyword",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建新用户并分配角色",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "创建用户",
+                "parameters": [
+                    {
+                        "description": "创建用户请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "创建成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/{id}": {
+            "get": {
+                "description": "根据ID获取用户详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "用户详情",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "无效的用户ID",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "404": {
+                        "description": "用户不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新用户信息，可同时更新角色绑定",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "更新用户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新用户请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.UpdateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "404": {
+                        "description": "用户不存在",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "根据ID删除用户",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "删除用户",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "用户ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "删除成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "400": {
+                        "description": "无效的用户ID",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -1169,6 +1466,34 @@
                     "items": {
                         "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_services.PermissionInfo"
                     }
+                }
+            }
+        },
+        "api_handler.auditTrendItem": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                }
+            }
+        },
+        "api_handler.dashboardStats": {
+            "type": "object",
+            "properties": {
+                "audit_log_count": {
+                    "type": "integer"
+                },
+                "menu_count": {
+                    "type": "integer"
+                },
+                "role_count": {
+                    "type": "integer"
+                },
+                "user_count": {
+                    "type": "integer"
                 }
             }
         },
@@ -1238,6 +1563,35 @@
                 },
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_dto.CreateUserRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "org_unit_id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -1510,6 +1864,56 @@
                 }
             }
         },
+        "github_com_lyj404_gin-api-template_domain_dto.UpdateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "org_unit_id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_dto.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_UserMenuResponse": {
             "type": "object",
             "properties": {
@@ -1545,6 +1949,47 @@
                             "$ref": "#/definitions/api_handler.UserPermissionResponse"
                         }
                     ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_dashboardStats": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/api_handler.dashboardStats"
+                        }
+                    ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_api_handler_auditTrendItem": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api_handler.auditTrendItem"
+                    }
                 },
                 "message": {
                     "description": "@Description 响应信息",
@@ -1739,7 +2184,7 @@
                 }
             }
         },
-        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_pkg_lib_captcha_CaptchaReponse": {
+        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_UserResponse": {
             "type": "object",
             "properties": {
                 "code": {
@@ -1750,7 +2195,7 @@
                     "description": "@Description 响应数据",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_pkg_lib_captcha.CaptchaReponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.UserResponse"
                         }
                     ]
                 },
@@ -1830,20 +2275,6 @@
                     "type": "boolean"
                 },
                 "resource_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_lyj404_gin-api-template_pkg_lib_captcha.CaptchaReponse": {
-            "type": "object",
-            "properties": {
-                "expire_time": {
-                    "type": "integer"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "question": {
                     "type": "string"
                 }
             }

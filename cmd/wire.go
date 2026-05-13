@@ -32,13 +32,14 @@ type App struct {
 	UserSvc        domain.LoginService
 	TokenSvc       domain.RefreshTokenService
 	UserHdlr       *handler.UserHandler
-	HelloHdlr      *handler.HelloHandler
 	RefreshHdlr    *handler.RefreshTokenHandler
 	RoleHdlr       *handler.RoleHandler
 	OrgHdlr        *handler.OrgUnitHandler
 	AuditHdlr      *handler.AuditLogHandler
 	UserPermHdlr   *handler.UserPermissionHandler
 	MenuHdlr       *handler.MenuHandler
+	UserMgmtHdlr   *handler.UserManagementHandler
+	DashboardHdlr  *handler.DashboardHandler
 	RBACMiddleware *middleware.RBACMiddleware
 	PermSvc        domainservices.PermissionService
 	RegisterRoutes func()
@@ -77,13 +78,14 @@ func provideRouter(timeout time.Duration, logger *zap.Logger) *gin.Engine {
 func provideRouteRegistration(
 	router *gin.Engine,
 	userHdlr *handler.UserHandler,
-	helloHdlr *handler.HelloHandler,
 	refreshTokenHdlr *handler.RefreshTokenHandler,
 	roleHdlr *handler.RoleHandler,
 	orgHdlr *handler.OrgUnitHandler,
 	auditHdlr *handler.AuditLogHandler,
 	userPermHdlr *handler.UserPermissionHandler,
 	menuHdlr *handler.MenuHandler,
+	userMgmtHdlr *handler.UserManagementHandler,
+	dashboardHdlr *handler.DashboardHandler,
 ) func() {
 	return func() {
 		// 注册公共路由
@@ -93,12 +95,13 @@ func provideRouteRegistration(
 		// 注册受保护的路由
 		protectedGroup := router.Group("")
 		protectedGroup.Use(route.JwtAuthMiddleware())
-		route.NewTestRouter(helloHdlr, protectedGroup)
 		route.NewRoleRouter(roleHdlr, protectedGroup)
 		route.NewOrgUnitRouter(orgHdlr, protectedGroup)
 		route.NewAuditLogRouter(auditHdlr, protectedGroup)
 		route.NewUserPermissionRouter(userPermHdlr, protectedGroup)
 		route.NewMenuRouter(menuHdlr, protectedGroup)
+		route.NewUserManagementRouter(userMgmtHdlr, protectedGroup)
+		route.NewDashboardRouter(dashboardHdlr, protectedGroup)
 	}
 }
 
@@ -122,6 +125,7 @@ var providerSet = wire.NewSet(
 	repository.NewOrgUnitRepository,
 	repository.NewAuditLogRepository,
 	repository.NewMenuRepository,
+	repository.NewUserManagementRepository,
 
 	// Service 层
 	service.NewUserService,
@@ -131,15 +135,17 @@ var providerSet = wire.NewSet(
 	service.NewOrgUnitService,
 	service.NewAuditLogService,
 	service.NewMenuService,
+	service.NewUserManagementService,
 	middleware.NewRBACMiddleware,
 
 	// Handler 层
 	handler.NewUserHandler,
-	handler.NewHelloHandler,
 	handler.NewRefreshTokenHandler,
 	handler.NewRoleHandler,
 	handler.NewOrgUnitHandler,
 	handler.NewUserPermissionHandler,
 	handler.NewAuditLogHandler,
 	handler.NewMenuHandler,
+	handler.NewUserManagementHandler,
+	handler.NewDashboardHandler,
 )

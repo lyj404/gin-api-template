@@ -195,7 +195,7 @@ func (u *UserHandler) Signup(c *gin.Context) {
 // @Tags user
 // @Accept json
 // @Produce png
-// @Success 200 {file} "验证码图片"
+// @Success 200 {file} binary "验证码图片"
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /captcha [get]
 func (u *UserHandler) GenerateMathCaptcha(c *gin.Context) {

@@ -17,6 +17,24 @@ definitions:
           $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_services.PermissionInfo'
         type: array
     type: object
+  api_handler.auditTrendItem:
+    properties:
+      count:
+        type: integer
+      date:
+        type: string
+    type: object
+  api_handler.dashboardStats:
+    properties:
+      audit_log_count:
+        type: integer
+      menu_count:
+        type: integer
+      role_count:
+        type: integer
+      user_count:
+        type: integer
+    type: object
   github_com_lyj404_gin-api-template_domain_dto.CreateMenuRequest:
     properties:
       component:
@@ -64,6 +82,26 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.CreateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      org_unit_id:
+        type: integer
+      password:
+        minLength: 6
+        type: string
+      role_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - email
+    - name
+    - password
     type: object
   github_com_lyj404_gin-api-template_domain_dto.LoginRequest:
     description: 登录时请求的参数
@@ -267,6 +305,39 @@ definitions:
       name:
         type: string
     type: object
+  github_com_lyj404_gin-api-template_domain_dto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      org_unit_id:
+        type: integer
+      password:
+        minLength: 6
+        type: string
+      role_ids:
+        items:
+          type: integer
+        type: array
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.UserResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      role_ids:
+        items:
+          type: integer
+        type: array
+      roles:
+        items:
+          type: string
+        type: array
+    type: object
   github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_UserMenuResponse:
     properties:
       code:
@@ -289,6 +360,33 @@ definitions:
         allOf:
         - $ref: '#/definitions/api_handler.UserPermissionResponse'
         description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_dashboardStats:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/api_handler.dashboardStats'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_api_handler_auditTrendItem:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        description: '@Description 响应数据'
+        items:
+          $ref: '#/definitions/api_handler.auditTrendItem'
+        type: array
       message:
         description: '@Description 响应信息'
         type: string
@@ -412,14 +510,14 @@ definitions:
         description: '@Description 响应信息'
         type: string
     type: object
-  ? github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_pkg_lib_captcha_CaptchaReponse
-  : properties:
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_UserResponse:
+    properties:
       code:
         description: '@Description 响应状态码'
         type: integer
       data:
         allOf:
-        - $ref: '#/definitions/github_com_lyj404_gin-api-template_pkg_lib_captcha.CaptchaReponse'
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.UserResponse'
         description: '@Description 响应数据'
       message:
         description: '@Description 响应信息'
@@ -472,15 +570,6 @@ definitions:
       is_write:
         type: boolean
       resource_name:
-        type: string
-    type: object
-  github_com_lyj404_gin-api-template_pkg_lib_captcha.CaptchaReponse:
-    properties:
-      expire_time:
-        type: integer
-      image_url:
-        type: string
-      question:
         type: string
     type: object
 info:
@@ -595,25 +684,59 @@ paths:
       summary: 按时间范围查询审计日志
       tags:
       - 审计
-  /hello:
+  /captcha:
     get:
       consumes:
       - application/json
-      description: 返回一个简单的消息
+      description: 生成验证码图片防止反复登录
+      produces:
+      - image/png
+      responses:
+        "200":
+          description: 验证码图片
+          schema:
+            type: file
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 验证码
+      tags:
+      - user
+  /dashboard/audit-trend:
+    get:
+      description: 按日期分组返回最近 7 天的审计日志数量
       produces:
       - application/json
       responses:
         "200":
-          description: 成功响应
+          description: 获取成功
           schema:
-            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_api_handler_auditTrendItem'
         "500":
-          description: 服务器错误
+          description: 服务器内部错误
           schema:
             $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
-      summary: 测试
+      summary: 审计日志 7 天趋势
       tags:
-      - hello
+      - 仪表盘
+  /dashboard/stats:
+    get:
+      description: 获取用户、角色、菜单、审计日志的总数统计
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_dashboardStats'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 仪表盘汇总统计
+      tags:
+      - 仪表盘
   /login:
     post:
       consumes:
@@ -1172,7 +1295,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 生成验证码防止反复登录
+      description: 处理新用户注册请求，创建用户账户并返回访问token和刷新token
       parameters:
       - description: 注册请求参数
         in: body
@@ -1184,14 +1307,22 @@ paths:
       - application/json
       responses:
         "200":
-          description: 验证码成功响应
+          description: 注册成功响应
           schema:
-            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_pkg_lib_captcha_CaptchaReponse'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_SignupResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "409":
+          description: 邮箱已存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
         "500":
           description: 服务器内部错误
           schema:
             $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
-      summary: 验证码
+      summary: 用户注册
       tags:
       - user
   /user/menus:
@@ -1234,6 +1365,160 @@ paths:
           schema:
             $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
       summary: 获取当前用户权限
+      tags:
+      - 用户
+  /users:
+    get:
+      description: 获取用户列表（支持分页和关键词搜索）
+      parameters:
+      - description: 页码，默认1
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量，默认10，最大100
+        in: query
+        name: page_size
+        type: integer
+      - description: 搜索关键词（搜索用户名或邮箱）
+        in: query
+        name: keyword
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 用户列表
+      tags:
+      - 用户
+    post:
+      consumes:
+      - application/json
+      description: 创建新用户并分配角色
+      parameters:
+      - description: 创建用户请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 创建成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_UserResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 创建用户
+      tags:
+      - 用户
+  /users/{id}:
+    delete:
+      description: 根据ID删除用户
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 删除成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "400":
+          description: 无效的用户ID
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 删除用户
+      tags:
+      - 用户
+    get:
+      description: 根据ID获取用户详情
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_UserResponse'
+        "400":
+          description: 无效的用户ID
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 用户详情
+      tags:
+      - 用户
+    put:
+      consumes:
+      - application/json
+      description: 更新用户信息，可同时更新角色绑定
+      parameters:
+      - description: 用户ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 更新用户请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_UserResponse'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "404":
+          description: 用户不存在
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 更新用户
       tags:
       - 用户
 swagger: "2.0"

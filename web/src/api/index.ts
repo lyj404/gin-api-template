@@ -9,7 +9,9 @@ import type {
   CreateOrgUnitRequest, UpdateOrgUnitRequest, OrgUnitResponse,
   ResourceResponse,
   BindResourceRequest,
-  UserPermissions
+  UserPermissions,
+  UserResponse, CreateUserRequest, UpdateUserRequest,
+  DashboardStats, AuditTrendItem
 } from '@/types'
 
 export const login = (data: LoginRequest) => api.post('/login', data)
@@ -45,3 +47,12 @@ export const getAuditLogsByTime = (params: { start_time: string; end_time: strin
 
 export const getUserPermissions = () => api.get<{ data: UserPermissions }>('/user/permissions')
 export const getUserMenus = () => api.get<{ data: { menus: MenuTreeNode[] } }>('/user/menus')
+
+export const getUsers = (params?: PaginationRequest) => api.get<PaginationResponse<UserResponse>>('/users', { params })
+export const getUser = (id: number) => api.get<{ data: UserResponse }>(`/users/${id}`)
+export const createUser = (data: CreateUserRequest) => api.post('/users', data)
+export const updateUser = (id: number, data: UpdateUserRequest) => api.put(`/users/${id}`, data)
+export const deleteUser = (id: number) => api.delete(`/users/${id}`)
+
+export const getDashboardStats = () => api.get<{ data: DashboardStats }>('/dashboard/stats')
+export const getAuditTrend = () => api.get<{ data: AuditTrendItem[] }>('/dashboard/audit-trend')

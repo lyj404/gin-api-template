@@ -19,7 +19,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("可用命令: create-admin")
+		fmt.Println("可用命令: create-admin, seed-menus")
 		os.Exit(1)
 	}
 
@@ -28,6 +28,8 @@ func main() {
 	switch command {
 	case "create-admin":
 		createAdmin()
+	case "seed-menus":
+		seedMenus()
 	default:
 		fmt.Printf("未知命令: %s\n", command)
 		os.Exit(1)
@@ -115,6 +117,11 @@ func createSystemAdmin(email, password string) error {
 		// 2. 创建默认资源（如果不存在）
 		if err := createDefaultResources(tx); err != nil {
 			return fmt.Errorf("创建默认资源失败: %w", err)
+		}
+
+		// 2.5 创建默认菜单（如果不存在）
+		if err := createDefaultMenus(tx); err != nil {
+			return fmt.Errorf("创建默认菜单失败: %w", err)
 		}
 
 		// 3. 创建超级管理员角色（如果不存在）
@@ -261,4 +268,72 @@ func bindOrgScopeToRole(tx *gorm.DB, roleID, orgUnitID uint, includeDescendants 
 		IncludeDescendants: includeDescendants,
 	}
 	return tx.Create(&roleOrgScope).Error
+}
+
+func seedMenus() {
+	fmt.Println("=== 菜单数据初始化 ===")
+
+	config.InitConfig()
+	bootstrap.BootDBOnly()
+
+	err := global.G_DB.Transaction(func(tx *gorm.DB) error {
+		return createDefaultMenus(tx)
+	})
+	if err != nil {
+		fmt.Printf("菜单初始化失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	var count int64
+	global.G_DB.Model(&entity.Menu{}).Count(&count)
+	fmt.Printf("菜单初始化成功，当前菜单总数: %d\n", count)
+}
+
+func createDefaultMenus(tx *gorm.DB) error {
+	type menuSeed struct {
+		Name         string
+		Path         string
+		Icon         string
+		OrderNum     int
+		ResourceName string
+	}
+
+	seeds := []menuSeed{
+		{Name: "仪表盘", Path: "/dashboard", Icon: "i-material-symbols:dashboard-outline", OrderNum: 10, ResourceName: "user:permissions"},
+		{Name: "用户管理", Path: "/users", Icon: "i-material-symbols:group-outline", OrderNum: 20, ResourceName: "user:read"},
+		{Name: "角色管理", Path: "/roles", Icon: "i-material-symbols:manage-accounts-outline", OrderNum: 30, ResourceName: "role:manage"},
+		{Name: "菜单管理", Path: "/menus", Icon: "i-material-symbols:menu-outline", OrderNum: 40, ResourceName: "menu:read"},
+		{Name: "组织管理", Path: "/orgs", Icon: "i-material-symbols:corporate-fare-outline", OrderNum: 50, ResourceName: "org:manage"},
+		{Name: "资源管理", Path: "/resources", Icon: "i-material-symbols:security-outline", OrderNum: 60, ResourceName: "resource:manage"},
+		{Name: "审计日志", Path: "/audit-logs", Icon: "i-material-symbols:history-outline", OrderNum: 70, ResourceName: "audit:read"},
+	}
+
+	for _, s := range seeds {
+		var existing entity.Menu
+		if err := tx.Where("name = ? AND parent_id IS NULL", s.Name).First(&existing).Error; err == nil {
+			continue
+		} else if err != gorm.ErrRecordNotFound {
+			return err
+		}
+
+		var res entity.Resource
+		if err := tx.Where("name = ?", s.ResourceName).First(&res).Error; err != nil {
+			return fmt.Errorf("查找菜单关联资源 %s 失败: %w", s.ResourceName, err)
+		}
+
+		menu := entity.Menu{
+			Name:       s.Name,
+			ParentID:   nil,
+			Path:       s.Path,
+			Icon:       s.Icon,
+			OrderNum:   s.OrderNum,
+			ResourceID: res.ID,
+			IsVisible:  true,
+			Status:     "enabled",
+		}
+		if err := tx.Create(&menu).Error; err != nil {
+			return err
+		}
+	}
+	return nil
 }

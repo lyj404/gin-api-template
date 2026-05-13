@@ -155,3 +155,39 @@ export interface UserPermissions {
   org_scope: number[]
   resources: ResourceResponse[]
 }
+
+export interface UserResponse {
+  id: number
+  name: string
+  email: string
+  role_ids: number[]
+  roles: string[]
+}
+
+export interface CreateUserRequest {
+  name: string
+  email: string
+  password: string
+  role_ids?: number[]
+  org_unit_id?: number
+}
+
+export interface UpdateUserRequest {
+  name?: string
+  email?: string
+  password?: string
+  role_ids?: number[]
+  org_unit_id?: number
+}
+
+export interface DashboardStats {
+  user_count: number
+  role_count: number
+  menu_count: number
+  audit_log_count: number
+}
+
+export interface AuditTrendItem {
+  date: string
+  count: number
+}
