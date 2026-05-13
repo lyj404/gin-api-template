@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :locale="zhCN" :theme-overrides="themeOverrides">
+  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme-overrides="themeOverrides">
     <n-message-provider>
       <n-dialog-provider>
         <n-notification-provider>
@@ -13,6 +13,7 @@
 <script setup lang="ts">
 import { NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvider, type GlobalThemeOverrides } from 'naive-ui'
 import zhCN from 'naive-ui/es/locales/common/zhCN'
+import dateZhCN from 'naive-ui/es/locales/date/zhCN'
 
 const themeOverrides: GlobalThemeOverrides = {
   common: {

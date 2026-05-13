@@ -182,12 +182,18 @@ func (h *OrgUnitHandler) ListOrgUnits(c *gin.Context) {
 	}
 	req.SetDefaults()
 
+	orderBy := req.OrderBy
+	if orderBy == "" {
+		orderBy = "id"
+	}
+	orderBy += " " + req.Sort
+
 	var orgs []entity.OrgUnit
 	builder := pagination.NewPaginationBuilder(global.G_DB).
 		Model(&entity.OrgUnit{}).
 		SetPage(req.Page).
 		SetPageSize(req.PageSize).
-		OrderBy(req.OrderBy + " " + req.Sort)
+		OrderBy(orderBy)
 
 	// 如果有关键词搜索，添加搜索条件
 	if req.Keyword != "" {

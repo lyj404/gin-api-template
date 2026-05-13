@@ -215,12 +215,18 @@ func (h *MenuHandler) ListMenus(c *gin.Context) {
 	}
 	req.SetDefaults()
 
+	orderBy := req.OrderBy
+	if orderBy == "" {
+		orderBy = "id"
+	}
+	orderBy += " " + req.Sort
+
 	var menus []entity.Menu
 	builder := pagination.NewPaginationBuilder(global.G_DB).
 		Model(&entity.Menu{}).
 		SetPage(req.Page).
 		SetPageSize(req.PageSize).
-		OrderBy(req.OrderBy + " " + req.Sort)
+		OrderBy(orderBy)
 
 	// 如果有关键词搜索，添加搜索条件
 	if req.Keyword != "" {

@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
+import { ref, computed, h, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { NLayout, NLayoutSider, NLayoutHeader, NLayoutContent, NMenu, NDropdown, NButton } from 'naive-ui'
 import type { MenuOption } from 'naive-ui'
@@ -62,16 +62,21 @@ const auth = useAuthStore()
 const permission = usePermissionStore()
 
 const collapsed = ref(false)
-const activeKey = ref<string>()
+const activeKey = ref<string>(route.path)
 const userName = ref(getUserInfo()?.name || 'Admin')
+
+watch(() => route.path, (newPath) => {
+  activeKey.value = newPath
+})
 
 const menuOptions = computed<MenuOption[]>(() => {
   return permission.menus.map(menu => ({
-    key: String(menu.id),
+    key: menu.path || String(menu.id),
     label: menu.name,
+    path: menu.path,
     icon: () => h('span', { class: menu.icon || 'i-material-symbols:circle' }),
     children: menu.children?.map(child => ({
-      key: String(child.id),
+      key: child.path,
       label: child.name,
       path: child.path,
       icon: () => h('span', { class: child.icon || 'i-material-symbols:circle' })
@@ -80,16 +85,20 @@ const menuOptions = computed<MenuOption[]>(() => {
 })
 
 const renderLabel = (option: MenuOption) => {
-  if ((option as any).path) {
+  const menuKey = option.key as string
+  if (menuKey && menuKey.startsWith('/')) {
     return h('a', {
-      onClick: () => router.push((option as any).path)
+      onClick: (e: Event) => {
+        e.preventDefault()
+        router.push(menuKey)
+      }
     }, option.label as string)
   }
   return option.label as string
 }
 
 const userOptions = [
-  { label: '退出登录', key: 'logout' }
+  { label: '退出登录', key: 'logout', icon: () => h('span', { class: 'i-material-symbols:logout' }) }
 ]
 
 const handleUserCommand = (key: string) => {

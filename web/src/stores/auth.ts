@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { login as loginApi } from '@/api'
 import { usePermissionStore } from '@/stores/permission'
 import type { LoginRequest, LoginResponse } from '@/types'
+import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref<string>(localStorage.getItem('accessToken') || '')
@@ -42,7 +43,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const logout = () => {
     clearToken()
-    window.location.href = '/login'
+    router.push('/login')
   }
 
   return { token, refreshToken, captchaUrl, login, logout, clearToken, refreshCaptcha }

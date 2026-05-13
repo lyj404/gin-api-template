@@ -180,12 +180,18 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 	}
 	req.SetDefaults()
 
+	orderBy := req.OrderBy
+	if orderBy == "" {
+		orderBy = "id"
+	}
+	orderBy += " " + req.Sort
+
 	var roles []entity.Role
 	builder := pagination.NewPaginationBuilder(global.G_DB).
 		Model(&entity.Role{}).
 		SetPage(req.Page).
 		SetPageSize(req.PageSize).
-		OrderBy(req.OrderBy + " " + req.Sort)
+		OrderBy(orderBy)
 
 	// 如果有关键词搜索，添加搜索条件
 	if req.Keyword != "" {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/lyj404/gin-api-template/api/route"
 	"github.com/lyj404/gin-api-template/bootstrap"
 	"github.com/lyj404/gin-api-template/config"
 	"github.com/lyj404/gin-api-template/pkg/lib/captcha"
@@ -35,6 +36,9 @@ func main() {
 
 	// 注册所有路由
 	app.RegisterRoutes()
+
+	// 设置前端 SPA 回退
+	route.SetupFrontend(app.Router)
 
 	// 运行服务
 	app.Router.Run(config.CfgServer.HttpPort)
