@@ -25,10 +25,10 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (data: LoginRequest): Promise<LoginResponse> => {
     const res = await loginApi(data)
     const result = res.data as any
-    if (result) {
-      setToken(result.accessToken, result.refreshToken)
+    if (result?.data) {
+      setToken(result.data.accessToken, result.data.refreshToken)
     }
-    return result
+    return result.data
   }
 
   const refreshCaptcha = async (): Promise<string> => {

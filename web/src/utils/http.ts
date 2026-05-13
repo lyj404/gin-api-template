@@ -8,7 +8,8 @@ const api: AxiosInstance = axios.create({
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  withCredentials: true
 })
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
