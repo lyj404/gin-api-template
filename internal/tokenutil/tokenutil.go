@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/lyj404/gin-api-template/config"
 	"github.com/lyj404/gin-api-template/domain"
 	"github.com/lyj404/gin-api-template/domain/entity"
 
@@ -30,9 +29,7 @@ func CreateAccessToken(user *entity.User, secret string, expire int) (accessToke
 	if err != nil {
 		return "", err
 	}
-	// 添加前缀，以方便后续处理
-	tokenWithPrefix := config.CfgToken.TokenPrefix + t
-	return tokenWithPrefix, nil
+	return t, nil
 }
 
 // CreateRefreshToken创建一个刷新令牌
@@ -52,9 +49,7 @@ func CreateRefreshToken(user *entity.User, secret string, expire int) (refreshTo
 	if err != nil {
 		return "", err
 	}
-	// 添加前缀，以方便后续处理
-	tokenWithPrefix := config.CfgToken.TokenPrefix + rt
-	return tokenWithPrefix, nil
+	return rt, nil
 }
 
 // ExtractIDFromToken从token提取用户ID

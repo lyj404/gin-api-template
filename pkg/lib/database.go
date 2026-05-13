@@ -3,6 +3,7 @@ package lib
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/lyj404/gin-api-template/config"
@@ -15,33 +16,20 @@ import (
 )
 
 func NewDataBase() *gorm.DB {
-	var dsn string
-	var db *gorm.DB
-	var err error
-
-	switch config.CfgDatabase.Type {
-	case "mysql":
-		dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
-			config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Host, config.CfgDatabase.Port, config.CfgDatabase.Name)
-		db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{
-			NamingStrategy: schema.NamingStrategy{
-				SingularTable: true, // 使用单数表名
-			},
-		})
-	case "postgres":
-		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
-			config.CfgDatabase.Host, config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Name, config.CfgDatabase.Port)
-		db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{
-			NamingStrategy: schema.NamingStrategy{
-				SingularTable: true, // 使用单数表名
-			},
-		})
-	default:
-		log.Fatal("不支持的数据库类型:", config.CfgDatabase.Type)
-	}
-
+	db, err := openDatabase()
 	if err != nil {
-		log.Fatal("连接数据库失败:", err)
+		// 数据库不存在时自动创建后重连
+		if isDatabaseNotExistError(err) {
+			log.Printf("数据库 %s 不存在，尝试自动创建...", config.CfgDatabase.Name)
+			if createErr := createDatabase(); createErr != nil {
+				log.Fatal("自动创建数据库失败:", createErr)
+			}
+			log.Printf("数据库 %s 创建成功", config.CfgDatabase.Name)
+			db, err = openDatabase()
+		}
+		if err != nil {
+			log.Fatal("连接数据库失败:", err)
+		}
 	}
 
 	// 设置自动迁移
@@ -112,4 +100,82 @@ func CloseDataBaseConnection(db *gorm.DB) {
 	} else {
 		log.Println("数据库连接已关闭")
 	}
+}
+
+// openDatabase 根据配置打开目标数据库连接
+func openDatabase() (*gorm.DB, error) {
+	gormCfg := &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true, // 使用单数表名
+		},
+	}
+
+	switch config.CfgDatabase.Type {
+	case "mysql":
+		dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+			config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Host, config.CfgDatabase.Port, config.CfgDatabase.Name)
+		return gorm.Open(mysql.Open(dsn), gormCfg)
+	case "postgres":
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
+			config.CfgDatabase.Host, config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Name, config.CfgDatabase.Port)
+		return gorm.Open(postgres.Open(dsn), gormCfg)
+	default:
+		return nil, fmt.Errorf("不支持的数据库类型: %s", config.CfgDatabase.Type)
+	}
+}
+
+// createDatabase 连接到管理库并创建目标数据库
+func createDatabase() error {
+	var adminDB *gorm.DB
+	var err error
+	var createSQL string
+
+	switch config.CfgDatabase.Type {
+	case "mysql":
+		// MySQL 连接时可不指定数据库
+		adminDSN := fmt.Sprintf("%s:%s@tcp(%s:%s)/?charset=utf8&parseTime=True&loc=Local",
+			config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Host, config.CfgDatabase.Port)
+		adminDB, err = gorm.Open(mysql.Open(adminDSN), &gorm.Config{})
+		if err != nil {
+			return fmt.Errorf("连接 MySQL 服务失败: %w", err)
+		}
+		createSQL = fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci",
+			config.CfgDatabase.Name)
+	case "postgres":
+		// PostgreSQL 必须连接到一个已存在的库（默认 postgres）
+		adminDSN := fmt.Sprintf("host=%s user=%s password=%s dbname=postgres port=%s sslmode=disable TimeZone=Asia/Shanghai",
+			config.CfgDatabase.Host, config.CfgDatabase.User, config.CfgDatabase.Password, config.CfgDatabase.Port)
+		adminDB, err = gorm.Open(postgres.Open(adminDSN), &gorm.Config{})
+		if err != nil {
+			return fmt.Errorf("连接 postgres 管理库失败: %w", err)
+		}
+		// PostgreSQL 不支持 IF NOT EXISTS 在所有版本上，这里依赖外层先判断不存在
+		createSQL = fmt.Sprintf(`CREATE DATABASE "%s"`, config.CfgDatabase.Name)
+	default:
+		return fmt.Errorf("不支持的数据库类型: %s", config.CfgDatabase.Type)
+	}
+
+	defer func() {
+		if sqlDB, dbErr := adminDB.DB(); dbErr == nil {
+			_ = sqlDB.Close()
+		}
+	}()
+
+	if err := adminDB.Exec(createSQL).Error; err != nil {
+		return fmt.Errorf("执行建库语句失败: %w", err)
+	}
+	return nil
+}
+
+// isDatabaseNotExistError 判断错误是否为目标数据库不存在
+func isDatabaseNotExistError(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := err.Error()
+	// PostgreSQL: SQLSTATE 3D000 (invalid_catalog_name)
+	// MySQL: Error 1049 (42000): Unknown database 'xxx'
+	return strings.Contains(msg, "SQLSTATE 3D000") ||
+		strings.Contains(msg, "Error 1049") ||
+		strings.Contains(msg, "Unknown database")
 }

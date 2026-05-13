@@ -93,17 +93,21 @@ var (
 )
 
 func InitConfig() {
-	// 加载.env文件
-	if err := godotenv.Load(); err != nil {
-		log.Println("未找到.env文件，将使用配置文件默认值")
-	}
-
 	// 获取当前工作目录
 	wd, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("无法获取当前工作目录: %v", err)
 	}
 	log.Printf("INFO: 当前工作目录: %s", wd)
+
+	// 加载.env文件：先在当前工作目录查找，找不到则向上一级
+	envPath := filepath.Join(wd, ".env")
+	if _, err := os.Stat(envPath); os.IsNotExist(err) {
+		envPath = filepath.Join(wd, "..", ".env")
+	}
+	if err := godotenv.Load(envPath); err != nil {
+		log.Println("未找到.env文件，将使用配置文件默认值")
+	}
 
 	// 尝试在当前工作目录下查找配置文件
 	configPath := filepath.Join(wd, "config", "config.yml")

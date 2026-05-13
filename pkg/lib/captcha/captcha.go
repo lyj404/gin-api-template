@@ -225,7 +225,7 @@ func drawSimpleText(img *image.RGBA, text string, width, height int) error {
 
 func drawSimpleChar(img *image.RGBA, char rune, x, y int, textColor color.RGBA, size int) {
 	if char >= '0' && char <= '9' {
-		drawSimpleDigit(img, char-'0', x, y, textColor, size)
+		drawSimpleDigit(img, char, x, y, textColor, size)
 	} else {
 		drawSimpleSymbol(img, char, x, y, textColor, size)
 	}

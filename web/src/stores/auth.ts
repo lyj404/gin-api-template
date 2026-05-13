@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { login as loginApi } from '@/api'
+import { usePermissionStore } from '@/stores/permission'
 import type { LoginRequest, LoginResponse } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -20,6 +21,7 @@ export const useAuthStore = defineStore('auth', () => {
     refreshToken.value = ''
     localStorage.removeItem('accessToken')
     localStorage.removeItem('refreshToken')
+    usePermissionStore().clear()
   }
 
   const login = async (data: LoginRequest): Promise<LoginResponse> => {

@@ -82,12 +82,9 @@ router.beforeEach(async (to, from, next) => {
     if (to.path === '/login') {
       next({ path: '/' })
     } else {
-      if (permissionStore.menus.length === 0) {
+      if (!permissionStore.loaded) {
         try {
-          await Promise.all([
-            permissionStore.fetchMenus(),
-            permissionStore.fetchPermissions()
-          ])
+          await permissionStore.loadAll()
           next({ ...to, replace: true })
         } catch (error) {
           authStore.clearToken()

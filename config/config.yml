@@ -7,19 +7,19 @@ server:
   RateLimit: 60 # 每分钟最大请求数，0表示不限流
 
 database:
-  Type: postgres  # 可选值：mysql / postgres
+  Type: postgres # 可选值：mysql / postgres
   Host: localhost
   Port: 5432
   User: postgres
   Password: "postgres"
   Name: study
-  MaxOpenConns: 100      # 最大打开连接数
-  MaxIdleConns: 10      # 最大空闲连接数
-  ConnMaxLifetime: 3600  # 连接最大存活时间（秒）
-  ConnMaxIdleTime: 600   # 连接最大空闲时间（秒）
+  MaxOpenConns: 100 # 最大打开连接数
+  MaxIdleConns: 10 # 最大空闲连接数
+  ConnMaxLifetime: 3600 # 连接最大存活时间（秒）
+  ConnMaxIdleTime: 600 # 连接最大空闲时间（秒）
 
 redis:
-  Enabled: true  # 是否启用Redis
+  Enabled: true # 是否启用Redis
   Host: 127.0.0.1
   Port: 6379
   Password: ""
@@ -41,4 +41,4 @@ session:
 password:
   SaltPrefix: "xY7kL9pM"
   SaltSuffix: "qR4sT8vN"
-  Cost: 12  # 成本因子
+  Cost: 12 # 成本因子

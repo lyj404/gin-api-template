@@ -45,7 +45,7 @@ func createAdmin() {
 	fmt.Println("=== 系统管理员初始化 ===")
 
 	config.InitConfig()
-	bootstrap.Boot()
+	bootstrap.BootDBOnly()
 
 	reader := bufio.NewReader(os.Stdin)
 

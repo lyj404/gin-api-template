@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/lyj404/gin-api-template/domain/result"
@@ -31,7 +32,7 @@ func JwtAuthMiddleware(secret string) gin.HandlerFunc {
 		}
 
 		// 验证令牌是否有效及过期
-		_, err := tokenutil.ExtractIDFromToken(authToken, secret)
+		idStr, err := tokenutil.ExtractIDFromToken(authToken, secret)
 		if err != nil {
 			// 根据错误类型返回相应的错误信息
 			if err.Error() == "token is expired" {
@@ -42,6 +43,15 @@ func JwtAuthMiddleware(secret string) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+
+		// 将十六进制用户ID解析为 uint 并注入 context
+		userID, err := strconv.ParseUint(idStr, 16, 64)
+		if err != nil {
+			result.ErrorResponse(c, http.StatusUnauthorized, "invalid user id in token")
+			c.Abort()
+			return
+		}
+		c.Set("user_id", uint(userID))
 
 		// 继续处理请求
 		c.Next()
