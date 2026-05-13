@@ -19,7 +19,7 @@ database:
   ConnMaxIdleTime: 600   # 连接最大空闲时间（秒）
 
 redis:
-  Enabled: false  # 是否启用Redis
+  Enabled: true  # 是否启用Redis
   Host: 127.0.0.1
   Port: 6379
   Password: ""

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"syscall"
+
+	"golang.org/x/term"
 
 	"github.com/lyj404/gin-api-template/bootstrap"
 	"github.com/lyj404/gin-api-template/config"
@@ -31,6 +34,13 @@ func main() {
 	}
 }
 
+func readPassword(prompt string) string {
+	fmt.Print(prompt)
+	password, _ := term.ReadPassword(int(syscall.Stdin))
+	fmt.Println()
+	return string(password)
+}
+
 func createAdmin() {
 	fmt.Println("=== 系统管理员初始化 ===")
 
@@ -39,31 +49,41 @@ func createAdmin() {
 
 	reader := bufio.NewReader(os.Stdin)
 
-	fmt.Print("输入管理员邮箱: ")
-	email, _ := reader.ReadString('\n')
-	email = strings.TrimSpace(email)
+	var email, password string
+
+	if adminEmail := os.Getenv("ADMIN_EMAIL"); adminEmail != "" {
+		email = adminEmail
+		fmt.Printf("使用环境变量 ADMIN_EMAIL: %s\n", email)
+	} else {
+		fmt.Print("输入管理员邮箱: ")
+		email, _ = reader.ReadString('\n')
+		email = strings.TrimSpace(email)
+	}
 
 	if email == "" {
-		fmt.Println("邮箱不能为空")
+		fmt.Println("邮箱不能为空，请设置 ADMIN_EMAIL 环境变量或手动输入")
 		os.Exit(1)
 	}
 
-	fmt.Print("输入管理员密码: ")
-	password, _ := reader.ReadString('\n')
-	password = strings.TrimSpace(password)
+	if adminPassword := os.Getenv("ADMIN_PASSWORD"); adminPassword != "" {
+		password = adminPassword
+		fmt.Println("使用环境变量 ADMIN_PASSWORD")
+	} else {
+		password = readPassword("输入管理员密码: ")
+	}
 
 	if password == "" {
-		fmt.Println("密码不能为空")
+		fmt.Println("密码不能为空，请设置 ADMIN_PASSWORD 环境变量或手动输入")
 		os.Exit(1)
 	}
 
-	fmt.Print("确认管理员密码: ")
-	confirmPassword, _ := reader.ReadString('\n')
-	confirmPassword = strings.TrimSpace(confirmPassword)
+	if os.Getenv("ADMIN_PASSWORD") == "" {
+		confirmPassword := readPassword("确认管理员密码: ")
 
-	if password != confirmPassword {
-		fmt.Println("两次密码不一致")
-		os.Exit(1)
+		if password != confirmPassword {
+			fmt.Println("两次密码不一致")
+			os.Exit(1)
+		}
 	}
 
 	err := createSystemAdmin(email, password)
@@ -72,7 +92,7 @@ func createAdmin() {
 		os.Exit(1)
 	}
 
-	fmt.Println("✅ 系统管理员创建成功！")
+	fmt.Println("系统管理员创建成功！")
 }
 
 func createSystemAdmin(email, password string) error {

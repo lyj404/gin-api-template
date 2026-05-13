@@ -79,6 +79,35 @@ make run
 ```
 > 想要执行`make`命令需要安装`GNU Make`工具
 
+## 配置文件
+
+项目使用 `config/config.yml` 作为主配置文件，同时支持通过 `.env` 文件覆盖配置。
+
+### .env 文件
+
+复制 `.env.example` 为 `.env` 并填入实际值，可以覆盖 `config.yml` 中的配置：
+
+```bash
+# 数据库配置
+DB_PASSWORD=your_actual_password
+
+# Token 密钥
+ACCESS_TOKEN_SECRET=your_secret_key
+REFRESH_TOKEN_SECRET=your_refresh_secret
+```
+
+优先级：**环境变量 / .env > config.yml**
+
+这样可以将敏感信息（密码、密钥）放在本地 `.env` 中，避免提交到版本控制。
+
+### create-admin 环境变量
+
+创建管理员时可使用环境变量自动填充：
+
+```bash
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=your_password go run cmd/rbaccli/main.go create-admin
+```
+
 # 🔐 RBAC 权限管理
 
 ## 初始化系统管理员
