@@ -8,6 +8,7 @@ export interface PaginationRequest {
   page?: number
   page_size?: number
   keyword?: string
+  operator_id?: string
   order_by?: string
   sort?: 'asc' | 'desc'
 }

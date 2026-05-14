@@ -302,10 +302,10 @@ func createDefaultMenus(tx *gorm.DB) error {
 		{Name: "仪表盘", Path: "/dashboard", Icon: "i-material-symbols:dashboard-outline", OrderNum: 10, ResourceName: "user:permissions"},
 		{Name: "用户管理", Path: "/users", Icon: "i-material-symbols:group-outline", OrderNum: 20, ResourceName: "user:read"},
 		{Name: "角色管理", Path: "/roles", Icon: "i-material-symbols:manage-accounts-outline", OrderNum: 30, ResourceName: "role:manage"},
-		{Name: "菜单管理", Path: "/menus", Icon: "i-material-symbols:menu-outline", OrderNum: 40, ResourceName: "menu:read"},
-		{Name: "组织管理", Path: "/orgs", Icon: "i-material-symbols:corporate-fare-outline", OrderNum: 50, ResourceName: "org:manage"},
-		{Name: "资源管理", Path: "/resources", Icon: "i-material-symbols:security-outline", OrderNum: 60, ResourceName: "resource:manage"},
-		{Name: "审计日志", Path: "/audit-logs", Icon: "i-material-symbols:history-outline", OrderNum: 70, ResourceName: "audit:read"},
+		{Name: "菜单管理", Path: "/menus", Icon: "i-material-symbols:list-alt-outline", OrderNum: 40, ResourceName: "menu:read"},
+		{Name: "组织管理", Path: "/orgs", Icon: "i-material-symbols:account-tree-outline", OrderNum: 50, ResourceName: "org:manage"},
+		{Name: "资源管理", Path: "/resources", Icon: "i-material-symbols:shield-outline", OrderNum: 60, ResourceName: "resource:manage"},
+		{Name: "审计日志", Path: "/audit-logs", Icon: "i-material-symbols:receipt-long-outline", OrderNum: 70, ResourceName: "audit:read"},
 	}
 
 	for _, s := range seeds {

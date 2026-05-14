@@ -43,7 +43,7 @@ const editingId = ref<number | null>(null)
 
 const form = reactive({ name: '', description: '' })
 const data = ref<RoleResponse[]>([])
-const pagination = reactive({ page: 1, pageSize: 10, pageSlots: 5 })
+const pagination = reactive({ page: 1, pageSize: 10, pageCount: 1, itemCount: 0 })
 
 const columns: DataTableColumns<RoleResponse> = [
   { title: 'ID', key: 'id', width: 80 },
@@ -62,8 +62,11 @@ const fetchData = async () => {
   loading.value = true
   try {
     const res = await getRoles({ page: pagination.page, page_size: pagination.pageSize })
-    data.value = res.data.data || []
-    pagination.page = res.data.page
+    const p = res.data.data
+    data.value = p.data || []
+    pagination.page = p.page
+    pagination.itemCount = p.total
+    pagination.pageCount = p.total_page
   } finally {
     loading.value = false
   }

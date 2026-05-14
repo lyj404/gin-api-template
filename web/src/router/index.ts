@@ -43,25 +43,25 @@ export const routes: RouteRecordRaw[] = [
         path: 'menus',
         name: 'Menus',
         component: () => import('@/views/menus/index.vue'),
-        meta: { title: '菜单管理', icon: 'i-material-symbols:menu-outline' }
+        meta: { title: '菜单管理', icon: 'i-material-symbols:list-alt-outline' }
       },
       {
         path: 'orgs',
         name: 'Orgs',
         component: () => import('@/views/orgs/index.vue'),
-        meta: { title: '组织管理', icon: 'i-material-symbols:corporate-fare-outline' }
+        meta: { title: '组织管理', icon: 'i-material-symbols:account-tree-outline' }
       },
       {
         path: 'resources',
         name: 'Resources',
         component: () => import('@/views/resources/index.vue'),
-        meta: { title: '资源管理', icon: 'i-material-symbols:security-outline' }
+        meta: { title: '资源管理', icon: 'i-material-symbols:shield-outline' }
       },
       {
         path: 'audit-logs',
         name: 'AuditLogs',
         component: () => import('@/views/audit-logs/index.vue'),
-        meta: { title: '审计日志', icon: 'i-material-symbols:history-outline' }
+        meta: { title: '审计日志', icon: 'i-material-symbols:receipt-long-outline' }
       }
     ]
   },

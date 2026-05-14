@@ -39,6 +39,7 @@ type App struct {
 	UserPermHdlr   *handler.UserPermissionHandler
 	MenuHdlr       *handler.MenuHandler
 	UserMgmtHdlr   *handler.UserManagementHandler
+	ResourceHdlr   *handler.ResourceHandler
 	DashboardHdlr  *handler.DashboardHandler
 	RBACMiddleware *middleware.RBACMiddleware
 	PermSvc        domainservices.PermissionService
@@ -85,6 +86,7 @@ func provideRouteRegistration(
 	userPermHdlr *handler.UserPermissionHandler,
 	menuHdlr *handler.MenuHandler,
 	userMgmtHdlr *handler.UserManagementHandler,
+	resourceHdlr *handler.ResourceHandler,
 	dashboardHdlr *handler.DashboardHandler,
 ) func() {
 	return func() {
@@ -101,6 +103,7 @@ func provideRouteRegistration(
 		route.NewUserPermissionRouter(userPermHdlr, protectedGroup)
 		route.NewMenuRouter(menuHdlr, protectedGroup)
 		route.NewUserManagementRouter(userMgmtHdlr, protectedGroup)
+		route.NewResourceRouter(resourceHdlr, protectedGroup)
 		route.NewDashboardRouter(dashboardHdlr, protectedGroup)
 	}
 }
@@ -126,6 +129,7 @@ var providerSet = wire.NewSet(
 	repository.NewAuditLogRepository,
 	repository.NewMenuRepository,
 	repository.NewUserManagementRepository,
+	repository.NewResourceRepository,
 
 	// Service 层
 	service.NewUserService,
@@ -136,6 +140,7 @@ var providerSet = wire.NewSet(
 	service.NewAuditLogService,
 	service.NewMenuService,
 	service.NewUserManagementService,
+	service.NewResourceService,
 	middleware.NewRBACMiddleware,
 
 	// Handler 层
@@ -147,5 +152,6 @@ var providerSet = wire.NewSet(
 	handler.NewAuditLogHandler,
 	handler.NewMenuHandler,
 	handler.NewUserManagementHandler,
+	handler.NewResourceHandler,
 	handler.NewDashboardHandler,
 )

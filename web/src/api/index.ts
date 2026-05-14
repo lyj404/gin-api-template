@@ -39,6 +39,10 @@ export const updateOrgUnit = (id: number, data: UpdateOrgUnitRequest) => api.put
 export const deleteOrgUnit = (id: number) => api.delete(`/org-units/${id}`)
 
 export const getResources = (params?: PaginationRequest) => api.get<PaginationResponse<ResourceResponse>>('/resources', { params })
+export const getResource = (id: number) => api.get<{ data: ResourceResponse }>(`/resources/${id}`)
+export const createResource = (data: ResourceResponse) => api.post('/resources', data)
+export const updateResource = (id: number, data: ResourceResponse) => api.put(`/resources/${id}`, data)
+export const deleteResource = (id: number) => api.delete(`/resources/${id}`)
 export const bindResource = (roleId: number, resourceId: number, data: BindResourceRequest) => api.post(`/roles/${roleId}/resources`, { ...data, resource_id: resourceId })
 
 export const getAuditLogs = (params?: PaginationRequest) => api.get<PaginationResponse<any>>('/audit-logs', { params })

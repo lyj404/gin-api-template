@@ -24,7 +24,11 @@
           <n-input v-model:value="form.component" placeholder="如: views/users/index.vue" />
         </n-form-item>
         <n-form-item label="图标">
-          <n-input v-model:value="form.icon" placeholder="如: i-material-symbols:home" />
+          <div class="flex gap-8 items-center w-full">
+            <span v-if="form.icon" :class="[form.icon, 'text-xl']" />
+            <n-input v-model:value="form.icon" placeholder="如: i-material-symbols:home" class="flex-1" />
+            <n-button @click="showIconPicker = true">选择</n-button>
+          </div>
         </n-form-item>
         <n-form-item label="排序">
           <n-input-number v-model:value="form.order_num" :min="0" />
@@ -41,6 +45,17 @@
         <n-button type="primary" :loading="saving" class="ml-8" @click="handleSave">保存</n-button>
       </template>
     </n-modal>
+
+    <n-modal v-model:show="showIconPicker" preset="card" title="选择图标" style="width: 650px">
+      <div class="grid grid-cols-8 gap-8 max-h-400 overflow-y-auto">
+        <div v-for="icon in commonIcons" :key="icon"
+          class="flex-center p-8 border border-gray-200 rounded cursor-pointer hover:border-primary hover:text-primary"
+          :class="{ 'border-primary text-primary': form.icon === icon }"
+          @click="selectIcon(icon)">
+          <span :class="[icon, 'text-xl']" />
+        </div>
+      </div>
+    </n-modal>
   </div>
 </template>
 
@@ -55,6 +70,7 @@ const message = useMessage()
 const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
+const showIconPicker = ref(false)
 const editingId = ref<number | null>(null)
 
 const form = reactive({ name: '', parent_id: null as number | null, path: '', component: '', icon: '', order_num: 0, resource_id: null as number | null, is_visible: true })
@@ -68,7 +84,7 @@ const columns: DataTableColumns<MenuTreeNode> = [
   { title: '菜单名称', key: 'name' },
   { title: '路由路径', key: 'path' },
   { title: '组件路径', key: 'component' },
-  { title: '图标', key: 'icon' },
+  { title: '图标', key: 'icon', render: (row: MenuTreeNode) => h('span', { class: `${row.icon || 'i-material-symbols:circle-outline'} text-lg` }) },
   { title: '排序', key: 'order_num', width: 80 },
   { title: '操作', key: 'actions', width: 160, render: (row: MenuTreeNode) => h(NSpace, null, {
     default: () => [
@@ -122,6 +138,59 @@ const handleSave = async () => {
 
 const handleDelete = (row: MenuTreeNode) => {
   deleteMenu(row.id).then(() => { message.success('删除成功'); fetchData() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
+}
+
+const commonIcons = [
+  'i-material-symbols:dashboard-outline',
+  'i-material-symbols:group-outline',
+  'i-material-symbols:person-outline',
+  'i-material-symbols:manage-accounts-outline',
+  'i-material-symbols:menu-outline',
+  'i-material-symbols:corporate-fare-outline',
+  'i-material-symbols:security-outline',
+  'i-material-symbols:history-outline',
+  'i-material-symbols:settings-outline',
+  'i-material-symbols:home-outline',
+  'i-material-symbols:notifications-outline',
+  'i-material-symbols:mail-outline',
+  'i-material-symbols:search',
+  'i-material-symbols:edit-outline',
+  'i-material-symbols:delete-outline',
+  'i-material-symbols:add-circle-outline',
+  'i-material-symbols:refresh',
+  'i-material-symbols:download',
+  'i-material-symbols:upload',
+  'i-material-symbols:print',
+  'i-material-symbols:share',
+  'i-material-symbols:star-outline',
+  'i-material-symbols:favorite-outline',
+  'i-material-symbols:lock-outline',
+  'i-material-symbols:visibility-outline',
+  'i-material-symbols:map',
+  'i-material-symbols:bar-chart',
+  'i-material-symbols:pie-chart',
+  'i-material-symbols:table',
+  'i-material-symbols:calendar-month',
+  'i-material-symbols:description',
+  'i-material-symbols:folder-outline',
+  'i-material-symbols:file-upload',
+  'i-material-symbols:article-outline',
+  'i-material-symbols:build-outline',
+  'i-material-symbols:help-outline',
+  'i-material-symbols:info-outline',
+  'i-material-symbols:warning-outline',
+  'i-material-symbols:check-circle-outline',
+  'i-material-symbols:cloud-outline',
+  'i-material-symbols:link',
+  'i-material-symbols:tag',
+  'i-material-symbols:label-outline',
+  'i-material-symbols:category-outline',
+  'i-material-symbols:layers',
+]
+
+const selectIcon = (icon: string) => {
+  form.icon = icon
+  showIconPicker.value = false
 }
 
 onMounted(fetchData)

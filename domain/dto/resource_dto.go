@@ -5,6 +5,26 @@ type BindResourceRequest struct {
 	IsWrite bool `json:"is_write"`
 }
 
+type CreateResourceRequest struct {
+	Name        string `json:"name" binding:"required"`
+	Type        string `json:"type" binding:"required"`
+	Pattern     string `json:"pattern" binding:"required"`
+	Method      string `json:"method"`
+	Entity      string `json:"entity"`
+	Action      string `json:"action"`
+	Description string `json:"description"`
+}
+
+type UpdateResourceRequest struct {
+	Name        string `json:"name" binding:"required"`
+	Type        string `json:"type" binding:"required"`
+	Pattern     string `json:"pattern" binding:"required"`
+	Method      string `json:"method"`
+	Entity      string `json:"entity"`
+	Action      string `json:"action"`
+	Description string `json:"description"`
+}
+
 type ResourceListResponse struct {
 	ID          uint   `json:"id"`
 	Name        string `json:"name"`

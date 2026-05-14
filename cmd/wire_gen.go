@@ -55,9 +55,12 @@ func InitializeApp() (*App, error) {
 	userRepository := repository.NewUserManagementRepository()
 	userManagementService := service.NewUserManagementService(userRepository)
 	userManagementHandler := handler.NewUserManagementHandler(userManagementService)
+	resourceRepository := repository.NewResourceRepository()
+	resourceService := service.NewResourceService(resourceRepository)
+	resourceHandler := handler.NewResourceHandler(resourceService)
 	dashboardHandler := handler.NewDashboardHandler()
 	rbacMiddleware := middleware.NewRBACMiddleware(permissionService)
-	v := provideRouteRegistration(engine, userHandler, refreshTokenHandler, roleHandler, orgUnitHandler, auditLogHandler, userPermissionHandler, menuHandler, userManagementHandler, dashboardHandler)
+	v := provideRouteRegistration(engine, userHandler, refreshTokenHandler, roleHandler, orgUnitHandler, auditLogHandler, userPermissionHandler, menuHandler, userManagementHandler, resourceHandler, dashboardHandler)
 	app := &App{
 		DB:             db,
 		Redis:          client,
@@ -74,6 +77,7 @@ func InitializeApp() (*App, error) {
 		UserPermHdlr:   userPermissionHandler,
 		MenuHdlr:       menuHandler,
 		UserMgmtHdlr:   userManagementHandler,
+		ResourceHdlr:   resourceHandler,
 		DashboardHdlr:  dashboardHandler,
 		RBACMiddleware: rbacMiddleware,
 		PermSvc:        permissionService,
@@ -101,6 +105,7 @@ type App struct {
 	UserPermHdlr   *handler.UserPermissionHandler
 	MenuHdlr       *handler.MenuHandler
 	UserMgmtHdlr   *handler.UserManagementHandler
+	ResourceHdlr   *handler.ResourceHandler
 	DashboardHdlr  *handler.DashboardHandler
 	RBACMiddleware *middleware.RBACMiddleware
 	PermSvc        services.PermissionService
@@ -138,6 +143,7 @@ func provideRouteRegistration(
 	userPermHdlr *handler.UserPermissionHandler,
 	menuHdlr *handler.MenuHandler,
 	userMgmtHdlr *handler.UserManagementHandler,
+	resourceHdlr *handler.ResourceHandler,
 	dashboardHdlr *handler.DashboardHandler,
 ) func() {
 	return func() {
@@ -153,6 +159,7 @@ func provideRouteRegistration(
 		route.NewUserPermissionRouter(userPermHdlr, protectedGroup)
 		route.NewMenuRouter(menuHdlr, protectedGroup)
 		route.NewUserManagementRouter(userMgmtHdlr, protectedGroup)
+		route.NewResourceRouter(resourceHdlr, protectedGroup)
 		route.NewDashboardRouter(dashboardHdlr, protectedGroup)
 	}
 }
@@ -169,5 +176,5 @@ var providerSet = wire.NewSet(
 	provideLogger,
 	provideRouter,
 	provideRouteRegistration,
-	provideTimeout, repository.NewUserRepo, repository.NewRoleRepository, repository.NewOrgUnitRepository, repository.NewAuditLogRepository, repository.NewMenuRepository, repository.NewUserManagementRepository, service.NewUserService, service.NewRefreshTokenService, service.NewPermissionService, service.NewRoleService, service.NewOrgUnitService, service.NewAuditLogService, service.NewMenuService, service.NewUserManagementService, middleware.NewRBACMiddleware, handler.NewUserHandler, handler.NewRefreshTokenHandler, handler.NewRoleHandler, handler.NewOrgUnitHandler, handler.NewUserPermissionHandler, handler.NewAuditLogHandler, handler.NewMenuHandler, handler.NewUserManagementHandler, handler.NewDashboardHandler,
+	provideTimeout, repository.NewUserRepo, repository.NewRoleRepository, repository.NewOrgUnitRepository, repository.NewAuditLogRepository, repository.NewMenuRepository, repository.NewUserManagementRepository, repository.NewResourceRepository, service.NewUserService, service.NewRefreshTokenService, service.NewPermissionService, service.NewRoleService, service.NewOrgUnitService, service.NewAuditLogService, service.NewMenuService, service.NewUserManagementService, service.NewResourceService, middleware.NewRBACMiddleware, handler.NewUserHandler, handler.NewRefreshTokenHandler, handler.NewRoleHandler, handler.NewOrgUnitHandler, handler.NewUserPermissionHandler, handler.NewAuditLogHandler, handler.NewMenuHandler, handler.NewUserManagementHandler, handler.NewResourceHandler, handler.NewDashboardHandler,
 )

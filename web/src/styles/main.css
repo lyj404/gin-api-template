@@ -3,7 +3,9 @@
   --header-height: 60px;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -11,6 +13,14 @@ html, body, #app {
   height: 100%;
   margin: 0;
   padding: 0;
+}
+
+body {
+  margin: 0;
+  line-height: 1.5;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .n-layout {

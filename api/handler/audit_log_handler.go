@@ -22,16 +22,16 @@ func NewAuditLogHandler(auditLogService domainservices.AuditLogService) *AuditLo
 	}
 }
 
-// GetAuditLogsByOperator 按操作者查询审计日志
+// GetAuditLogsByOperator 按操作者查询审计日志，不传操作者ID时返回全部
 // @Summary 按操作者查询审计日志
-// @Description 根据操作者ID分页查询审计日志
+// @Description 根据操作者ID分页查询审计日志，不传操作者ID时返回全部日志
 // @Tags 审计
 // @Produce json
-// @Param operator_id query int true "操作者ID"
+// @Param operator_id query int false "操作者ID，不传时返回全部"
 // @Param page query int false "页码，默认1"
 // @Param page_size query int false "每页数量，默认10，最大100"
 // @Success 200 {object} result.ResponseResult[dto.PaginationResponse] "查询成功"
-// @Failure 400 {object} result.ResponseResult[string] "缺少操作者ID"
+// @Failure 400 {object} result.ResponseResult[string] "参数错误"
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /audit-logs [get]
 func (h *AuditLogHandler) GetAuditLogsByOperator(c *gin.Context) {
@@ -43,17 +43,27 @@ func (h *AuditLogHandler) GetAuditLogsByOperator(c *gin.Context) {
 	req.SetDefaults()
 
 	operatorID, _ := strconv.Atoi(c.Query("operator_id"))
-	if operatorID == 0 {
-		result.ErrorResponse(c, http.StatusBadRequest, "缺少操作者ID")
+	if operatorID != 0 {
+		logs, total, err := h.auditLogService.GetAuditLogsByOperator(uint(operatorID), req.Page, req.PageSize)
+		if err != nil {
+			result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+			return
+		}
+		result.SuccessResponse(c, "查询审计日志成功", dto.NewPaginationResponse(
+			req.Page,
+			req.PageSize,
+			total,
+			logs,
+		))
 		return
 	}
 
-	logs, total, err := h.auditLogService.GetAuditLogsByOperator(uint(operatorID), req.Page, req.PageSize)
+	// 不传操作者ID时返回全部日志
+	logs, total, err := h.auditLogService.GetAuditLogsByTimeRange("", "", req.Page, req.PageSize)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-
 	result.SuccessResponse(c, "查询审计日志成功", dto.NewPaginationResponse(
 		req.Page,
 		req.PageSize,
