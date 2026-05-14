@@ -11,6 +11,7 @@ import type {
   BindResourceRequest,
   UserPermissions,
   UserResponse, CreateUserRequest, UpdateUserRequest,
+  ProfileResponse, UpdateProfileRequest, ChangePasswordRequest,
   DashboardStats, AuditTrendItem
 } from '@/types'
 
@@ -51,6 +52,9 @@ export const getAuditLogsByTime = (params: { start_time: string; end_time: strin
 
 export const getUserPermissions = () => api.get<{ data: UserPermissions }>('/user/permissions')
 export const getUserMenus = () => api.get<{ data: { menus: MenuTreeNode[] } }>('/user/menus')
+export const getProfile = () => api.get<{ data: ProfileResponse }>('/user/profile')
+export const updateProfile = (data: UpdateProfileRequest) => api.put('/user/profile', data)
+export const changePassword = (data: ChangePasswordRequest) => api.put('/user/password', data)
 
 export const getUsers = (params?: PaginationRequest) => api.get<PaginationResponse<UserResponse>>('/users', { params })
 export const getUser = (id: number) => api.get<{ data: UserResponse }>(`/users/${id}`)

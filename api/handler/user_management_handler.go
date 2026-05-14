@@ -182,6 +182,10 @@ func (h *UserManagementHandler) DeleteUser(c *gin.Context) {
 	}
 
 	operatorID := c.GetUint("user_id")
+	if uint(id) == operatorID {
+		result.ErrorResponse(c, http.StatusBadRequest, "不能删除自己")
+		return
+	}
 	if err := h.userMgmt.Delete(uint(id), operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

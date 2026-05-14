@@ -80,6 +80,10 @@ func (s *roleServiceImpl) GetAllRoles() ([]entity.Role, error) {
 	return s.roleRepo.GetAll()
 }
 
+func (s *roleServiceImpl) GetRoleResources(roleID uint) ([]entity.RoleResource, error) {
+	return s.roleRepo.GetRoleResources(roleID)
+}
+
 func (s *roleServiceImpl) BindResource(roleID, resourceID uint, isWrite bool, operatorID uint) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		roleResource := entity.RoleResource{

@@ -134,11 +134,11 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 
 // GetRole 获取角色详情
 // @Summary 获取角色详情
-// @Description 根据ID获取角色详情
+// @Description 根据ID获取角色详情（包含绑定的资源列表）
 // @Tags 角色
 // @Produce json
 // @Param id path int true "角色ID"
-// @Success 200 {object} result.ResponseResult[dto.RoleResponse] "获取成功"
+// @Success 200 {object} result.ResponseResult[dto.RoleDetailResponse] "获取成功"
 // @Failure 404 {object} result.ResponseResult[string] "角色不存在"
 // @Router /roles/:id [get]
 func (h *RoleHandler) GetRole(c *gin.Context) {
@@ -150,14 +150,132 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 		return
 	}
 
-	response := dto.RoleResponse{
+	resources, _ := h.roleService.GetRoleResources(uint(id))
+	resourceResponses := make([]dto.RoleResourceResponse, len(resources))
+	for i, rr := range resources {
+		resourceResponses[i] = dto.RoleResourceResponse{
+			ID:         rr.ID,
+			RoleID:     rr.RoleID,
+			ResourceID: rr.ResourceID,
+			IsRead:     rr.IsRead,
+			IsWrite:    rr.IsWrite,
+			Resource: &dto.ResourceBriefResponse{
+				ID:          rr.Resource.ID,
+				Name:        rr.Resource.Name,
+				Type:        rr.Resource.Type,
+				Pattern:     rr.Resource.Pattern,
+				Method:      rr.Resource.Method,
+				Entity:      rr.Resource.Entity,
+				Action:      rr.Resource.Action,
+				Description: rr.Resource.Description,
+			},
+		}
+	}
+
+	response := dto.RoleDetailResponse{
 		ID:          role.ID,
 		Name:        role.Name,
 		Description: role.Description,
 		IsSystem:    role.IsSystem,
+		Resources:   resourceResponses,
 	}
 
 	result.SuccessResponse(c, "获取角色成功", &response)
+}
+
+// BindResource 角色绑定资源
+// @Summary 角色绑定资源
+// @Description 为角色绑定一个资源，指定是否具有写权限
+// @Tags 角色
+// @Accept json
+// @Produce json
+// @Param id path int true "角色ID"
+// @Param request body dto.BindRoleResourceRequest true "绑定资源请求"
+// @Success 200 {object} result.ResponseResult[string] "绑定成功"
+// @Failure 400 {object} result.ResponseResult[string] "请求参数错误"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /roles/:id/resources [post]
+func (h *RoleHandler) BindResource(c *gin.Context) {
+	roleID, _ := strconv.Atoi(c.Param("id"))
+
+	var req dto.BindRoleResourceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	operatorID := c.GetUint("user_id")
+	if err := h.roleService.BindResource(uint(roleID), req.ResourceID, req.IsWrite, operatorID); err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result.SimpleSuccessResponse(c, "资源绑定成功")
+}
+
+// UnbindResource 角色解绑资源
+// @Summary 角色解绑资源
+// @Description 移除角色绑定的资源
+// @Tags 角色
+// @Produce json
+// @Param id path int true "角色ID"
+// @Param resourceId path int true "资源ID"
+// @Success 200 {object} result.ResponseResult[string] "解绑成功"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /roles/:id/resources/:resourceId [delete]
+func (h *RoleHandler) UnbindResource(c *gin.Context) {
+	roleID, _ := strconv.Atoi(c.Param("id"))
+	resourceID, _ := strconv.Atoi(c.Param("resourceId"))
+
+	operatorID := c.GetUint("user_id")
+	if err := h.roleService.UnbindResource(uint(roleID), uint(resourceID), operatorID); err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result.SimpleSuccessResponse(c, "资源解绑成功")
+}
+
+// GetRoleResources 获取角色绑定的资源列表
+// @Summary 获取角色绑定的资源列表
+// @Description 获取指定角色绑定的所有资源
+// @Tags 角色
+// @Produce json
+// @Param id path int true "角色ID"
+// @Success 200 {object} result.ResponseResult[[]dto.RoleResourceResponse] "获取成功"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /roles/:id/resources [get]
+func (h *RoleHandler) GetRoleResources(c *gin.Context) {
+	roleID, _ := strconv.Atoi(c.Param("id"))
+
+	resources, err := h.roleService.GetRoleResources(uint(roleID))
+	if err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responses := make([]dto.RoleResourceResponse, len(resources))
+	for i, rr := range resources {
+		responses[i] = dto.RoleResourceResponse{
+			ID:         rr.ID,
+			RoleID:     rr.RoleID,
+			ResourceID: rr.ResourceID,
+			IsRead:     rr.IsRead,
+			IsWrite:    rr.IsWrite,
+			Resource: &dto.ResourceBriefResponse{
+				ID:          rr.Resource.ID,
+				Name:        rr.Resource.Name,
+				Type:        rr.Resource.Type,
+				Pattern:     rr.Resource.Pattern,
+				Method:      rr.Resource.Method,
+				Entity:      rr.Resource.Entity,
+				Action:      rr.Resource.Action,
+				Description: rr.Resource.Description,
+			},
+		}
+	}
+
+	result.SuccessResponse(c, "获取角色资源成功", &responses)
 }
 
 // ListRoles 获取角色列表（分页）

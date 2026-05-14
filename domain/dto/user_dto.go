@@ -26,3 +26,24 @@ type UserResponse struct {
 	RoleIDs []uint   `json:"role_ids"`
 	Roles   []string `json:"roles"`
 }
+
+// ProfileResponse 个人信息响应
+type ProfileResponse struct {
+	ID        uint   `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+// UpdateProfileRequest 更新个人信息请求
+type UpdateProfileRequest struct {
+	Name  string `json:"name" binding:"required"`
+	Email string `json:"email" binding:"required,email"`
+}
+
+// ChangePasswordRequest 修改密码请求
+type ChangePasswordRequest struct {
+	OldPassword string `json:"old_password" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required,min=6"`
+}

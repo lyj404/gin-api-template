@@ -11,4 +11,7 @@ func NewRoleRouter(roleHdlr *handler.RoleHandler, group *gin.RouterGroup) {
 	group.DELETE("/roles/:id", roleHdlr.DeleteRole)
 	group.GET("/roles/:id", roleHdlr.GetRole)
 	group.GET("/roles", roleHdlr.ListRoles)
+	group.POST("/roles/:id/resources", roleHdlr.BindResource)
+	group.DELETE("/roles/:id/resources/:resourceId", roleHdlr.UnbindResource)
+	group.GET("/roles/:id/resources", roleHdlr.GetRoleResources)
 }

@@ -37,6 +37,7 @@ type App struct {
 	OrgHdlr        *handler.OrgUnitHandler
 	AuditHdlr      *handler.AuditLogHandler
 	UserPermHdlr   *handler.UserPermissionHandler
+	UserProfileHdlr *handler.UserProfileHandler
 	MenuHdlr       *handler.MenuHandler
 	UserMgmtHdlr   *handler.UserManagementHandler
 	ResourceHdlr   *handler.ResourceHandler
@@ -84,6 +85,7 @@ func provideRouteRegistration(
 	orgHdlr *handler.OrgUnitHandler,
 	auditHdlr *handler.AuditLogHandler,
 	userPermHdlr *handler.UserPermissionHandler,
+	userProfileHdlr *handler.UserProfileHandler,
 	menuHdlr *handler.MenuHandler,
 	userMgmtHdlr *handler.UserManagementHandler,
 	resourceHdlr *handler.ResourceHandler,
@@ -100,7 +102,7 @@ func provideRouteRegistration(
 		route.NewRoleRouter(roleHdlr, protectedGroup)
 		route.NewOrgUnitRouter(orgHdlr, protectedGroup)
 		route.NewAuditLogRouter(auditHdlr, protectedGroup)
-		route.NewUserPermissionRouter(userPermHdlr, protectedGroup)
+		route.NewUserPermissionRouter(userPermHdlr, userProfileHdlr, protectedGroup)
 		route.NewMenuRouter(menuHdlr, protectedGroup)
 		route.NewUserManagementRouter(userMgmtHdlr, protectedGroup)
 		route.NewResourceRouter(resourceHdlr, protectedGroup)
@@ -140,6 +142,7 @@ var providerSet = wire.NewSet(
 	service.NewAuditLogService,
 	service.NewMenuService,
 	service.NewUserManagementService,
+	service.NewUserProfileService,
 	service.NewResourceService,
 	middleware.NewRBACMiddleware,
 
@@ -149,6 +152,7 @@ var providerSet = wire.NewSet(
 	handler.NewRoleHandler,
 	handler.NewOrgUnitHandler,
 	handler.NewUserPermissionHandler,
+	handler.NewUserProfileHandler,
 	handler.NewAuditLogHandler,
 	handler.NewMenuHandler,
 	handler.NewUserManagementHandler,

@@ -16,4 +16,5 @@ type RoleService interface {
 	UnbindOrgScope(roleID, orgUnitID uint, operatorID uint) error
 	AssignRoleToUser(userID, roleID, orgUnitID uint, operatorID uint) error
 	RevokeRoleFromUser(userID, roleID, orgUnitID uint, operatorID uint) error
+	GetRoleResources(roleID uint) ([]entity.RoleResource, error)
 }

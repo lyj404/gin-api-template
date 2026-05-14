@@ -16,6 +16,10 @@ func NewAuditLogService(auditLogRepo repositories.AuditLogRepository) services.A
 	}
 }
 
+func (s *auditLogServiceImpl) Create(auditLog *entity.AuditLog) error {
+	return s.auditLogRepo.Create(auditLog)
+}
+
 func (s *auditLogServiceImpl) GetAuditLogsByOperator(operatorID uint, page, pageSize int) ([]entity.AuditLog, int64, error) {
 	return s.auditLogRepo.GetByOperator(operatorID, page, pageSize)
 }

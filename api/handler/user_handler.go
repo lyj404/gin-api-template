@@ -11,6 +11,7 @@ import (
 	"github.com/lyj404/gin-api-template/domain/dto"
 	"github.com/lyj404/gin-api-template/domain/entity"
 	"github.com/lyj404/gin-api-template/domain/result"
+	"github.com/lyj404/gin-api-template/domain/services"
 	"github.com/lyj404/gin-api-template/pkg/lib/captcha"
 	"github.com/lyj404/gin-api-template/util"
 
@@ -20,12 +21,14 @@ import (
 type UserHandler struct {
 	UserService         domain.LoginService
 	RefreshTokenUseCase domain.RefreshTokenService
+	AuditLogService     services.AuditLogService
 }
 
-func NewUserHandler(userService domain.LoginService, refreshTokenService domain.RefreshTokenService) *UserHandler {
+func NewUserHandler(userService domain.LoginService, refreshTokenService domain.RefreshTokenService, auditLogService services.AuditLogService) *UserHandler {
 	return &UserHandler{
 		UserService:         userService,
 		RefreshTokenUseCase: refreshTokenService,
+		AuditLogService:     auditLogService,
 	}
 }
 
@@ -114,6 +117,16 @@ func (u *UserHandler) Login(c *gin.Context) {
 		RefreshToken: refreshToken,
 	}
 
+	// 记录登录审计日志
+	u.AuditLogService.Create(&entity.AuditLog{
+		OperatorID:   user.ID,
+		OperatorName: user.Name,
+		Action:       "login",
+		TargetType:   "user",
+		TargetID:     user.ID,
+		Description:  "用户登录: " + user.Email,
+	})
+
 	// 返回成功响应
 	result.SuccessResponse(c, "Login successful", &loginResponse)
 }
@@ -186,6 +199,16 @@ func (u *UserHandler) Signup(c *gin.Context) {
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}
+
+	// 记录注册审计日志
+	u.AuditLogService.Create(&entity.AuditLog{
+		OperatorID:   user.ID,
+		OperatorName: user.Name,
+		Action:       "signup",
+		TargetType:   "user",
+		TargetID:     user.ID,
+		Description:  "用户注册: " + user.Email,
+	})
 
 	result.SuccessResponse(c, "Signup successful", &signupResponse)
 }

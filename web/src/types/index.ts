@@ -181,6 +181,24 @@ export interface UpdateUserRequest {
   org_unit_id?: number
 }
 
+export interface ProfileResponse {
+  id: number
+  name: string
+  email: string
+  created_at: string
+  updated_at: string
+}
+
+export interface UpdateProfileRequest {
+  name: string
+  email: string
+}
+
+export interface ChangePasswordRequest {
+  old_password: string
+  new_password: string
+}
+
 export interface DashboardStats {
   user_count: number
   role_count: number

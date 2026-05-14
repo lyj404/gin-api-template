@@ -163,7 +163,9 @@ const userOptions: DropdownOption[] = [
 ]
 
 const handleUserCommand = (key: string) => {
-  if (key === 'logout') {
+  if (key === 'profile') {
+    router.push('/profile')
+  } else if (key === 'logout') {
     auth.logout()
   }
 }

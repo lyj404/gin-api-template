@@ -62,6 +62,12 @@ export const routes: RouteRecordRaw[] = [
         name: 'AuditLogs',
         component: () => import('@/views/audit-logs/index.vue'),
         meta: { title: '审计日志', icon: 'i-material-symbols:receipt-long-outline' }
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('@/views/profile/index.vue'),
+        meta: { title: '个人信息', icon: 'i-material-symbols:person-outline' }
       }
     ]
   },
