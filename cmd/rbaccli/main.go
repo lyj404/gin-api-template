@@ -19,7 +19,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("可用命令: create-admin, seed-menus")
+		fmt.Println("可用命令: create-admin, seed-resources, seed-menus")
 		os.Exit(1)
 	}
 
@@ -28,6 +28,8 @@ func main() {
 	switch command {
 	case "create-admin":
 		createAdmin()
+	case "seed-resources":
+		seedResources()
 	case "seed-menus":
 		seedMenus()
 	default:
@@ -124,7 +126,7 @@ func createSystemAdmin(email, password string) error {
 			return fmt.Errorf("创建默认菜单失败: %w", err)
 		}
 
-		// 3. 创建超级管理员角色（如果不存在）
+		// 3. 创建/更新超级管理员角色
 		var superAdminRole entity.Role
 		result = tx.Where("name = ?", "super_admin").First(&superAdminRole)
 		if result.Error == gorm.ErrRecordNotFound {
@@ -136,13 +138,16 @@ func createSystemAdmin(email, password string) error {
 			if err := tx.Create(&superAdminRole).Error; err != nil {
 				return fmt.Errorf("创建超级管理员角色失败: %w", err)
 			}
+		}
 
-			// 绑定所有资源权限
-			if err := bindAllResourcesToRole(tx, superAdminRole.ID); err != nil {
-				return fmt.Errorf("绑定资源权限失败: %w", err)
-			}
+		// 每次运行都重新绑定所有资源权限（确保新增资源同步到 super_admin）
+		if err := syncAllResourcesToRole(tx, superAdminRole.ID); err != nil {
+			return fmt.Errorf("绑定资源权限失败: %w", err)
+		}
 
-			// 绑定全组织范围
+		// 绑定全组织范围（仅首次创建时）
+		orgScopesExist := tx.Model(&entity.RoleOrgScope{}).Where("role_id = ?", superAdminRole.ID).First(&entity.RoleOrgScope{}).Error == nil
+		if !orgScopesExist {
 			if err := bindOrgScopeToRole(tx, superAdminRole.ID, rootOrg.ID, true); err != nil {
 				return fmt.Errorf("绑定组织范围失败: %w", err)
 			}
@@ -204,6 +209,9 @@ func createDefaultResources(tx *gorm.DB) error {
 
 		// API 资源 - 角色管理
 		{Name: "role:manage", Type: "api", Pattern: "/roles/*", Method: "*", Description: "角色管理"},
+		{Name: "role:bind-resource", Type: "api", Pattern: "/roles/:id/resources", Method: "POST", Description: "角色绑定资源"},
+		{Name: "role:unbind-resource", Type: "api", Pattern: "/roles/:id/resources/:resourceId", Method: "DELETE", Description: "角色解绑资源"},
+		{Name: "role:list-resources", Type: "api", Pattern: "/roles/:id/resources", Method: "GET", Description: "查看角色资源列表"},
 
 		// API 资源 - 资源管理
 		{Name: "resource:manage", Type: "api", Pattern: "/resources/*", Method: "*", Description: "资源管理"},
@@ -213,9 +221,12 @@ func createDefaultResources(tx *gorm.DB) error {
 
 		// API 资源 - 审计日志
 		{Name: "audit:read", Type: "api", Pattern: "/audit-logs", Method: "GET", Description: "查看审计日志"},
+		{Name: "audit:read:target", Type: "api", Pattern: "/audit-logs/target", Method: "GET", Description: "按目标查询审计日志"},
+		{Name: "audit:read:time", Type: "api", Pattern: "/audit-logs/time", Method: "GET", Description: "按时间范围查询审计日志"},
 
 		// API 资源 - 菜单管理
 		{Name: "menu:read", Type: "api", Pattern: "/menus", Method: "GET", Description: "查看菜单列表"},
+		{Name: "menu:read:detail", Type: "api", Pattern: "/menus/:id", Method: "GET", Description: "查看菜单详情"},
 		{Name: "menu:read:tree", Type: "api", Pattern: "/menus/tree", Method: "GET", Description: "查看菜单树"},
 		{Name: "menu:create", Type: "api", Pattern: "/menus", Method: "POST", Description: "创建菜单"},
 		{Name: "menu:update", Type: "api", Pattern: "/menus/:id", Method: "PUT", Description: "更新菜单"},
@@ -224,6 +235,10 @@ func createDefaultResources(tx *gorm.DB) error {
 		// API 资源 - 用户权限与菜单
 		{Name: "user:permissions", Type: "api", Pattern: "/user/permissions", Method: "GET", Description: "获取用户权限"},
 		{Name: "user:menus", Type: "api", Pattern: "/user/menus", Method: "GET", Description: "获取用户菜单"},
+
+		// API 资源 - 仪表盘
+		{Name: "dashboard:read", Type: "api", Pattern: "/dashboard/stats", Method: "GET", Description: "查看仪表盘统计"},
+		{Name: "dashboard:audit-trend", Type: "api", Pattern: "/dashboard/audit-trend", Method: "GET", Description: "查看审计趋势"},
 
 		// 实体资源
 		{Name: "entity:all", Type: "entity", Pattern: "*", Entity: "*", Action: "*", Description: "所有实体权限"},
@@ -241,7 +256,13 @@ func createDefaultResources(tx *gorm.DB) error {
 	return nil
 }
 
-func bindAllResourcesToRole(tx *gorm.DB, roleID uint) error {
+func syncAllResourcesToRole(tx *gorm.DB, roleID uint) error {
+	// 清除旧绑定
+	if err := tx.Where("role_id = ?", roleID).Delete(&entity.RoleResource{}).Error; err != nil {
+		return err
+	}
+
+	// 重新绑定所有资源
 	var resources []entity.Resource
 	if err := tx.Find(&resources).Error; err != nil {
 		return err
@@ -259,6 +280,40 @@ func bindAllResourcesToRole(tx *gorm.DB, roleID uint) error {
 		}
 	}
 	return nil
+}
+
+func seedResources() {
+	fmt.Println("=== 资源数据初始化 ===")
+
+	config.InitConfig()
+	bootstrap.BootDBOnly()
+
+	err := global.G_DB.Transaction(func(tx *gorm.DB) error {
+		// 1. 创建默认资源
+		if err := createDefaultResources(tx); err != nil {
+			return fmt.Errorf("创建默认资源失败: %w", err)
+		}
+
+		// 2. 查找 super_admin 角色，同步资源绑定
+		var superAdminRole entity.Role
+		if err := tx.Where("name = ?", "super_admin").First(&superAdminRole).Error; err == nil {
+			if err := syncAllResourcesToRole(tx, superAdminRole.ID); err != nil {
+				return fmt.Errorf("同步资源到 super_admin 角色失败: %w", err)
+			}
+			fmt.Println("已同步资源到 super_admin 角色")
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Printf("资源初始化失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	var count int64
+	global.G_DB.Model(&entity.Resource{}).Count(&count)
+	fmt.Printf("资源初始化成功，当前资源总数: %d\n", count)
 }
 
 func bindOrgScopeToRole(tx *gorm.DB, roleID, orgUnitID uint, includeDescendants bool) error {

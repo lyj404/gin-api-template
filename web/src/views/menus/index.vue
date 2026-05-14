@@ -25,8 +25,8 @@
         </n-form-item>
         <n-form-item label="图标">
           <div class="flex gap-8 items-center w-full">
-            <span v-if="form.icon" :class="[form.icon, 'text-xl']" />
-            <n-input v-model:value="form.icon" placeholder="如: i-material-symbols:home" class="flex-1" />
+            <Icon v-if="form.icon" :icon="toIconifyName(form.icon)" class="text-xl" />
+            <n-input v-model:value="form.icon" placeholder="如: i-material-symbols:home 或 material-symbols:home" class="flex-1" />
             <n-button @click="showIconPicker = true">选择</n-button>
           </div>
         </n-form-item>
@@ -52,7 +52,7 @@
           class="flex-center p-8 border border-gray-200 rounded cursor-pointer hover:border-primary hover:text-primary"
           :class="{ 'border-primary text-primary': form.icon === icon }"
           @click="selectIcon(icon)">
-          <span :class="[icon, 'text-xl']" />
+          <Icon :icon="toIconifyName(icon)" class="text-xl" />
         </div>
       </div>
     </n-modal>
@@ -63,15 +63,20 @@
 import { ref, reactive, h, onMounted, computed } from 'vue'
 import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NH2, NCard, NTag, NSpace, useMessage } from 'naive-ui'
 import type { DataTableColumns, SelectOption } from 'naive-ui'
+import { Icon } from '@iconify/vue'
 import { getMenuTree, createMenu, updateMenu, deleteMenu } from '@/api'
+import { usePermissionStore } from '@/stores/permission'
 import type { MenuTreeNode } from '@/types'
 
 const message = useMessage()
+const permission = usePermissionStore()
 const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
 const showIconPicker = ref(false)
 const editingId = ref<number | null>(null)
+
+const toIconifyName = (icon?: string) => (icon || '').replace(/^i-/, '')
 
 const form = reactive({ name: '', parent_id: null as number | null, path: '', component: '', icon: '', order_num: 0, resource_id: null as number | null, is_visible: true })
 const data = ref<MenuTreeNode[]>([])
@@ -82,9 +87,9 @@ const resourceOptions = ref<SelectOption[]>([])
 const columns: DataTableColumns<MenuTreeNode> = [
   { title: 'ID', key: 'id', width: 80 },
   { title: '菜单名称', key: 'name' },
-  { title: '路由路径', key: 'path' },
-  { title: '组件路径', key: 'component' },
-  { title: '图标', key: 'icon', render: (row: MenuTreeNode) => h('span', { class: `${row.icon || 'i-material-symbols:circle-outline'} text-lg` }) },
+  { title: '路由路径', key: 'path', render: (row: MenuTreeNode) => row.path || '-' },
+  { title: '组件路径', key: 'component', render: (row: MenuTreeNode) => row.component || '-' },
+  { title: '图标', key: 'icon', render: (row: MenuTreeNode) => h(Icon, { icon: toIconifyName(row.icon) || 'material-symbols:circle-outline', class: 'text-lg' }) },
   { title: '排序', key: 'order_num', width: 80 },
   { title: '操作', key: 'actions', width: 160, render: (row: MenuTreeNode) => h(NSpace, null, {
     default: () => [
@@ -129,6 +134,7 @@ const handleSave = async () => {
     message.success(editingId.value ? '更新成功' : '创建成功')
     showModal.value = false
     fetchData()
+    permission.fetchMenus()
   } catch (e: any) {
     message.error(e?.response?.data?.message || '操作失败')
   } finally {
@@ -137,7 +143,7 @@ const handleSave = async () => {
 }
 
 const handleDelete = (row: MenuTreeNode) => {
-  deleteMenu(row.id).then(() => { message.success('删除成功'); fetchData() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
+  deleteMenu(row.id).then(() => { message.success('删除成功'); fetchData(); permission.fetchMenus() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
 }
 
 const commonIcons = [

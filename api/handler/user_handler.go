@@ -12,6 +12,7 @@ import (
 	"github.com/lyj404/gin-api-template/domain/entity"
 	"github.com/lyj404/gin-api-template/domain/result"
 	"github.com/lyj404/gin-api-template/domain/services"
+	"github.com/lyj404/gin-api-template/global"
 	"github.com/lyj404/gin-api-template/pkg/lib/captcha"
 	"github.com/lyj404/gin-api-template/util"
 
@@ -247,4 +248,46 @@ func (u *UserHandler) GenerateMathCaptcha(c *gin.Context) {
 
 	c.Header("Content-Type", "image/png")
 	c.Data(http.StatusOK, "image/png", imageData)
+}
+
+// @Summary 用户登出
+// @Description 用户登出系统，失效当前 token
+// @Tags user
+// @Produce json
+// @Success 200 {object} result.ResponseResult[string] "登出成功"
+// @Failure 401 {object} result.ResponseResult[string] "未授权"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /logout [post]
+func (u *UserHandler) Logout(c *gin.Context) {
+	userID := c.GetUint("user_id")
+
+	user, err := u.RefreshTokenUseCase.GetUserByID(c, strconv.FormatUint(uint64(userID), 16))
+	if err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, "获取用户信息失败")
+		return
+	}
+
+	// 如果 Redis 启用，将当前 token 加入黑名单
+	authHeader := c.Request.Header.Get("Authorization")
+	if authHeader != "" && config.CfgRedis.Enabled && global.G_REDIS != nil {
+		var authToken string
+		if strings.HasPrefix(authHeader, "Bearer ") {
+			authToken = strings.TrimPrefix(authHeader, "Bearer ")
+		} else {
+			authToken = authHeader
+		}
+		global.G_REDIS.Set(c.Request.Context(), "token_blacklist:"+authToken, true,
+			time.Duration(config.CfgToken.AccessTokenExpiryHour)*time.Hour)
+	}
+
+	u.AuditLogService.Create(&entity.AuditLog{
+		OperatorID:   userID,
+		OperatorName: user.Name,
+		Action:       "logout",
+		TargetType:   "user",
+		TargetID:     userID,
+		Description:  "用户登出: " + user.Email,
+	})
+
+	result.SimpleSuccessResponse(c, "登出成功")
 }

@@ -11,4 +11,5 @@ func NewUserRouter(userHdlr *handler.UserHandler, refreshTokenHdlr *handler.Refr
 	group.POST("/signup", userHdlr.Signup)
 	group.POST("/refresh-token", refreshTokenHdlr.RefreshToken)
 	group.GET("/captcha", userHdlr.GenerateMathCaptcha)
+	group.POST("/logout", JwtAuthMiddleware(), userHdlr.Logout)
 }

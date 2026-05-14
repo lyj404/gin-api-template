@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/lyj404/gin-api-template/config"
 	"github.com/lyj404/gin-api-template/domain/result"
+	"github.com/lyj404/gin-api-template/global"
 	"github.com/lyj404/gin-api-template/internal/tokenutil"
 
 	"github.com/gin-gonic/gin"
@@ -42,6 +44,16 @@ func JwtAuthMiddleware(secret string) gin.HandlerFunc {
 			}
 			c.Abort()
 			return
+		}
+
+		// 检查 token 是否在黑名单中（登出后失效）
+		if config.CfgRedis.Enabled && global.G_REDIS != nil {
+			exists, err := global.G_REDIS.Exists(c.Request.Context(), "token_blacklist:"+authToken).Result()
+			if err == nil && exists > 0 {
+				result.ErrorResponse(c, http.StatusUnauthorized, "Token has been invalidated")
+				c.Abort()
+				return
+			}
 		}
 
 		// 将十六进制用户ID解析为 uint 并注入 context

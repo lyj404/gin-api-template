@@ -1,5 +1,5 @@
 # 定义伪目标
-.PHONY: all build run clean swagger create-admin seed-menus clean-logs
+.PHONY: all build run clean swagger create-admin seed-resources seed-menus seed clean-logs
 
 # 项目名称
 PROJECT_NAME := gin-api-template
@@ -45,7 +45,14 @@ swagger:
 create-admin:
 	$(GO) run ./cmd/rbaccli/main.go create-admin
 
+# 初始化系统资源到数据库
+seed-resources:
+	$(GO) run ./cmd/rbaccli/main.go seed-resources
+
 # 创建系统管理员默认菜单
 seed-menus:
 	$(GO) run ./cmd/rbaccli/main.go seed-menus
+
+# 初始化所有基础数据（资源 + 菜单）
+seed: seed-resources seed-menus
 

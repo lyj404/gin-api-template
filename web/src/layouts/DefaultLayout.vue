@@ -95,6 +95,7 @@ import {
   NMenu, NDropdown, NAvatar, NBreadcrumb, NBreadcrumbItem, NTooltip
 } from 'naive-ui'
 import type { MenuOption, DropdownOption } from 'naive-ui'
+import { Icon } from '@iconify/vue'
 import { useAuthStore } from '@/stores/auth'
 import { usePermissionStore } from '@/stores/permission'
 import { getUserInfo } from '@/utils/auth'
@@ -109,6 +110,8 @@ const activeKey = ref<string>(route.path)
 const userName = ref(getUserInfo()?.name || 'Admin')
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
 const isFullscreen = ref(false)
+
+const toIconifyName = (icon?: string) => (icon || '').replace(/^i-/, '') || 'material-symbols:circle-outline'
 
 watch(() => route.path, (newPath) => {
   activeKey.value = newPath
@@ -125,12 +128,12 @@ const menuOptions = computed<MenuOption[]>(() => {
     key: menu.path || String(menu.id),
     label: menu.name,
     path: menu.path,
-    icon: () => h('span', { class: `${menu.icon || 'i-material-symbols:circle-outline'} text-lg` }),
+    icon: () => h(Icon, { icon: toIconifyName(menu.icon), class: 'text-lg' }),
     children: menu.children?.map(child => ({
       key: child.path,
       label: child.name,
       path: child.path,
-      icon: () => h('span', { class: `${child.icon || 'i-material-symbols:circle-outline'} text-lg` })
+      icon: () => h(Icon, { icon: toIconifyName(child.icon), class: 'text-lg' })
     }))
   }))
 })

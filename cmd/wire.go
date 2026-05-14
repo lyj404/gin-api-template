@@ -92,7 +92,7 @@ func provideRouteRegistration(
 	dashboardHdlr *handler.DashboardHandler,
 ) func() {
 	return func() {
-		// 注册公共路由
+		// 注册公共路由（根路径）
 		publicGroup := router.Group("")
 		route.NewUserRouter(userHdlr, refreshTokenHdlr, publicGroup)
 
