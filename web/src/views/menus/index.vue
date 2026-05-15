@@ -6,7 +6,7 @@
     </div>
 
     <n-card>
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="false" :row-key="(row: any) => row.id" />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="false" :row-key="(row: any) => row.id" bordered single-column />
     </n-card>
 
     <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑菜单' : '新增菜单'" style="width: 600px">

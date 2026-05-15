@@ -13,7 +13,7 @@
         API 类型控制接口访问，实体类型控制业务数据操作。
       </n-alert>
 
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" bordered single-column />
     </n-card>
 
     <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑资源' : '新增资源'" style="width: 580px">
@@ -118,7 +118,7 @@ const columns: DataTableColumns<ResourceResponse> = [
   { title: '实体', key: 'entity', width: 80 },
   { title: '操作', key: 'action', width: 70 },
   { title: '描述', key: 'description', ellipsis: true },
-  { title: '操作', key: 'actions', width: 120, render: (row: ResourceResponse) => h(NSpace, null, {
+  { title: '操作', key: 'actions', width: 160, render: (row: ResourceResponse) => h(NSpace, null, {
     default: () => [
       h(NButton, { size: 'small', onClick: () => openModal(row) }, { default: () => '编辑' }),
       h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })

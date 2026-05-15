@@ -9,7 +9,9 @@
   box-sizing: border-box;
 }
 
-html, body, #app {
+html,
+body,
+#app {
   height: 100%;
   margin: 0;
   padding: 0;
@@ -35,4 +37,14 @@ body {
   height: calc(100vh - var(--header-height));
   overflow-y: auto;
   padding: 16px;
+}
+
+.n-data-table td,
+.n-data-table th {
+  border-left: 1px solid var(--n-border-color, #e0e0e0) !important;
+}
+
+.n-data-table .n-data-table-td:first-child,
+.n-data-table .n-data-table-th:first-child {
+  border-left: none !important;
 }

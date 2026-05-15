@@ -6,7 +6,7 @@
     </div>
 
     <n-card>
-      <n-data-table :columns="columns" :data="treeData" :loading="loading" :pagination="false" />
+      <n-data-table :columns="columns" :data="treeData" :loading="loading" :pagination="false" bordered single-column />
     </n-card>
 
     <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑组织' : '新增组织'" style="width: 500px">
@@ -72,7 +72,7 @@ const columns = computed<DataTableColumns<FlatNode>>(() => [
   {
     title: '操作',
     key: 'actions',
-    width: 240,
+    width: 280,
     render: (row: FlatNode) => {
       return h(NSpace, { size: 4 }, {
         default: () => [

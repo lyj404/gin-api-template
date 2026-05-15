@@ -16,6 +16,8 @@
         :loading="loading"
         :pagination="pagination"
         :row-key="(row: any) => row.id"
+        bordered
+        single-column
         remote
         @update:page="handlePageChange"
       />

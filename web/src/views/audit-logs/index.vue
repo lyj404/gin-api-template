@@ -5,46 +5,43 @@
     </div>
 
     <n-card>
-      <n-tabs v-model:value="tab" type="line">
-        <n-tab-pane name="all" tab="全部">
-          <div class="mb-16 flex gap-8">
-            <n-button type="primary" @click="searchAll">刷新</n-button>
-          </div>
-        </n-tab-pane>
-        <n-tab-pane name="operator" tab="按操作者">
-          <div class="mb-16 flex gap-8">
-            <n-input v-model:value="operatorId" placeholder="请输入操作者ID" clearable />
+      <div class="mb-16">
+        <div class="flex gap-8 items-center mb-12">
+          <span class="text-sm text-gray-500 whitespace-nowrap">查询方式：</span>
+          <n-select v-model:value="searchType" :options="searchTypeOptions" style="width: 140px" />
+          <n-button @click="searchAll">刷新</n-button>
+        </div>
+        <div class="flex gap-8 items-center">
+          <template v-if="searchType === 'operator'">
+            <n-input v-model:value="operatorId" placeholder="请输入操作者ID" clearable style="width: 220px" />
             <n-button type="primary" @click="searchByOperator">查询</n-button>
-          </div>
-        </n-tab-pane>
-        <n-tab-pane name="target" tab="按目标">
-          <div class="mb-16 flex gap-8">
-            <n-select v-model:value="targetType" :options="targetTypeOptions" placeholder="目标类型" clearable />
-            <n-input v-model:value="targetId" placeholder="目标ID" clearable />
+          </template>
+          <template v-else-if="searchType === 'target'">
+            <n-select v-model:value="targetType" :options="targetTypeOptions" placeholder="目标类型" clearable style="width: 130px" />
+            <n-input v-model:value="targetId" placeholder="目标ID" clearable style="width: 180px" />
             <n-button type="primary" @click="searchByTarget">查询</n-button>
-          </div>
-        </n-tab-pane>
-        <n-tab-pane name="time" tab="按时间">
-          <div class="mb-16 flex gap-8 items-center">
-            <n-date-picker v-model:value="timeRange" type="daterange" clearable />
+          </template>
+          <template v-else-if="searchType === 'time'">
+            <n-date-picker v-model:value="timeRange" type="daterange" clearable style="width: 260px" />
             <n-button type="primary" @click="searchByTime">查询</n-button>
-          </div>
-        </n-tab-pane>
-      </n-tabs>
+          </template>
+          <span v-else class="text-sm text-gray-400">点击刷新按钮获取最新日志</span>
+        </div>
+      </div>
 
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" bordered single-column />
     </n-card>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted } from 'vue'
-import { NButton, NDataTable, NCard, NInput, NSelect, NDatePicker, NH2, NTabPane, NTabs, useMessage } from 'naive-ui'
+import { NButton, NDataTable, NCard, NInput, NSelect, NDatePicker, NH2, useMessage } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
 import { getAuditLogs, getAuditLogsByTarget, getAuditLogsByTime } from '@/api'
 
 const message = useMessage()
-const tab = ref('all')
+const searchType = ref('all')
 const loading = ref(false)
 const data = ref<any[]>([])
 const operatorId = ref('')
@@ -52,6 +49,13 @@ const targetType = ref('')
 const targetId = ref('')
 const timeRange = ref<[number, number] | null>(null)
 const pagination = reactive({ page: 1, pageSize: 10, itemCount: 0, pageCount: 1 })
+
+const searchTypeOptions = [
+  { label: '全部', value: 'all' },
+  { label: '按操作者', value: 'operator' },
+  { label: '按目标', value: 'target' },
+  { label: '按时间', value: 'time' }
+]
 
 const targetTypeOptions = [
   { label: '角色', value: 'role' },

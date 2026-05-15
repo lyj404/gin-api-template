@@ -6,7 +6,7 @@
     </div>
 
     <n-card>
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" bordered single-column />
     </n-card>
 
     <!-- 新建/编辑模态框 -->
@@ -66,7 +66,7 @@
                 <n-button size="tiny" @click="selectAllResources(false)">取消全选</n-button>
                 <span class="text-sm text-gray-400 ml-8">已选 {{ selectedResCount }} / {{ allResources.length }}</span>
               </n-space>
-              <n-data-table :columns="resColumns" :data="allResources" :loading="resLoading" />
+              <n-data-table :columns="resColumns" :data="allResources" :loading="resLoading" bordered single-column />
               <n-space class="mt-16">
                 <n-button type="primary" :loading="resSaving" @click="saveResources">保存资源权限</n-button>
                 <n-button @click="loadRoleConfig(configRole!.id)">重置</n-button>
@@ -115,7 +115,7 @@ const columns: DataTableColumns<RoleResponse> = [
   { title: '角色名称', key: 'name' },
   { title: '描述', key: 'description' },
   { title: '系统角色', key: 'is_system', render: (row: RoleResponse) => h(NTag, { type: row.is_system ? 'success' : 'default', size: 'small' }, { default: () => row.is_system ? '是' : '否' }) },
-  { title: '操作', key: 'actions', width: 200, render: (row: RoleResponse) => h(NSpace, null, {
+  { title: '操作', key: 'actions', width: 280, render: (row: RoleResponse) => h(NSpace, null, {
     default: () => [
       h(NButton, { size: 'small', onClick: () => openModal(row) }, { default: () => '编辑' }),
       h(NButton, { size: 'small', type: 'warning', onClick: () => openConfig(row) }, { default: () => '权限配置' }),
