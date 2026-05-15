@@ -7,9 +7,8 @@ type Menu struct {
 	global.G_MODEL
 	Name       string   `gorm:"type:varchar(100);not null" json:"name"`                         // 菜单名称
 	ParentID   *uint    `gorm:"index" json:"parent_id"`                                         // 父菜单ID，nil表示根菜单
-	Path       string   `gorm:"type:varchar(255)" json:"path"`                                    // 前端路由路径
-	Component  string   `gorm:"type:varchar(255)" json:"component"`                               // 前端组件路径
-	Icon       string   `gorm:"type:varchar(100)" json:"icon"`                                    // 菜单图标
+	Path       string   `gorm:"type:varchar(255)" json:"path"`       // 前端路由路径
+	Icon       string   `gorm:"type:varchar(100)" json:"icon"`       // 菜单图标
 	OrderNum   int      `gorm:"default:0" json:"order_num"`                                      // 排序序号
 	ResourceID uint     `gorm:"not null;index" json:"resource_id"`                                 // 关联资源ID，通过资源权限控制菜单显示
 	IsVisible  bool     `gorm:"default:true" json:"is_visible"`                                    // 是否显示

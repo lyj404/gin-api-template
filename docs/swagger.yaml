@@ -35,11 +35,28 @@ definitions:
       user_count:
         type: integer
     type: object
+  github_com_lyj404_gin-api-template_domain_dto.BindRoleResourceRequest:
+    properties:
+      is_write:
+        type: boolean
+      resource_id:
+        type: integer
+    required:
+    - resource_id
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.ChangePasswordRequest:
+    properties:
+      new_password:
+        minLength: 6
+        type: string
+      old_password:
+        type: string
+    required:
+    - new_password
+    - old_password
+    type: object
   github_com_lyj404_gin-api-template_domain_dto.CreateMenuRequest:
     properties:
-      component:
-        description: 前端组件路径
-        type: string
       icon:
         description: 菜单图标
         type: string
@@ -143,8 +160,6 @@ definitions:
         items:
           $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.MenuResponse'
         type: array
-      component:
-        type: string
       icon:
         type: string
       id:
@@ -194,6 +209,19 @@ definitions:
         description: 总页数
         type: integer
     type: object
+  github_com_lyj404_gin-api-template_domain_dto.ProfileResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   github_com_lyj404_gin-api-template_domain_dto.RefreshTokenRequest:
     description: 刷新token时请求的参数
     properties:
@@ -214,6 +242,55 @@ definitions:
       refreshToken:
         description: '@Description 刷新token'
         type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.ResourceBriefResponse:
+    properties:
+      action:
+        type: string
+      description:
+        type: string
+      entity:
+        type: string
+      id:
+        type: integer
+      method:
+        type: string
+      name:
+        type: string
+      pattern:
+        type: string
+      type:
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.RoleDetailResponse:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      is_system:
+        type: boolean
+      name:
+        type: string
+      resources:
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleResourceResponse'
+        type: array
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.RoleResourceResponse:
+    properties:
+      id:
+        type: integer
+      is_read:
+        type: boolean
+      is_write:
+        type: boolean
+      resource:
+        $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.ResourceBriefResponse'
+      resource_id:
+        type: integer
+      role_id:
+        type: integer
     type: object
   github_com_lyj404_gin-api-template_domain_dto.RoleResponse:
     properties:
@@ -263,9 +340,6 @@ definitions:
     type: object
   github_com_lyj404_gin-api-template_domain_dto.UpdateMenuRequest:
     properties:
-      component:
-        description: 前端组件路径
-        type: string
       icon:
         description: 菜单图标
         type: string
@@ -297,6 +371,16 @@ definitions:
         type: string
       parent_id:
         type: integer
+    type: object
+  github_com_lyj404_gin-api-template_domain_dto.UpdateProfileRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    required:
+    - email
+    - name
     type: object
   github_com_lyj404_gin-api-template_domain_dto.UpdateRoleRequest:
     properties:
@@ -419,6 +503,20 @@ definitions:
         description: '@Description 响应信息'
         type: string
     type: object
+  ? github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_RoleResourceResponse
+  : properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        description: '@Description 响应数据'
+        items:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleResourceResponse'
+        type: array
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
   github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_LoginResponse:
     properties:
       code:
@@ -471,6 +569,19 @@ definitions:
         description: '@Description 响应信息'
         type: string
     type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_ProfileResponse:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.ProfileResponse'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
   ? github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RefreshTokenResponse
   : properties:
       code:
@@ -479,6 +590,19 @@ definitions:
       data:
         allOf:
         - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.RefreshTokenResponse'
+        description: '@Description 响应数据'
+      message:
+        description: '@Description 响应信息'
+        type: string
+    type: object
+  github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleDetailResponse:
+    properties:
+      code:
+        description: '@Description 响应状态码'
+        type: integer
+      data:
+        allOf:
+        - $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleDetailResponse'
         description: '@Description 响应数据'
       message:
         description: '@Description 响应信息'
@@ -541,8 +665,6 @@ definitions:
         items:
           $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_services.MenuTreeNode'
         type: array
-      component:
-        type: string
       icon:
         type: string
       id:
@@ -577,12 +699,11 @@ info:
 paths:
   /audit-logs:
     get:
-      description: 根据操作者ID分页查询审计日志
+      description: 根据操作者ID分页查询审计日志，不传操作者ID时返回全部日志
       parameters:
-      - description: 操作者ID
+      - description: 操作者ID，不传时返回全部
         in: query
         name: operator_id
-        required: true
         type: integer
       - description: 页码，默认1
         in: query
@@ -600,7 +721,7 @@ paths:
           schema:
             $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_PaginationResponse'
         "400":
-          description: 缺少操作者ID
+          description: 参数错误
           schema:
             $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
         "500":
@@ -773,6 +894,27 @@ paths:
           schema:
             $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
       summary: 用户登录
+      tags:
+      - user
+  /logout:
+    post:
+      description: 用户登出系统，失效当前 token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 登出成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 用户登出
       tags:
       - user
   /menus:
@@ -1232,7 +1374,7 @@ paths:
       tags:
       - 角色
     get:
-      description: 根据ID获取角色详情
+      description: 根据ID获取角色详情（包含绑定的资源列表）
       parameters:
       - description: 角色ID
         in: path
@@ -1245,7 +1387,7 @@ paths:
         "200":
           description: 获取成功
           schema:
-            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleResponse'
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleDetailResponse'
         "404":
           description: 角色不存在
           schema:
@@ -1289,6 +1431,91 @@ paths:
           schema:
             $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
       summary: 更新角色
+      tags:
+      - 角色
+  /roles/:id/resources:
+    get:
+      description: 获取指定角色绑定的所有资源
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_RoleResourceResponse'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 获取角色绑定的资源列表
+      tags:
+      - 角色
+    post:
+      consumes:
+      - application/json
+      description: 为角色绑定一个资源，指定是否具有写权限
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 绑定资源请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.BindRoleResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 绑定成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 角色绑定资源
+      tags:
+      - 角色
+  /roles/:id/resources/:resourceId:
+    delete:
+      description: 移除角色绑定的资源
+      parameters:
+      - description: 角色ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 资源ID
+        in: path
+        name: resourceId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 解绑成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 角色解绑资源
       tags:
       - 角色
   /signup:
@@ -1346,6 +1573,40 @@ paths:
       summary: 获取当前用户可见的菜单
       tags:
       - 用户
+  /user/password:
+    put:
+      consumes:
+      - application/json
+      description: 修改当前登录用户的密码
+      parameters:
+      - description: 修改密码请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.ChangePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 修改成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "400":
+          description: 请求参数错误或原密码错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 修改密码
+      tags:
+      - 用户
   /user/permissions:
     get:
       description: 获取当前用户的权限列表和组织范围
@@ -1365,6 +1626,60 @@ paths:
           schema:
             $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
       summary: 获取当前用户权限
+      tags:
+      - 用户
+  /user/profile:
+    get:
+      description: 获取当前登录用户的个人信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 获取成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_ProfileResponse'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 获取个人信息
+      tags:
+      - 用户
+    put:
+      consumes:
+      - application/json
+      description: 更新当前登录用户的姓名和邮箱
+      parameters:
+      - description: 更新个人信息请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_dto.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 更新成功
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "400":
+          description: 请求参数错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "401":
+          description: 未授权
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+        "500":
+          description: 服务器内部错误
+          schema:
+            $ref: '#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string'
+      summary: 更新个人信息
       tags:
       - 用户
   /users:

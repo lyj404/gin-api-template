@@ -159,12 +159,11 @@ func (s *permissionServiceImpl) buildMenuTree(menus []entity.Menu) []services.Me
 	// 第一遍：创建所有节点映射
 	for _, menu := range menus {
 		menuMap[menu.ID] = &services.MenuTreeNode{
-			ID:        menu.ID,
-			Name:      menu.Name,
-			Path:      menu.Path,
-			Component: menu.Component,
-			Icon:      menu.Icon,
-			OrderNum:  menu.OrderNum,
+			ID:       menu.ID,
+			Name:     menu.Name,
+			Path:     menu.Path,
+			Icon:     menu.Icon,
+			OrderNum: menu.OrderNum,
 		}
 	}
 

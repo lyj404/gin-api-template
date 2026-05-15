@@ -68,7 +68,6 @@ export interface CreateMenuRequest {
   name: string
   parent_id?: number | null
   path?: string
-  component?: string
   icon?: string
   order_num?: number
   resource_id: number
@@ -79,7 +78,6 @@ export interface UpdateMenuRequest {
   name?: string
   parent_id?: number | null
   path?: string
-  component?: string
   icon?: string
   order_num?: number
   resource_id?: number
@@ -92,7 +90,6 @@ export interface MenuResponse {
   name: string
   parent_id: number | null
   path: string
-  component: string
   icon: string
   order_num: number
   resource_id: number
@@ -105,7 +102,6 @@ export interface MenuTreeNode {
   id: number
   name: string
   path: string
-  component: string
   icon: string
   order_num: number
   is_visible: boolean

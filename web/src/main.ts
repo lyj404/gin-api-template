@@ -6,9 +6,9 @@ import { createPinia } from 'pinia'
 import 'virtual:uno.css'
 import '@styles/main.css'
 
-import('@iconify-json/material-symbols/icons.json').then((m) => {
-  addCollection(m.default as any)
-})
+// Use dynamic import to prevent tree-shaking
+const { default: iconsData } = await import('@iconify-json/material-symbols/icons.json')
+addCollection(iconsData)
 
 const app = createApp(App)
 app.use(createPinia())

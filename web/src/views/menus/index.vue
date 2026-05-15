@@ -20,13 +20,9 @@
         <n-form-item label="路由路径">
           <n-input v-model:value="form.path" placeholder="如: /users" />
         </n-form-item>
-        <n-form-item label="组件路径">
-          <n-input v-model:value="form.component" placeholder="如: views/users/index.vue" />
-        </n-form-item>
         <n-form-item label="图标">
           <div class="flex gap-8 items-center w-full">
-            <Icon v-if="form.icon" :icon="toIconifyName(form.icon)" class="text-xl" />
-            <n-input v-model:value="form.icon" placeholder="如: i-material-symbols:home 或 material-symbols:home" class="flex-1" />
+            <span v-if="form.icon" :class="[toIconClass(form.icon), 'text-xl inline-block']" />
             <n-button @click="showIconPicker = true">选择</n-button>
           </div>
         </n-form-item>
@@ -34,7 +30,7 @@
           <n-input-number v-model:value="form.order_num" :min="0" />
         </n-form-item>
         <n-form-item label="关联资源">
-          <n-select v-model:value="form.resource_id" :options="resourceOptions" placeholder="请选择资源" />
+          <n-select v-model:value="form.resource_id" :options="resourceOptions" placeholder="请选择资源" :loading="resourcesLoading" />
         </n-form-item>
         <n-form-item label="是否显示">
           <n-switch v-model:value="form.is_visible" />
@@ -64,7 +60,7 @@ import { ref, reactive, h, onMounted, computed } from 'vue'
 import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NH2, NCard, NTag, NSpace, useMessage } from 'naive-ui'
 import type { DataTableColumns, SelectOption } from 'naive-ui'
 import { Icon } from '@iconify/vue'
-import { getMenuTree, createMenu, updateMenu, deleteMenu } from '@/api'
+import { getMenuTree, createMenu, updateMenu, deleteMenu, getResources } from '@/api'
 import { usePermissionStore } from '@/stores/permission'
 import type { MenuTreeNode } from '@/types'
 
@@ -77,18 +73,19 @@ const showIconPicker = ref(false)
 const editingId = ref<number | null>(null)
 
 const toIconifyName = (icon?: string) => (icon || '').replace(/^i-/, '')
+const toIconClass = (icon?: string) => icon ? (icon.startsWith('i-') ? icon : `i-${icon}`) : ''
 
-const form = reactive({ name: '', parent_id: null as number | null, path: '', component: '', icon: '', order_num: 0, resource_id: null as number | null, is_visible: true })
+const form = reactive({ name: '', parent_id: null as number | null, path: '', icon: '', order_num: 0, resource_id: null as number | null, is_visible: true })
 const data = ref<MenuTreeNode[]>([])
 
 const menuOptions = computed<SelectOption[]>(() => [{ label: '顶级菜单', value: 0 }, ...data.value.map((m: MenuTreeNode) => ({ label: m.name, value: m.id }))])
 const resourceOptions = ref<SelectOption[]>([])
+const resourcesLoading = ref(false)
 
 const columns: DataTableColumns<MenuTreeNode> = [
   { title: 'ID', key: 'id', width: 80 },
   { title: '菜单名称', key: 'name' },
   { title: '路由路径', key: 'path', render: (row: MenuTreeNode) => row.path || '-' },
-  { title: '组件路径', key: 'component', render: (row: MenuTreeNode) => row.component || '-' },
   { title: '图标', key: 'icon', render: (row: MenuTreeNode) => h(Icon, { icon: toIconifyName(row.icon) || 'material-symbols:circle-outline', class: 'text-lg' }) },
   { title: '排序', key: 'order_num', width: 80 },
   { title: '操作', key: 'actions', width: 160, render: (row: MenuTreeNode) => h(NSpace, null, {
@@ -112,18 +109,19 @@ const fetchData = async () => {
 const openModal = (row?: MenuTreeNode) => {
   if (row) {
     editingId.value = row.id
-    Object.assign(form, { name: row.name, parent_id: null, path: row.path, component: row.component, icon: row.icon, order_num: row.order_num, resource_id: null, is_visible: row.is_visible })
+    Object.assign(form, { name: row.name, parent_id: null, path: row.path, icon: row.icon, order_num: row.order_num, resource_id: null, is_visible: row.is_visible })
   } else {
     editingId.value = null
-    Object.assign(form, { name: '', parent_id: null, path: '', component: '', icon: '', order_num: 0, resource_id: null, is_visible: true })
+    Object.assign(form, { name: '', parent_id: null, path: '', icon: '', order_num: 0, resource_id: null, is_visible: true })
   }
   showModal.value = true
+  fetchResources()
 }
 
 const handleSave = async () => {
   saving.value = true
   try {
-    const payload: any = { name: form.name, path: form.path, component: form.component, icon: form.icon, order_num: form.order_num, is_visible: form.is_visible }
+    const payload: any = { name: form.name, path: form.path, icon: form.icon, order_num: form.order_num, is_visible: form.is_visible }
     if (form.parent_id) (payload as any).parent_id = form.parent_id === 0 ? null : form.parent_id
     if (form.resource_id) (payload as any).resource_id = form.resource_id
     if (editingId.value) {
@@ -193,6 +191,15 @@ const commonIcons = [
   'i-material-symbols:category-outline',
   'i-material-symbols:layers',
 ]
+
+const fetchResources = async () => {
+  resourcesLoading.value = true
+  try {
+    const res = await getResources({ page: 1, page_size: 100 })
+    resourceOptions.value = (res.data.data?.data || []).map((r: any) => ({ label: r.description, value: r.id }))
+  } catch { /* ignore */ }
+  finally { resourcesLoading.value = false }
+}
 
 const selectIcon = (icon: string) => {
   form.icon = icon

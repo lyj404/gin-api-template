@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/audit-logs": {
             "get": {
-                "description": "根据操作者ID分页查询审计日志",
+                "description": "根据操作者ID分页查询审计日志，不传操作者ID时返回全部日志",
                 "produces": [
                     "application/json"
                 ],
@@ -28,10 +28,9 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "操作者ID",
+                        "description": "操作者ID，不传时返回全部",
                         "name": "operator_id",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     },
                     {
                         "type": "integer",
@@ -54,7 +53,7 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "缺少操作者ID",
+                        "description": "参数错误",
                         "schema": {
                             "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
                         }
@@ -306,6 +305,38 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "用户未找到",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/logout": {
+            "post": {
+                "description": "用户登出系统，失效当前 token",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "用户登出",
+                "responses": {
+                    "200": {
+                        "description": "登出成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
                         "schema": {
                             "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
                         }
@@ -969,7 +1000,7 @@ const docTemplate = `{
         },
         "/roles/:id": {
             "get": {
-                "description": "根据ID获取角色详情",
+                "description": "根据ID获取角色详情（包含绑定的资源列表）",
                 "produces": [
                     "application/json"
                 ],
@@ -990,7 +1021,7 @@ const docTemplate = `{
                     "200": {
                         "description": "获取成功",
                         "schema": {
-                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleResponse"
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleDetailResponse"
                         }
                     },
                     "404": {
@@ -1101,6 +1132,134 @@ const docTemplate = `{
                 }
             }
         },
+        "/roles/:id/resources": {
+            "get": {
+                "description": "获取指定角色绑定的所有资源",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色"
+                ],
+                "summary": "获取角色绑定的资源列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_RoleResourceResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "为角色绑定一个资源，指定是否具有写权限",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色"
+                ],
+                "summary": "角色绑定资源",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "绑定资源请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.BindRoleResourceRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "绑定成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/roles/:id/resources/:resourceId": {
+            "delete": {
+                "description": "移除角色绑定的资源",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色"
+                ],
+                "summary": "角色解绑资源",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "角色ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "资源ID",
+                        "name": "resourceId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "解绑成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
         "/signup": {
             "post": {
                 "description": "处理新用户注册请求，创建用户账户并返回访问token和刷新token",
@@ -1185,6 +1344,58 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/password": {
+            "put": {
+                "description": "修改当前登录用户的密码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "修改密码",
+                "parameters": [
+                    {
+                        "description": "修改密码请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.ChangePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "修改成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误或原密码错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
         "/user/permissions": {
             "get": {
                 "description": "获取当前用户的权限列表和组织范围",
@@ -1200,6 +1411,88 @@ const docTemplate = `{
                         "description": "获取成功",
                         "schema": {
                             "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-api_handler_UserPermissionResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/profile": {
+            "get": {
+                "description": "获取当前登录用户的个人信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "获取个人信息",
+                "responses": {
+                    "200": {
+                        "description": "获取成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_ProfileResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "未授权",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "500": {
+                        "description": "服务器内部错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "更新当前登录用户的姓名和邮箱",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户"
+                ],
+                "summary": "更新个人信息",
+                "parameters": [
+                    {
+                        "description": "更新个人信息请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.UpdateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "更新成功",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
+                        }
+                    },
+                    "400": {
+                        "description": "请求参数错误",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_result.ResponseResult-string"
                         }
                     },
                     "401": {
@@ -1508,6 +1801,36 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_lyj404_gin-api-template_domain_dto.BindRoleResourceRequest": {
+            "type": "object",
+            "required": [
+                "resource_id"
+            ],
+            "properties": {
+                "is_write": {
+                    "type": "boolean"
+                },
+                "resource_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_dto.ChangePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password",
+                "old_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "old_password": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_lyj404_gin-api-template_domain_dto.CreateMenuRequest": {
             "type": "object",
             "required": [
@@ -1515,10 +1838,6 @@ const docTemplate = `{
                 "resource_id"
             ],
             "properties": {
-                "component": {
-                    "description": "前端组件路径",
-                    "type": "string"
-                },
                 "icon": {
                     "description": "菜单图标",
                     "type": "string"
@@ -1653,9 +1972,6 @@ const docTemplate = `{
                         "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.MenuResponse"
                     }
                 },
-                "component": {
-                    "type": "string"
-                },
                 "icon": {
                     "type": "string"
                 },
@@ -1729,6 +2045,26 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_lyj404_gin-api-template_domain_dto.ProfileResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_lyj404_gin-api-template_domain_dto.RefreshTokenRequest": {
             "description": "刷新token时请求的参数",
             "type": "object",
@@ -1753,6 +2089,81 @@ const docTemplate = `{
                 "refreshToken": {
                     "description": "@Description 刷新token",
                     "type": "string"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_dto.ResourceBriefResponse": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "entity": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "method": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_dto.RoleDetailResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_system": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleResourceResponse"
+                    }
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_dto.RoleResourceResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "is_read": {
+                    "type": "boolean"
+                },
+                "is_write": {
+                    "type": "boolean"
+                },
+                "resource": {
+                    "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.ResourceBriefResponse"
+                },
+                "resource_id": {
+                    "type": "integer"
+                },
+                "role_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -1815,10 +2226,6 @@ const docTemplate = `{
         "github_com_lyj404_gin-api-template_domain_dto.UpdateMenuRequest": {
             "type": "object",
             "properties": {
-                "component": {
-                    "description": "前端组件路径",
-                    "type": "string"
-                },
                 "icon": {
                     "description": "菜单图标",
                     "type": "string"
@@ -1861,6 +2268,21 @@ const docTemplate = `{
                 },
                 "parent_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_dto.UpdateProfileRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -2048,6 +2470,26 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-array_github_com_lyj404_gin-api-template_domain_dto_RoleResourceResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleResourceResponse"
+                    }
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
         "github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_LoginResponse": {
             "type": "object",
             "properties": {
@@ -2132,6 +2574,27 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_ProfileResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.ProfileResponse"
+                        }
+                    ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
         "github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RefreshTokenResponse": {
             "type": "object",
             "properties": {
@@ -2144,6 +2607,27 @@ const docTemplate = `{
                     "allOf": [
                         {
                             "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.RefreshTokenResponse"
+                        }
+                    ]
+                },
+                "message": {
+                    "description": "@Description 响应信息",
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_lyj404_gin-api-template_domain_result.ResponseResult-github_com_lyj404_gin-api-template_domain_dto_RoleDetailResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "@Description 响应状态码",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "@Description 响应数据",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_dto.RoleDetailResponse"
                         }
                     ]
                 },
@@ -2241,9 +2725,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/github_com_lyj404_gin-api-template_domain_services.MenuTreeNode"
                     }
-                },
-                "component": {
-                    "type": "string"
                 },
                 "icon": {
                     "type": "string"

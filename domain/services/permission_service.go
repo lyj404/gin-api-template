@@ -5,7 +5,6 @@ type MenuTreeNode struct {
 	ID        uint           `json:"id"`
 	Name      string         `json:"name"`
 	Path      string         `json:"path"`
-	Component string         `json:"component"`
 	Icon      string         `json:"icon"`
 	OrderNum  int            `json:"order_num"`
 	Children  []MenuTreeNode `json:"children,omitempty"`
