@@ -17,4 +17,7 @@ type RoleService interface {
 	AssignRoleToUser(userID, roleID, orgUnitID uint, operatorID uint) error
 	RevokeRoleFromUser(userID, roleID, orgUnitID uint, operatorID uint) error
 	GetRoleResources(roleID uint) ([]entity.RoleResource, error)
+	BindMenu(roleID, menuID uint, operatorID uint) error
+	UnbindMenu(roleID, menuID uint, operatorID uint) error
+	GetRoleMenus(roleID uint) ([]entity.RoleMenu, error)
 }

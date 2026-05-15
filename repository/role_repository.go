@@ -77,3 +77,18 @@ func (r *roleRepository) GetRoleOrgScopes(roleID uint) ([]entity.RoleOrgScope, e
 	err := global.G_DB.Preload("OrgUnit").Where("role_id = ?", roleID).Find(&scopes).Error
 	return scopes, err
 }
+
+func (r *roleRepository) BindMenu(roleID, menuID uint) error {
+	rm := entity.RoleMenu{RoleID: roleID, MenuID: menuID}
+	return global.G_DB.Create(&rm).Error
+}
+
+func (r *roleRepository) UnbindMenu(roleID, menuID uint) error {
+	return global.G_DB.Where("role_id = ? AND menu_id = ?", roleID, menuID).Delete(&entity.RoleMenu{}).Error
+}
+
+func (r *roleRepository) GetRoleMenus(roleID uint) ([]entity.RoleMenu, error) {
+	var menus []entity.RoleMenu
+	err := global.G_DB.Preload("Menu").Where("role_id = ?", roleID).Find(&menus).Error
+	return menus, err
+}

@@ -44,6 +44,8 @@ func NewDataBase() *gorm.DB {
 		&entity.OrgEntityBinding{},
 		&entity.AuditLog{},
 		&entity.Menu{},
+		&entity.RoleMenu{},
+		&entity.MenuResource{},
 	)
 
 	// 设置数据库连接池

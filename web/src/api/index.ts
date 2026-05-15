@@ -8,11 +8,12 @@ import type {
   CreateMenuRequest, UpdateMenuRequest, MenuResponse, MenuTreeNode,
   CreateOrgUnitRequest, UpdateOrgUnitRequest, OrgUnitResponse,
   ResourceResponse,
-  BindResourceRequest,
+  BindResourceRequest, BindMenuRequest, BindMenuResourceRequest,
   UserPermissions,
   UserResponse, CreateUserRequest, UpdateUserRequest,
   ProfileResponse, UpdateProfileRequest, ChangePasswordRequest,
-  DashboardStats, AuditTrendItem
+  DashboardStats, AuditTrendItem,
+  RoleDetailResponse, RoleMenuResponse
 } from '@/types'
 
 export const login = (data: LoginRequest) => api.post('/login', data)
@@ -21,16 +22,25 @@ export const refreshToken = (data: RefreshTokenRequest) => api.post('/refresh-to
 export const getCaptcha = () => api.get('/captcha', { responseType: 'blob' })
 
 export const getRoles = (params?: PaginationRequest) => api.get<PaginationResponse<RoleResponse>>('/roles', { params })
-export const getRole = (id: number) => api.get<{ data: RoleResponse }>(`/roles/${id}`)
+export const getRoleDetail = (id: number) => api.get<{ data: RoleDetailResponse }>(`/roles/${id}`)
 export const createRole = (data: RoleRequest) => api.post<{ data: RoleResponse }>('/roles', data)
 export const updateRole = (id: number, data: RoleRequest) => api.put(`/roles/${id}`, data)
 export const deleteRole = (id: number) => api.delete(`/roles/${id}`)
+export const bindRoleResource = (roleId: number, resourceId: number, data: BindResourceRequest) => api.post(`/roles/${roleId}/resources`, { ...data, resource_id: resourceId })
+export const unbindRoleResource = (roleId: number, resourceId: number) => api.delete(`/roles/${roleId}/resources/${resourceId}`)
+export const getRoleResources = (roleId: number) => api.get<{ data: RoleResourceResponse[] }>(`/roles/${roleId}/resources`)
+export const bindRoleMenu = (roleId: number, data: BindMenuRequest) => api.post(`/roles/${roleId}/menus`, data)
+export const unbindRoleMenu = (roleId: number, menuId: number) => api.delete(`/roles/${roleId}/menus/${menuId}`)
+export const getRoleMenus = (roleId: number) => api.get<{ data: RoleMenuResponse[] }>(`/roles/${roleId}/menus`)
 
 export const getMenuTree = () => api.get<{ data: MenuTreeNode[] }>('/menus/tree')
 export const getMenu = (id: number) => api.get<{ data: MenuResponse }>(`/menus/${id}`)
 export const createMenu = (data: CreateMenuRequest) => api.post('/menus', data)
 export const updateMenu = (id: number, data: UpdateMenuRequest) => api.put(`/menus/${id}`, data)
 export const deleteMenu = (id: number) => api.delete(`/menus/${id}`)
+export const bindMenuResource = (menuId: number, data: BindMenuResourceRequest) => api.post(`/menus/${menuId}/resources`, data)
+export const unbindMenuResource = (menuId: number, resourceId: number) => api.delete(`/menus/${menuId}/resources/${resourceId}`)
+export const getMenuResources = (menuId: number) => api.get<{ data: MenuResourceResponse[] }>(`/menus/${menuId}/resources`)
 
 export const getOrgUnits = (params?: PaginationRequest) => api.get<PaginationResponse<OrgUnitResponse>>('/org-units', { params })
 export const getOrgTree = () => api.get<{ data: OrgUnitResponse[] }>('/org-units/tree')
@@ -44,7 +54,6 @@ export const getResource = (id: number) => api.get<{ data: ResourceResponse }>(`
 export const createResource = (data: ResourceResponse) => api.post('/resources', data)
 export const updateResource = (id: number, data: ResourceResponse) => api.put(`/resources/${id}`, data)
 export const deleteResource = (id: number) => api.delete(`/resources/${id}`)
-export const bindResource = (roleId: number, resourceId: number, data: BindResourceRequest) => api.post(`/roles/${roleId}/resources`, { ...data, resource_id: resourceId })
 
 export const getAuditLogs = (params?: PaginationRequest) => api.get<PaginationResponse<any>>('/audit-logs', { params })
 export const getAuditLogsByTarget = (params: { target_type: string; target_id: string }) => api.get<{ data: any[] }>('/audit-logs/target', { params })

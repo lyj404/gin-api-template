@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/lyj404/gin-api-template/config"
@@ -12,15 +13,12 @@ import (
 	"github.com/lyj404/gin-api-template/global"
 )
 
-// permissionServiceImpl 权限服务实现
 type permissionServiceImpl struct{}
 
-// NewPermissionService 创建权限服务实例
 func NewPermissionService() services.PermissionService {
 	return &permissionServiceImpl{}
 }
 
-// CheckPermission 检查用户是否有访问指定资源的权限
 func (s *permissionServiceImpl) CheckPermission(userID uint, resource string, method string) (bool, error) {
 	permissions, err := s.getUserPermissions(userID)
 	if err != nil {
@@ -41,7 +39,6 @@ func (s *permissionServiceImpl) CheckPermission(userID uint, resource string, me
 	return false, nil
 }
 
-// CheckEntityPermission 检查用户是否有操作指定实体的权限
 func (s *permissionServiceImpl) CheckEntityPermission(userID uint, entityType string, entityID uint, action string) (bool, error) {
 	entityResourceName := fmt.Sprintf("entity:%s:%s", entityType, action)
 
@@ -95,17 +92,14 @@ func (s *permissionServiceImpl) CheckEntityPermission(userID uint, entityType st
 	return false, nil
 }
 
-// GetUserPermissions 获取用户的权限列表
 func (s *permissionServiceImpl) GetUserPermissions(userID uint) ([]services.PermissionInfo, error) {
 	return s.getUserPermissions(userID)
 }
 
-// GetUserOrgScope 获取用户的组织范围
 func (s *permissionServiceImpl) GetUserOrgScope(userID uint) ([]services.OrgScopeInfo, error) {
 	return s.getUserOrgScope(userID)
 }
 
-// ClearUserCache 清除用户权限缓存
 func (s *permissionServiceImpl) ClearUserCache(userID uint) error {
 	if !config.CfgRedis.Enabled {
 		return nil
@@ -115,48 +109,39 @@ func (s *permissionServiceImpl) ClearUserCache(userID uint) error {
 	return global.G_REDIS.Del(context.Background(), cacheKey).Err()
 }
 
-// GetUserMenus 获取用户可见的菜单树（根据用户权限过滤）
 func (s *permissionServiceImpl) GetUserMenus(userID uint) ([]services.MenuTreeNode, error) {
-	// 获取用户权限
-	permissions, err := s.getUserPermissions(userID)
+	var userRoles []entity.UserRole
+	err := global.G_DB.Preload("Role.RoleMenus.Menu.Resources").Where("user_id = ?", userID).Find(&userRoles).Error
 	if err != nil {
 		return nil, err
 	}
 
-	// 获取用户可见的资源名列表
-	resourceSet := make(map[string]bool)
-	for _, perm := range permissions {
-		resourceSet[perm.ResourceName] = true
-	}
-
-	// 获取所有菜单
-	var menus []entity.Menu
-	err = global.G_DB.Preload("Resource").Order("order_num ASC").Find(&menus).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// 过滤菜单：只保留用户有权限且可见的菜单
-	visibleMenus := make([]entity.Menu, 0)
-	for _, menu := range menus {
-		if !menu.IsVisible || menu.Status != "enabled" {
-			continue
-		}
-		if menu.Resource != nil && resourceSet[menu.Resource.Name] {
-			visibleMenus = append(visibleMenus, menu)
+	menuMap := make(map[uint]*entity.Menu)
+	for _, ur := range userRoles {
+		for _, rm := range ur.Role.RoleMenus {
+			if rm.Menu != nil && rm.Menu.IsVisible && rm.Menu.Status == "enabled" {
+				if _, exists := menuMap[rm.Menu.ID]; !exists {
+					menuMap[rm.Menu.ID] = rm.Menu
+				}
+			}
 		}
 	}
 
-	// 构建菜单树
-	return s.buildMenuTree(visibleMenus), nil
+	allMenus := make([]entity.Menu, 0, len(menuMap))
+	for _, m := range menuMap {
+		allMenus = append(allMenus, *m)
+	}
+	sort.Slice(allMenus, func(i, j int) bool {
+		return allMenus[i].OrderNum < allMenus[j].OrderNum
+	})
+
+	return s.buildMenuTree(allMenus), nil
 }
 
-// buildMenuTree 将扁平菜单列表构建为树形结构
 func (s *permissionServiceImpl) buildMenuTree(menus []entity.Menu) []services.MenuTreeNode {
 	menuMap := make(map[uint]*services.MenuTreeNode)
 	var roots []services.MenuTreeNode
 
-	// 第一遍：创建所有节点映射
 	for _, menu := range menus {
 		menuMap[menu.ID] = &services.MenuTreeNode{
 			ID:       menu.ID,
@@ -167,7 +152,6 @@ func (s *permissionServiceImpl) buildMenuTree(menus []entity.Menu) []services.Me
 		}
 	}
 
-	// 第二遍：建立父子关系
 	for _, menu := range menus {
 		if menu.ParentID != nil {
 			if parent, exists := menuMap[*menu.ParentID]; exists {
@@ -181,11 +165,9 @@ func (s *permissionServiceImpl) buildMenuTree(menus []entity.Menu) []services.Me
 	return roots
 }
 
-// getUserPermissions 获取用户权限（内部方法，支持缓存）
 func (s *permissionServiceImpl) getUserPermissions(userID uint) ([]services.PermissionInfo, error) {
 	cacheKey := fmt.Sprintf("user:permissions:%d", userID)
 
-	// 如果启用Redis，尝试从缓存获取
 	if config.CfgRedis.Enabled {
 		cached, err := global.G_REDIS.Get(context.Background(), cacheKey).Result()
 		if err == nil && cached != "" {
@@ -196,25 +178,31 @@ func (s *permissionServiceImpl) getUserPermissions(userID uint) ([]services.Perm
 		}
 	}
 
-	// 从数据库获取用户角色和权限
 	var userRoles []entity.UserRole
-	err := global.G_DB.Preload("Role.RoleResources.Resource").Where("user_id = ?", userID).Find(&userRoles).Error
+	err := global.G_DB.
+		Preload("Role.RoleResources.Resource").
+		Preload("Role.RoleMenus.Menu.Resources").
+		Where("user_id = ?", userID).
+		Find(&userRoles).Error
 	if err != nil {
 		return nil, err
 	}
 
-	// 合并同一资源的权限
 	permissionMap := make(map[string]*services.PermissionInfo)
+
+	// 1. 收集角色直接绑定的资源
 	for _, userRole := range userRoles {
 		for _, roleResource := range userRole.Role.RoleResources {
-			if perm, exists := permissionMap[roleResource.Resource.Name]; exists {
-				perm.IsRead = perm.IsRead || roleResource.IsRead
-				perm.IsWrite = perm.IsWrite || roleResource.IsWrite
-			} else {
-				permissionMap[roleResource.Resource.Name] = &services.PermissionInfo{
-					ResourceName: roleResource.Resource.Name,
-					IsRead:       roleResource.IsRead,
-					IsWrite:      roleResource.IsWrite,
+			s.mergePermission(permissionMap, roleResource.Resource.Name, roleResource.IsRead, roleResource.IsWrite)
+		}
+	}
+
+	// 2. 收集角色通过菜单绑定的资源
+	for _, userRole := range userRoles {
+		for _, roleMenu := range userRole.Role.RoleMenus {
+			if roleMenu.Menu != nil {
+				for _, res := range roleMenu.Menu.Resources {
+					s.mergePermission(permissionMap, res.Name, true, false)
 				}
 			}
 		}
@@ -225,7 +213,6 @@ func (s *permissionServiceImpl) getUserPermissions(userID uint) ([]services.Perm
 		permissions = append(permissions, *perm)
 	}
 
-	// 如果启用Redis，缓存权限
 	if config.CfgRedis.Enabled {
 		data, _ := json.Marshal(permissions)
 		global.G_REDIS.Set(context.Background(), cacheKey, data, 0)
@@ -234,7 +221,19 @@ func (s *permissionServiceImpl) getUserPermissions(userID uint) ([]services.Perm
 	return permissions, nil
 }
 
-// getUserOrgScope 获取用户组织范围（内部方法）
+func (s *permissionServiceImpl) mergePermission(permMap map[string]*services.PermissionInfo, name string, isRead, isWrite bool) {
+	if perm, exists := permMap[name]; exists {
+		perm.IsRead = perm.IsRead || isRead
+		perm.IsWrite = perm.IsWrite || isWrite
+	} else {
+		permMap[name] = &services.PermissionInfo{
+			ResourceName: name,
+			IsRead:       isRead,
+			IsWrite:      isWrite,
+		}
+	}
+}
+
 func (s *permissionServiceImpl) getUserOrgScope(userID uint) ([]services.OrgScopeInfo, error) {
 	var userRoles []entity.UserRole
 	err := global.G_DB.Preload("Role.RoleOrgScopes.OrgUnit").Where("user_id = ?", userID).Find(&userRoles).Error
@@ -265,7 +264,6 @@ func (s *permissionServiceImpl) getUserOrgScope(userID uint) ([]services.OrgScop
 	return scopes, nil
 }
 
-// matchPattern 通配符模式匹配
 func (s *permissionServiceImpl) matchPattern(pattern, target string) bool {
 	if pattern == "*" {
 		return true
@@ -279,7 +277,6 @@ func (s *permissionServiceImpl) matchPattern(pattern, target string) bool {
 	return pattern == target
 }
 
-// isWriteMethod 判断是否为写操作方法
 func (s *permissionServiceImpl) isWriteMethod(method string) bool {
 	return method != "GET" && method != "HEAD"
 }

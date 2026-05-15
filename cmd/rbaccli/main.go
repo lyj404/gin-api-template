@@ -145,6 +145,11 @@ func createSystemAdmin(email, password string) error {
 			return fmt.Errorf("绑定资源权限失败: %w", err)
 		}
 
+		// 每次运行都重新绑定所有菜单（确保新增菜单同步到 super_admin）
+		if err := syncAllMenusToRole(tx, superAdminRole.ID); err != nil {
+			return fmt.Errorf("绑定菜单失败: %w", err)
+		}
+
 		// 绑定全组织范围（仅首次创建时）
 		orgScopesExist := tx.Model(&entity.RoleOrgScope{}).Where("role_id = ?", superAdminRole.ID).First(&entity.RoleOrgScope{}).Error == nil
 		if !orgScopesExist {
@@ -282,6 +287,25 @@ func syncAllResourcesToRole(tx *gorm.DB, roleID uint) error {
 	return nil
 }
 
+func syncAllMenusToRole(tx *gorm.DB, roleID uint) error {
+	if err := tx.Where("role_id = ?", roleID).Delete(&entity.RoleMenu{}).Error; err != nil {
+		return err
+	}
+
+	var menus []entity.Menu
+	if err := tx.Find(&menus).Error; err != nil {
+		return err
+	}
+
+	for _, menu := range menus {
+		rm := entity.RoleMenu{RoleID: roleID, MenuID: menu.ID}
+		if err := tx.Create(&rm).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func seedResources() {
 	fmt.Println("=== 资源数据初始化 ===")
 
@@ -332,7 +356,19 @@ func seedMenus() {
 	bootstrap.BootDBOnly()
 
 	err := global.G_DB.Transaction(func(tx *gorm.DB) error {
-		return createDefaultMenus(tx)
+		if err := createDefaultMenus(tx); err != nil {
+			return err
+		}
+
+		var superAdminRole entity.Role
+		if err := tx.Where("name = ?", "super_admin").First(&superAdminRole).Error; err == nil {
+			if err := syncAllMenusToRole(tx, superAdminRole.ID); err != nil {
+				return fmt.Errorf("同步菜单到 super_admin 角色失败: %w", err)
+			}
+			fmt.Println("已同步菜单到 super_admin 角色")
+		}
+
+		return nil
 	})
 	if err != nil {
 		fmt.Printf("菜单初始化失败: %v\n", err)
@@ -377,16 +413,20 @@ func createDefaultMenus(tx *gorm.DB) error {
 		}
 
 		menu := entity.Menu{
-			Name:       s.Name,
-			ParentID:   nil,
-			Path:       s.Path,
-			Icon:       s.Icon,
-			OrderNum:   s.OrderNum,
-			ResourceID: res.ID,
-			IsVisible:  true,
-			Status:     "enabled",
+			Name:      s.Name,
+			ParentID:  nil,
+			Path:      s.Path,
+			Icon:      s.Icon,
+			OrderNum:  s.OrderNum,
+			IsVisible: true,
+			Status:    "enabled",
 		}
 		if err := tx.Create(&menu).Error; err != nil {
+			return err
+		}
+
+		mr := entity.MenuResource{MenuID: menu.ID, ResourceID: res.ID}
+		if err := tx.Create(&mr).Error; err != nil {
 			return err
 		}
 	}

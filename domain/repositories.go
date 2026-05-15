@@ -22,6 +22,8 @@ type MenuRepository interface {
 	GetAll() ([]entity.Menu, error)
 	GetByParentID(parentID *uint) ([]entity.Menu, error)
 	GetRootMenus() ([]entity.Menu, error)
-	GetByResourceID(resourceID uint) (*entity.Menu, error)
 	HasChildren(id uint) (bool, error)
+	BindResource(menuID, resourceID uint) error
+	UnbindResource(menuID, resourceID uint) error
+	GetMenuResources(menuID uint) ([]entity.MenuResource, error)
 }

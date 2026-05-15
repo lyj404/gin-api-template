@@ -169,6 +169,31 @@ func (s *roleServiceImpl) RevokeRoleFromUser(userID, roleID, orgUnitID uint, ope
 	})
 }
 
+func (s *roleServiceImpl) BindMenu(roleID, menuID uint, operatorID uint) error {
+	return global.G_DB.Transaction(func(tx *gorm.DB) error {
+		rm := entity.RoleMenu{RoleID: roleID, MenuID: menuID}
+		if err := tx.Create(&rm).Error; err != nil {
+			return err
+		}
+		description := fmt.Sprintf("角色 %d 绑定菜单 %d", roleID, menuID)
+		return s.createAuditLog(tx, operatorID, "bind", "role_menu", rm.ID, "", "", description)
+	})
+}
+
+func (s *roleServiceImpl) UnbindMenu(roleID, menuID uint, operatorID uint) error {
+	return global.G_DB.Transaction(func(tx *gorm.DB) error {
+		description := fmt.Sprintf("角色 %d 解绑菜单 %d", roleID, menuID)
+		if err := tx.Where("role_id = ? AND menu_id = ?", roleID, menuID).Delete(&entity.RoleMenu{}).Error; err != nil {
+			return err
+		}
+		return s.createAuditLog(tx, operatorID, "unbind", "role_menu", 0, "", "", description)
+	})
+}
+
+func (s *roleServiceImpl) GetRoleMenus(roleID uint) ([]entity.RoleMenu, error) {
+	return s.roleRepo.GetRoleMenus(roleID)
+}
+
 func (s *roleServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint, action, targetType string, targetID uint, beforeData, afterData, description string) error {
 	auditLog := entity.AuditLog{
 		OperatorID:   operatorID,

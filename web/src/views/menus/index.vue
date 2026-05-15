@@ -22,15 +22,15 @@
         </n-form-item>
         <n-form-item label="图标">
           <div class="flex gap-8 items-center w-full">
-            <span v-if="form.icon" :class="[toIconClass(form.icon), 'text-xl inline-block']" />
-            <n-button @click="showIconPicker = true">选择</n-button>
+            <Icon v-if="form.icon" :icon="toIconifyName(form.icon)" style="font-size: 1.25rem" />
+            <n-button @click="openIconPicker">选择</n-button>
           </div>
         </n-form-item>
         <n-form-item label="排序">
           <n-input-number v-model:value="form.order_num" :min="0" />
         </n-form-item>
         <n-form-item label="关联资源">
-          <n-select v-model:value="form.resource_id" :options="resourceOptions" placeholder="请选择资源" :loading="resourcesLoading" />
+          <n-select v-model:value="form.resource_ids" multiple :options="allResourceOptions" placeholder="选择资源" :loading="resourcesLoading" />
         </n-form-item>
         <n-form-item label="是否显示">
           <n-switch v-model:value="form.is_visible" />
@@ -42,13 +42,16 @@
       </template>
     </n-modal>
 
-    <n-modal v-model:show="showIconPicker" preset="card" title="选择图标" style="width: 650px">
-      <div class="grid grid-cols-8 gap-8 max-h-400 overflow-y-auto">
-        <div v-for="icon in commonIcons" :key="icon"
-          class="flex-center p-8 border border-gray-200 rounded cursor-pointer hover:border-primary hover:text-primary"
-          :class="{ 'border-primary text-primary': form.icon === icon }"
-          @click="selectIcon(icon)">
-          <Icon :icon="toIconifyName(icon)" class="text-xl" />
+    <n-modal v-model:show="showIconPicker" preset="card" title="选择图标" style="width: 720px">
+      <n-input v-model:value="iconSearch" placeholder="搜索图标名称" clearable style="margin-bottom: 12px" />
+      <div style="font-size: 12px; color: #999; margin-bottom: 8px">共 {{ filteredIcons.length }} 个，显示前 {{ Math.min(filteredIcons.length, iconDisplayLimit) }} 个</div>
+      <div @scroll="onIconGridScroll" style="display:grid; grid-template-columns: repeat(10, 1fr); gap: 6px; max-height: 420px; overflow-y: auto; padding: 4px;">
+        <div v-for="name in displayedIcons" :key="name"
+          :title="name"
+          style="display:flex; align-items:center; justify-content:center; padding: 8px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;"
+          :style="form.icon === `i-material-symbols:${name}` ? { borderColor: '#18a058', color: '#18a058' } : {}"
+          @click="selectIcon(`i-material-symbols:${name}`)">
+          <Icon :icon="`material-symbols:${name}`" style="font-size: 1.5rem" />
         </div>
       </div>
     </n-modal>
@@ -60,9 +63,9 @@ import { ref, reactive, h, onMounted, computed } from 'vue'
 import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NH2, NCard, NTag, NSpace, useMessage } from 'naive-ui'
 import type { DataTableColumns, SelectOption } from 'naive-ui'
 import { Icon } from '@iconify/vue'
-import { getMenuTree, createMenu, updateMenu, deleteMenu, getResources } from '@/api'
+import { getMenuTree, getMenu, createMenu, updateMenu, deleteMenu, getResources, bindMenuResource, unbindMenuResource } from '@/api'
 import { usePermissionStore } from '@/stores/permission'
-import type { MenuTreeNode } from '@/types'
+import type { MenuTreeNode, MenuResponse, ResourceResponse } from '@/types'
 
 const message = useMessage()
 const permission = usePermissionStore()
@@ -73,13 +76,36 @@ const showIconPicker = ref(false)
 const editingId = ref<number | null>(null)
 
 const toIconifyName = (icon?: string) => (icon || '').replace(/^i-/, '')
-const toIconClass = (icon?: string) => icon ? (icon.startsWith('i-') ? icon : `i-${icon}`) : ''
 
-const form = reactive({ name: '', parent_id: null as number | null, path: '', icon: '', order_num: 0, resource_id: null as number | null, is_visible: true })
+const allIconNames = ref<string[]>([])
+const iconSearch = ref('')
+const iconDisplayLimit = ref(240)
+
+const filteredIcons = computed(() => {
+  const q = iconSearch.value.trim().toLowerCase()
+  if (!q) return allIconNames.value
+  return allIconNames.value.filter(n => n.includes(q))
+})
+const displayedIcons = computed(() => filteredIcons.value.slice(0, iconDisplayLimit.value))
+
+const openIconPicker = () => {
+  iconSearch.value = ''
+  iconDisplayLimit.value = 240
+  showIconPicker.value = true
+}
+
+const onIconGridScroll = (e: Event) => {
+  const el = e.target as HTMLElement
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 40 && iconDisplayLimit.value < filteredIcons.value.length) {
+    iconDisplayLimit.value = Math.min(iconDisplayLimit.value + 240, filteredIcons.value.length)
+  }
+}
+
+const form = reactive({ name: '', parent_id: null as number | null, path: '', icon: '', order_num: 0, resource_ids: [] as number[], is_visible: true })
 const data = ref<MenuTreeNode[]>([])
 
 const menuOptions = computed<SelectOption[]>(() => [{ label: '顶级菜单', value: 0 }, ...data.value.map((m: MenuTreeNode) => ({ label: m.name, value: m.id }))])
-const resourceOptions = ref<SelectOption[]>([])
+const allResourceOptions = ref<SelectOption[]>([])
 const resourcesLoading = ref(false)
 
 const columns: DataTableColumns<MenuTreeNode> = [
@@ -106,29 +132,75 @@ const fetchData = async () => {
   }
 }
 
-const openModal = (row?: MenuTreeNode) => {
+const fetchAllResources = async () => {
+  resourcesLoading.value = true
+  try {
+    const res = await getResources({ page: 1, page_size: 200 })
+    allResourceOptions.value = (res.data.data?.data || []).map((r: ResourceResponse) => ({ label: `${r.description} (${r.name})`, value: r.id }))
+  } catch { /* ignore */ }
+  finally { resourcesLoading.value = false }
+}
+
+const openModal = async (row?: MenuTreeNode) => {
   if (row) {
     editingId.value = row.id
-    Object.assign(form, { name: row.name, parent_id: null, path: row.path, icon: row.icon, order_num: row.order_num, resource_id: null, is_visible: row.is_visible })
+    form.name = row.name
+    form.path = row.path
+    form.icon = row.icon
+    form.order_num = row.order_num
+    form.is_visible = row.is_visible
+
+    // 加载当前资源的资源绑定
+    try {
+      const detail = await getMenu(row.id)
+      const resources = (detail.data.data as MenuResponse).resources || []
+      form.resource_ids = resources.map((r: any) => r.id)
+    } catch {
+      form.resource_ids = []
+    }
   } else {
     editingId.value = null
-    Object.assign(form, { name: '', parent_id: null, path: '', icon: '', order_num: 0, resource_id: null, is_visible: true })
+    Object.assign(form, { name: '', parent_id: null, path: '', icon: '', order_num: 0, resource_ids: [], is_visible: true })
   }
   showModal.value = true
-  fetchResources()
+  fetchAllResources()
 }
 
 const handleSave = async () => {
   saving.value = true
   try {
     const payload: any = { name: form.name, path: form.path, icon: form.icon, order_num: form.order_num, is_visible: form.is_visible }
-    if (form.parent_id) (payload as any).parent_id = form.parent_id === 0 ? null : form.parent_id
-    if (form.resource_id) (payload as any).resource_id = form.resource_id
+    if (form.parent_id !== null && form.parent_id !== undefined) {
+      payload.parent_id = form.parent_id === 0 ? null : form.parent_id
+    }
+
+    let menuId: number
     if (editingId.value) {
       await updateMenu(editingId.value, payload)
+      menuId = editingId.value
     } else {
-      await createMenu(payload)
+      const res = await createMenu(payload)
+      menuId = res.data.data?.id
     }
+
+    // 同步资源绑定：先获取当前的，再 diff
+    let currentIds: number[] = []
+    try {
+      const detail = await getMenu(menuId)
+      currentIds = ((detail.data.data as MenuResponse).resources || []).map((r: any) => r.id)
+    } catch { /* ignore */ }
+
+    const newIds = form.resource_ids || []
+    const toAdd = newIds.filter((id: number) => !currentIds.includes(id))
+    const toRemove = currentIds.filter((id: number) => !newIds.includes(id))
+
+    for (const id of toRemove) {
+      await unbindMenuResource(menuId, id)
+    }
+    for (const id of toAdd) {
+      await bindMenuResource(menuId, { resource_id: id })
+    }
+
     message.success(editingId.value ? '更新成功' : '创建成功')
     showModal.value = false
     fetchData()
@@ -144,59 +216,11 @@ const handleDelete = (row: MenuTreeNode) => {
   deleteMenu(row.id).then(() => { message.success('删除成功'); fetchData(); permission.fetchMenus() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
 }
 
-const commonIcons = [
-  'i-material-symbols:dashboard-outline',
-  'i-material-symbols:group-outline',
-  'i-material-symbols:person-outline',
-  'i-material-symbols:manage-accounts-outline',
-  'i-material-symbols:menu-outline',
-  'i-material-symbols:corporate-fare-outline',
-  'i-material-symbols:security-outline',
-  'i-material-symbols:history-outline',
-  'i-material-symbols:settings-outline',
-  'i-material-symbols:home-outline',
-  'i-material-symbols:notifications-outline',
-  'i-material-symbols:mail-outline',
-  'i-material-symbols:search',
-  'i-material-symbols:edit-outline',
-  'i-material-symbols:delete-outline',
-  'i-material-symbols:add-circle-outline',
-  'i-material-symbols:refresh',
-  'i-material-symbols:download',
-  'i-material-symbols:upload',
-  'i-material-symbols:print',
-  'i-material-symbols:share',
-  'i-material-symbols:star-outline',
-  'i-material-symbols:favorite-outline',
-  'i-material-symbols:lock-outline',
-  'i-material-symbols:visibility-outline',
-  'i-material-symbols:map',
-  'i-material-symbols:bar-chart',
-  'i-material-symbols:pie-chart',
-  'i-material-symbols:table',
-  'i-material-symbols:calendar-month',
-  'i-material-symbols:description',
-  'i-material-symbols:folder-outline',
-  'i-material-symbols:file-upload',
-  'i-material-symbols:article-outline',
-  'i-material-symbols:build-outline',
-  'i-material-symbols:help-outline',
-  'i-material-symbols:info-outline',
-  'i-material-symbols:warning-outline',
-  'i-material-symbols:check-circle-outline',
-  'i-material-symbols:cloud-outline',
-  'i-material-symbols:link',
-  'i-material-symbols:tag',
-  'i-material-symbols:label-outline',
-  'i-material-symbols:category-outline',
-  'i-material-symbols:layers',
-]
-
 const fetchResources = async () => {
   resourcesLoading.value = true
   try {
-    const res = await getResources({ page: 1, page_size: 100 })
-    resourceOptions.value = (res.data.data?.data || []).map((r: any) => ({ label: r.description, value: r.id }))
+    const res = await getResources({ page: 1, page_size: 200 })
+    allResourceOptions.value = (res.data.data?.data || []).map((r: ResourceResponse) => ({ label: `${r.description} (${r.name})`, value: r.id }))
   } catch { /* ignore */ }
   finally { resourcesLoading.value = false }
 }
@@ -206,5 +230,15 @@ const selectIcon = (icon: string) => {
   showIconPicker.value = false
 }
 
-onMounted(fetchData)
+onMounted(async () => {
+  fetchData()
+  try {
+    const { default: iconsData } = await import('@iconify-json/material-symbols/icons.json')
+    const names = Object.keys((iconsData as any).icons || {})
+    const aliases = Object.keys((iconsData as any).aliases || {})
+    allIconNames.value = [...names, ...aliases].sort()
+  } catch (e) {
+    console.error('load icons failed', e)
+  }
+})
 </script>

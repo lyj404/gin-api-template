@@ -16,4 +16,7 @@ type RoleRepository interface {
 	BindOrgScope(roleID, orgUnitID uint, includeDescendants bool) error
 	UnbindOrgScope(roleID, orgUnitID uint) error
 	GetRoleOrgScopes(roleID uint) ([]entity.RoleOrgScope, error)
+	BindMenu(roleID, menuID uint) error
+	UnbindMenu(roleID, menuID uint) error
+	GetRoleMenus(roleID uint) ([]entity.RoleMenu, error)
 }

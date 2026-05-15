@@ -23,11 +23,30 @@ type RoleDetailResponse struct {
 	Description string                 `json:"description"`
 	IsSystem    bool                   `json:"is_system"`
 	Resources   []RoleResourceResponse `json:"resources,omitempty"`
+	Menus       []RoleMenuResponse     `json:"menus,omitempty"`
+}
+
+type RoleMenuResponse struct {
+	ID         uint            `json:"id"`
+	RoleID     uint            `json:"role_id"`
+	MenuID     uint            `json:"menu_id"`
+	Menu       *MenuBriefResponse `json:"menu,omitempty"`
+}
+
+type MenuBriefResponse struct {
+	ID     uint   `json:"id"`
+	Name   string `json:"name"`
+	Path   string `json:"path"`
+	Icon   string `json:"icon"`
 }
 
 type BindRoleResourceRequest struct {
 	ResourceID uint `json:"resource_id" binding:"required"`
 	IsWrite    bool `json:"is_write"`
+}
+
+type BindRoleMenuRequest struct {
+	MenuID uint `json:"menu_id" binding:"required"`
 }
 
 type RoleResourceResponse struct {

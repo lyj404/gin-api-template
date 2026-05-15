@@ -64,13 +64,62 @@ export interface RoleResponse {
   is_system: boolean
 }
 
+export interface ResourceBrief {
+  id: number
+  name: string
+  type: string
+  pattern: string
+  method: string
+  entity: string
+  action: string
+  description: string
+}
+
+export interface MenuResourceResponse {
+  id: number
+  menu_id: number
+  resource_id: number
+  resource?: ResourceBrief
+}
+
+export interface RoleResourceResponse {
+  id: number
+  role_id: number
+  resource_id: number
+  is_read: boolean
+  is_write: boolean
+  resource?: ResourceBrief
+}
+
+export interface RoleMenuResponse {
+  id: number
+  role_id: number
+  menu_id: number
+  menu?: MenuBrief
+}
+
+export interface MenuBrief {
+  id: number
+  name: string
+  path: string
+  icon: string
+}
+
+export interface RoleDetailResponse {
+  id: number
+  name: string
+  description: string
+  is_system: boolean
+  resources?: RoleResourceResponse[]
+  menus?: RoleMenuResponse[]
+}
+
 export interface CreateMenuRequest {
   name: string
   parent_id?: number | null
   path?: string
   icon?: string
   order_num?: number
-  resource_id: number
   is_visible?: boolean
 }
 
@@ -80,7 +129,6 @@ export interface UpdateMenuRequest {
   path?: string
   icon?: string
   order_num?: number
-  resource_id?: number
   is_visible?: boolean
   status?: string
 }
@@ -92,9 +140,9 @@ export interface MenuResponse {
   path: string
   icon: string
   order_num: number
-  resource_id: number
   is_visible: boolean
   status: string
+  resources?: ResourceBrief[]
   children?: MenuResponse[]
 }
 
@@ -138,8 +186,15 @@ export interface ResourceResponse {
 }
 
 export interface BindResourceRequest {
-  role_id: number
   is_write?: boolean
+}
+
+export interface BindMenuRequest {
+  menu_id: number
+}
+
+export interface BindMenuResourceRequest {
+  resource_id: number
 }
 
 export interface Permission {

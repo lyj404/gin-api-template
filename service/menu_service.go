@@ -119,6 +119,31 @@ func buildMenuTree(menus []entity.Menu) []entity.Menu {
 }
 
 // createAuditLog 创建审计日志
+func (s *menuServiceImpl) BindResource(menuID, resourceID uint, operatorID uint) error {
+	return global.G_DB.Transaction(func(tx *gorm.DB) error {
+		mr := entity.MenuResource{MenuID: menuID, ResourceID: resourceID}
+		if err := tx.Create(&mr).Error; err != nil {
+			return err
+		}
+		description := fmt.Sprintf("菜单 %d 绑定资源 %d", menuID, resourceID)
+		return s.createAuditLog(tx, operatorID, "bind", "menu_resource", mr.ID, "", "", description)
+	})
+}
+
+func (s *menuServiceImpl) UnbindResource(menuID, resourceID uint, operatorID uint) error {
+	return global.G_DB.Transaction(func(tx *gorm.DB) error {
+		description := fmt.Sprintf("菜单 %d 解绑资源 %d", menuID, resourceID)
+		if err := tx.Where("menu_id = ? AND resource_id = ?", menuID, resourceID).Delete(&entity.MenuResource{}).Error; err != nil {
+			return err
+		}
+		return s.createAuditLog(tx, operatorID, "unbind", "menu_resource", 0, "", "", description)
+	})
+}
+
+func (s *menuServiceImpl) GetMenuResources(menuID uint) ([]entity.MenuResource, error) {
+	return s.menuRepo.GetMenuResources(menuID)
+}
+
 func (s *menuServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint, action, targetType string, targetID uint, beforeData, afterData, description string) error {
 	auditLog := entity.AuditLog{
 		OperatorID:   operatorID,

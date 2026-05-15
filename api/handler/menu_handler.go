@@ -13,12 +13,10 @@ import (
 	"github.com/lyj404/gin-api-template/pkg/pagination"
 )
 
-// MenuHandler 菜单处理器，处理菜单相关的HTTP请求
 type MenuHandler struct {
 	menuService services.MenuService
 }
 
-// NewMenuHandler 创建菜单处理器实例
 func NewMenuHandler(menuService services.MenuService) *MenuHandler {
 	return &MenuHandler{
 		menuService: menuService,
@@ -44,14 +42,13 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 	}
 
 	menu := &entity.Menu{
-		Name:       request.Name,
-		ParentID:   request.ParentID,
-		Path:       request.Path,
-		Icon:       request.Icon,
-		OrderNum:   request.OrderNum,
-		ResourceID: request.ResourceID,
-		IsVisible:  request.IsVisible,
-		Status:     "enabled",
+		Name:      request.Name,
+		ParentID:  request.ParentID,
+		Path:      request.Path,
+		Icon:      request.Icon,
+		OrderNum:  request.OrderNum,
+		IsVisible: request.IsVisible,
+		Status:    "enabled",
 	}
 
 	operatorID := c.GetUint("user_id")
@@ -61,15 +58,14 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 	}
 
 	response := dto.MenuResponse{
-		ID:         menu.ID,
-		Name:       menu.Name,
-		ParentID:   menu.ParentID,
-		Path:       menu.Path,
-		Icon:       menu.Icon,
-		OrderNum:   menu.OrderNum,
-		ResourceID: menu.ResourceID,
-		IsVisible:  menu.IsVisible,
-		Status:     menu.Status,
+		ID:        menu.ID,
+		Name:      menu.Name,
+		ParentID:  menu.ParentID,
+		Path:      menu.Path,
+		Icon:      menu.Icon,
+		OrderNum:  menu.OrderNum,
+		IsVisible: menu.IsVisible,
+		Status:    menu.Status,
 	}
 
 	result.SuccessResponse(c, "菜单创建成功", &response)
@@ -98,17 +94,15 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	}
 
 	menu := &entity.Menu{
-		G_MODEL:    global.G_MODEL{ID: uint(id)},
-		Name:       request.Name,
-		ParentID:   request.ParentID,
-		Path:       request.Path,
-		Icon:       request.Icon,
-		OrderNum:   request.OrderNum,
-		ResourceID: request.ResourceID,
-		Status:     request.Status,
+		G_MODEL:   global.G_MODEL{ID: uint(id)},
+		Name:      request.Name,
+		ParentID:  request.ParentID,
+		Path:      request.Path,
+		Icon:      request.Icon,
+		OrderNum:  request.OrderNum,
+		Status:    request.Status,
 	}
 
-	// 如果 IsVisible 被传入，更新它
 	if request.IsVisible != nil {
 		menu.IsVisible = *request.IsVisible
 	}
@@ -120,15 +114,14 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	}
 
 	response := dto.MenuResponse{
-		ID:         menu.ID,
-		Name:       menu.Name,
-		ParentID:   menu.ParentID,
-		Path:       menu.Path,
-		Icon:       menu.Icon,
-		OrderNum:   menu.OrderNum,
-		ResourceID: menu.ResourceID,
-		IsVisible:  menu.IsVisible,
-		Status:     menu.Status,
+		ID:        menu.ID,
+		Name:      menu.Name,
+		ParentID:  menu.ParentID,
+		Path:      menu.Path,
+		Icon:      menu.Icon,
+		OrderNum:  menu.OrderNum,
+		IsVisible: menu.IsVisible,
+		Status:    menu.Status,
 	}
 
 	result.SuccessResponse(c, "菜单更新成功", &response)
@@ -176,15 +169,15 @@ func (h *MenuHandler) GetMenu(c *gin.Context) {
 	}
 
 	response := dto.MenuResponse{
-		ID:         menu.ID,
-		Name:       menu.Name,
-		ParentID:   menu.ParentID,
-		Path:       menu.Path,
-		Icon:       menu.Icon,
-		OrderNum:   menu.OrderNum,
-		ResourceID: menu.ResourceID,
-		IsVisible:  menu.IsVisible,
-		Status:     menu.Status,
+		ID:        menu.ID,
+		Name:      menu.Name,
+		ParentID:  menu.ParentID,
+		Path:      menu.Path,
+		Icon:      menu.Icon,
+		OrderNum:  menu.OrderNum,
+		IsVisible: menu.IsVisible,
+		Status:    menu.Status,
+		Resources: toResourceBriefResponses(menu.Resources),
 	}
 
 	result.SuccessResponse(c, "获取菜单成功", &response)
@@ -223,7 +216,6 @@ func (h *MenuHandler) ListMenus(c *gin.Context) {
 		SetPageSize(req.PageSize).
 		OrderBy(orderBy)
 
-	// 如果有关键词搜索，添加搜索条件
 	if req.Keyword != "" {
 		builder = builder.Where("name LIKE ?", "%"+req.Keyword+"%")
 	}
@@ -236,21 +228,15 @@ func (h *MenuHandler) ListMenus(c *gin.Context) {
 
 	responses := make([]dto.MenuListResponse, len(menus))
 	for i, menu := range menus {
-		resourceName := ""
-		if menu.Resource != nil {
-			resourceName = menu.Resource.Name
-		}
 		responses[i] = dto.MenuListResponse{
-			ID:           menu.ID,
-			Name:         menu.Name,
-			ParentID:     menu.ParentID,
-			Path:         menu.Path,
-			Icon:         menu.Icon,
-			OrderNum:     menu.OrderNum,
-			ResourceID:   menu.ResourceID,
-			ResourceName: resourceName,
-			IsVisible:    menu.IsVisible,
-			Status:       menu.Status,
+			ID:        menu.ID,
+			Name:      menu.Name,
+			ParentID:  menu.ParentID,
+			Path:      menu.Path,
+			Icon:      menu.Icon,
+			OrderNum:  menu.OrderNum,
+			IsVisible: menu.IsVisible,
+			Status:    menu.Status,
 		}
 	}
 
@@ -280,20 +266,112 @@ func (h *MenuHandler) GetMenuTree(c *gin.Context) {
 	result.SuccessResponse(c, "获取菜单树成功", &responses)
 }
 
-// convertMenuTreeToResponse 将菜单树转换为响应结构
+// BindResource 菜单绑定资源
+// @Summary 菜单绑定资源
+// @Description 为菜单绑定一个资源
+// @Tags 菜单
+// @Accept json
+// @Produce json
+// @Param id path int true "菜单ID"
+// @Param request body dto.BindMenuResourceRequest true "绑定资源请求"
+// @Success 200 {object} result.ResponseResult[string] "绑定成功"
+// @Failure 400 {object} result.ResponseResult[string] "请求参数错误"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /menus/:id/resources [post]
+func (h *MenuHandler) BindResource(c *gin.Context) {
+	menuID, _ := strconv.Atoi(c.Param("id"))
+
+	var req dto.BindMenuResourceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	operatorID := c.GetUint("user_id")
+	if err := h.menuService.BindResource(uint(menuID), req.ResourceID, operatorID); err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result.SimpleSuccessResponse(c, "资源绑定成功")
+}
+
+// UnbindResource 菜单解绑资源
+// @Summary 菜单解绑资源
+// @Description 移除菜单绑定的资源
+// @Tags 菜单
+// @Produce json
+// @Param id path int true "菜单ID"
+// @Param resourceId path int true "资源ID"
+// @Success 200 {object} result.ResponseResult[string] "解绑成功"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /menus/:id/resources/:resourceId [delete]
+func (h *MenuHandler) UnbindResource(c *gin.Context) {
+	menuID, _ := strconv.Atoi(c.Param("id"))
+	resourceID, _ := strconv.Atoi(c.Param("resourceId"))
+
+	operatorID := c.GetUint("user_id")
+	if err := h.menuService.UnbindResource(uint(menuID), uint(resourceID), operatorID); err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	result.SimpleSuccessResponse(c, "资源解绑成功")
+}
+
+// GetMenuResources 获取菜单绑定的资源列表
+// @Summary 获取菜单绑定的资源列表
+// @Description 获取指定菜单绑定的所有资源
+// @Tags 菜单
+// @Produce json
+// @Param id path int true "菜单ID"
+// @Success 200 {object} result.ResponseResult[[]dto.MenuResourceResponse] "获取成功"
+// @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
+// @Router /menus/:id/resources [get]
+func (h *MenuHandler) GetMenuResources(c *gin.Context) {
+	menuID, _ := strconv.Atoi(c.Param("id"))
+
+	resources, err := h.menuService.GetMenuResources(uint(menuID))
+	if err != nil {
+		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responses := make([]dto.MenuResourceResponse, len(resources))
+	for i, mr := range resources {
+		responses[i] = dto.MenuResourceResponse{
+			ID:         mr.ID,
+			MenuID:     mr.MenuID,
+			ResourceID: mr.ResourceID,
+			Resource: &dto.ResourceBriefResponse{
+				ID:          mr.Resource.ID,
+				Name:        mr.Resource.Name,
+				Type:        mr.Resource.Type,
+				Pattern:     mr.Resource.Pattern,
+				Method:      mr.Resource.Method,
+				Entity:      mr.Resource.Entity,
+				Action:      mr.Resource.Action,
+				Description: mr.Resource.Description,
+			},
+		}
+	}
+
+	result.SuccessResponse(c, "获取菜单资源成功", &responses)
+}
+
 func convertMenuTreeToResponse(menus []entity.Menu) []dto.MenuResponse {
 	responses := make([]dto.MenuResponse, 0, len(menus))
 	for _, menu := range menus {
 		response := dto.MenuResponse{
-			ID:         menu.ID,
-			Name:       menu.Name,
-			ParentID:   menu.ParentID,
-			Path:       menu.Path,
-			Icon:       menu.Icon,
-			OrderNum:   menu.OrderNum,
-			ResourceID: menu.ResourceID,
-			IsVisible:  menu.IsVisible,
-			Status:     menu.Status,
+			ID:        menu.ID,
+			Name:      menu.Name,
+			ParentID:  menu.ParentID,
+			Path:      menu.Path,
+			Icon:      menu.Icon,
+			OrderNum:  menu.OrderNum,
+			IsVisible: menu.IsVisible,
+			Status:    menu.Status,
+			Resources: toResourceBriefResponses(menu.Resources),
 		}
 		if len(menu.Children) > 0 {
 			response.Children = convertMenuTreeToResponse(menu.Children)
@@ -301,4 +379,24 @@ func convertMenuTreeToResponse(menus []entity.Menu) []dto.MenuResponse {
 		responses = append(responses, response)
 	}
 	return responses
+}
+
+func toResourceBriefResponses(resources []entity.Resource) []dto.ResourceBriefResponse {
+	if len(resources) == 0 {
+		return nil
+	}
+	resp := make([]dto.ResourceBriefResponse, len(resources))
+	for i, r := range resources {
+		resp[i] = dto.ResourceBriefResponse{
+			ID:          r.ID,
+			Name:        r.Name,
+			Type:        r.Type,
+			Pattern:     r.Pattern,
+			Method:      r.Method,
+			Entity:      r.Entity,
+			Action:      r.Action,
+			Description: r.Description,
+		}
+	}
+	return resp
 }
