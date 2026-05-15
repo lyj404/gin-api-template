@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme-overrides="themeOverrides">
+  <n-config-provider :locale="zhCN" :date-locale="dateZhCN" :theme="themeStore.isDark ? darkTheme : undefined" :theme-overrides="themeOverrides">
     <n-message-provider>
       <n-dialog-provider>
         <n-notification-provider>
@@ -7,13 +7,19 @@
         </n-notification-provider>
       </n-dialog-provider>
     </n-message-provider>
+    <button class="theme-toggle" @click="themeStore.toggle">
+      <span :class="themeStore.isDark ? 'i-material-symbols:light-mode' : 'i-material-symbols:dark-mode'" />
+    </button>
   </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvider, type GlobalThemeOverrides } from 'naive-ui'
+import { NConfigProvider, NMessageProvider, NDialogProvider, NNotificationProvider, darkTheme, type GlobalThemeOverrides } from 'naive-ui'
 import zhCN from 'naive-ui/es/locales/common/zhCN'
 import dateZhCN from 'naive-ui/es/locales/date/zhCN'
+import { useThemeStore } from '@/stores/theme'
+
+const themeStore = useThemeStore()
 
 const themeOverrides: GlobalThemeOverrides = {
   common: {
@@ -21,3 +27,34 @@ const themeOverrides: GlobalThemeOverrides = {
   }
 }
 </script>
+
+<style scoped>
+.theme-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #334155;
+  transition: all 0.2s;
+}
+.theme-toggle:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+.dark .theme-toggle {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+</style>

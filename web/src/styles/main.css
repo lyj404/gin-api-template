@@ -48,3 +48,81 @@ body {
 .n-data-table .n-data-table-th:first-child {
   border-left: none !important;
 }
+
+.dark body {
+  background-color: #0f172a;
+  color: #c9d1d9;
+}
+
+.dark .login-container {
+  background: #0f172a !important;
+}
+
+.dark .login-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.2), 0 8px 24px rgba(0,0,0,0.3);
+}
+
+.dark .login-title {
+  color: #f1f5f9 !important;
+}
+
+.dark .login-subtitle {
+  color: #94a3b8 !important;
+}
+
+.dark .login-footer {
+  color: #64748b !important;
+}
+
+.dark .custom-input :deep(.n-input) {
+  background: #0f172a !important;
+}
+
+.dark .custom-input :deep(.n-input__input-el) {
+  color: #e2e8f0;
+}
+
+.dark .custom-input :deep(.n-input .n-input__border),
+.dark .custom-input :deep(.n-input .n-input__state-border) {
+  border-color: #334155 !important;
+}
+
+.dark .custom-input :deep(.n-input--focus) {
+  background: #1e293b !important;
+}
+
+.dark .captcha-img {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+.dark .header {
+  background-color: #16213e !important;
+}
+
+.dark .logo {
+  border-bottom-color: #2a2a4a !important;
+}
+
+.dark .action-btn {
+  color: #8b8fa3;
+}
+
+.dark .action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #4fc08d;
+}
+
+.dark .user-box:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.dark .user-name {
+  color: #c9d1d9;
+}
+
+.dark .collapse-btn {
+  color: #8b8fa3;
+}

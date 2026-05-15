@@ -51,7 +51,9 @@ const menuIcons = [
   'i-material-symbols:account-tree-outline',
   'i-material-symbols:shield-outline',
   'i-material-symbols:receipt-long-outline',
-  'i-material-symbols:circle-outline'
+  'i-material-symbols:circle-outline',
+  'i-material-symbols:dark-mode',
+  'i-material-symbols:light-mode'
 ]
 
 export default defineConfig({
