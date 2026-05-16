@@ -6,7 +6,16 @@
     </div>
 
     <n-card>
-      <n-data-table :columns="columns" :data="treeData" :loading="loading" :pagination="false" :scroll-x="700" bordered single-column />
+      <n-tree
+        :data="treeData"
+        :loading="loading"
+        key-field="id"
+        label-field="label"
+        children-field="children"
+        default-expand-all
+        selectable
+        :render-label="renderNodeLabel"
+      />
     </n-card>
 
     <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑组织' : '新增组织'" :style="{ width: '90vw', maxWidth: '500px' }">
@@ -28,8 +37,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, h } from 'vue'
-import { NButton, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NH2, NSpace, useMessage } from 'naive-ui'
-import type { DataTableColumns, SelectOption } from 'naive-ui'
+import { NButton, NTree, NCard, NModal, NForm, NFormItem, NInput, NSelect, NH2, NSpace, useMessage } from 'naive-ui'
+import type { TreeOption, SelectOption } from 'naive-ui'
 import { getOrgTree, createOrgUnit, updateOrgUnit, deleteOrgUnit } from '@/api'
 import type { OrgUnitResponse } from '@/types'
 
@@ -42,47 +51,30 @@ const editingId = ref<string | null>(null)
 const form = reactive({ name: '', parent_id: null as string | null })
 const allOrgs = ref<OrgUnitResponse[]>([])
 
-interface FlatNode {
-  id: string
-  name: string
-  parent_id: string | null
-  level: number
+const buildTree = (nodes: OrgUnitResponse[], parentId: string | null = null): TreeOption[] => {
+  return nodes
+    .filter(n => n.parent_id === parentId)
+    .map(n => ({
+      id: n.id,
+      label: n.name,
+      key: n.id,
+      children: buildTree(nodes, n.id)
+    }))
 }
 
-const buildFlat = (units: OrgUnitResponse[]): FlatNode[] => {
-  return units.map(u => ({ id: u.id, name: u.name, parent_id: u.parent_id, level: u.level }))
-}
+const treeData = computed(() => buildTree(allOrgs.value))
 
-const treeData = computed(() => buildFlat(allOrgs.value))
 const orgOptions = computed<SelectOption[]>(() => [{ label: '顶级组织', value: '0' }, ...allOrgs.value.map((o: OrgUnitResponse) => ({ label: o.name, value: o.id }))])
 
-const columns = computed<DataTableColumns<FlatNode>>(() => [
-  {
-    title: '序号', key: 'index', width: 70,
-    render: (_row: FlatNode, index: number) => index + 1
-  },
-  {
-    title: '名称',
-    key: 'name',
-    render: (row: FlatNode) => {
-      return h('span', { style: { marginLeft: `${row.level * 24}px` } }, row.name)
-    }
-  },
-  {
-    title: '操作',
-    key: 'actions',
-    width: 280,
-    render: (row: FlatNode) => {
-      return h(NSpace, { size: 4 }, {
-        default: () => [
-          h(NButton, { size: 'small', onClick: () => openModal(row) }, { default: () => '新增子级' }),
-          h(NButton, { size: 'small', onClick: () => openModal(row, null, row) }, { default: () => '编辑' }),
-          h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
-        ]
-      })
-    }
-  }
-])
+const renderNodeLabel = (info: { option: TreeOption }) => {
+  const opt = info.option
+  return h('div', { style: 'display: flex; align-items: center; gap: 8px; width: 100%; padding: 4px 0' }, [
+    h('span', { style: 'flex: 1' }, opt.label as string),
+    h(NButton, { size: 'tiny', quaternary: true, onClick: (e: Event) => { e.stopPropagation(); openModal(opt) } }, { default: () => '新增子级' }),
+    h(NButton, { size: 'tiny', quaternary: true, onClick: (e: Event) => { e.stopPropagation(); openModal(opt, true) } }, { default: () => '编辑' }),
+    h(NButton, { size: 'tiny', quaternary: true, type: 'error', onClick: (e: Event) => { e.stopPropagation(); handleDelete(opt) } }, { default: () => '删除' })
+  ])
+}
 
 const fetchData = async () => {
   loading.value = true
@@ -94,15 +86,20 @@ const fetchData = async () => {
   }
 }
 
-const openModal = (node: FlatNode | null, _parent?: any, editNode?: FlatNode) => {
-  if (editNode) {
-    editingId.value = editNode.id
-    form.name = editNode.name
-    form.parent_id = editNode.parent_id || null
+const openModal = (node: TreeOption | null, isEdit?: boolean) => {
+  if (node && isEdit) {
+    const org = allOrgs.value.find(o => o.id === node.id)
+    editingId.value = node.id as string
+    form.name = (org?.name || node.label) as string
+    form.parent_id = org?.parent_id || null
+  } else if (node) {
+    editingId.value = null
+    form.name = ''
+    form.parent_id = node.id as string
   } else {
     editingId.value = null
     form.name = ''
-    form.parent_id = node ? (node.parent_id || node.id) : null
+    form.parent_id = null
   }
   showModal.value = true
 }
@@ -127,8 +124,8 @@ const handleSave = async () => {
   }
 }
 
-const handleDelete = (node: FlatNode) => {
-  deleteOrgUnit(node.id).then(() => { message.success('删除成功'); fetchData() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
+const handleDelete = (opt: TreeOption) => {
+  deleteOrgUnit(opt.id as string).then(() => { message.success('删除成功'); fetchData() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
 }
 
 onMounted(fetchData)
