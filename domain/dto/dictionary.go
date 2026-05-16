@@ -18,7 +18,7 @@ type UpdateDictRequest struct {
 
 // DictResponse 字典响应
 type DictResponse struct {
-	ID      uint64              `json:"id"`
+	ID      uint64              `json:"id,string"`
 	Name    string            `json:"name"`
 	Type    string            `json:"type"`
 	Status  int               `json:"status"`
@@ -28,7 +28,7 @@ type DictResponse struct {
 
 // CreateDictDetailRequest 创建字典详情请求
 type CreateDictDetailRequest struct {
-	DictID uint64 `json:"dict_id" binding:"required"`
+	DictID uint64 `json:"dict_id,string" binding:"required"`
 	Label  string `json:"label" binding:"required"`
 	Value  string `json:"value" binding:"required"`
 	Sort   int    `json:"sort"`
@@ -47,7 +47,7 @@ type UpdateDictDetailRequest struct {
 
 // DictDetailResponse 字典详情响应
 type DictDetailResponse struct {
-	ID     uint64 `json:"id"`
+	ID     uint64 `json:"id,string"`
 	DictID string `json:"dict_id"`
 	Label  string `json:"label"`
 	Value  string `json:"value"`

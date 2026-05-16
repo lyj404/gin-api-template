@@ -11,6 +11,7 @@ import (
 	"github.com/lyj404/gin-api-template/domain/services"
 	"github.com/lyj404/gin-api-template/global"
 	"github.com/lyj404/gin-api-template/util"
+	"strconv"
 	"gorm.io/gorm"
 )
 
@@ -96,7 +97,11 @@ func (s *userManagementServiceImpl) Create(req *dto.CreateUserRequest, operatorI
 			orgUnitID = rootOrg.ID
 		}
 
-		if err := s.userRepo.ReplaceUserRoles(tx, user.ID, orgUnitID, req.RoleIDs); err != nil {
+		roleIDs := make([]uint64, len(req.RoleIDs))
+		for i, s := range req.RoleIDs {
+			roleIDs[i], _ = strconv.ParseUint(s, 10, 64)
+		}
+		if err := s.userRepo.ReplaceUserRoles(tx, user.ID, orgUnitID, roleIDs); err != nil {
 			return err
 		}
 
@@ -149,7 +154,11 @@ func (s *userManagementServiceImpl) Update(id uint64, req *dto.UpdateUserRequest
 				}
 				orgUnitID = rootOrg.ID
 			}
-			if err := s.userRepo.ReplaceUserRoles(tx, id, orgUnitID, req.RoleIDs); err != nil {
+			roleIDs := make([]uint64, len(req.RoleIDs))
+			for i, s := range req.RoleIDs {
+				roleIDs[i], _ = strconv.ParseUint(s, 10, 64)
+			}
+			if err := s.userRepo.ReplaceUserRoles(tx, id, orgUnitID, roleIDs); err != nil {
 				return err
 			}
 		}

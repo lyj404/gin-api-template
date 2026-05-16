@@ -2,7 +2,7 @@ package dto
 
 type CreateMenuRequest struct {
 	Name       string  `json:"name" binding:"required"`
-	ParentID   *uint64   `json:"parent_id"`
+	ParentID   *uint64   `json:"parent_id,string"`
 	Path       string  `json:"path"`
 	Icon       string  `json:"icon"`
 	OrderNum   int     `json:"order_num"`
@@ -11,7 +11,7 @@ type CreateMenuRequest struct {
 
 type UpdateMenuRequest struct {
 	Name       string  `json:"name"`
-	ParentID   *uint64   `json:"parent_id"`
+	ParentID   *uint64   `json:"parent_id,string"`
 	Path       string  `json:"path"`
 	Icon       string  `json:"icon"`
 	OrderNum   int     `json:"order_num"`
@@ -20,9 +20,9 @@ type UpdateMenuRequest struct {
 }
 
 type MenuResponse struct {
-	ID         uint64            `json:"id"`
+	ID         uint64            `json:"id,string"`
 	Name       string          `json:"name"`
-	ParentID   *uint64           `json:"parent_id"`
+	ParentID   *uint64           `json:"parent_id,string"`
 	Path       string          `json:"path"`
 	Icon       string          `json:"icon"`
 	OrderNum   int             `json:"order_num"`
@@ -33,7 +33,7 @@ type MenuResponse struct {
 }
 
 type MenuTreeNode struct {
-	ID         uint64           `json:"id"`
+	ID         uint64           `json:"id,string"`
 	Name       string         `json:"name"`
 	Path       string         `json:"path"`
 	Icon       string         `json:"icon"`
@@ -47,9 +47,9 @@ type UserMenuResponse struct {
 }
 
 type MenuListResponse struct {
-	ID           uint64                   `json:"id"`
+	ID           uint64                   `json:"id,string"`
 	Name         string                 `json:"name"`
-	ParentID     *uint64                  `json:"parent_id"`
+	ParentID     *uint64                  `json:"parent_id,string"`
 	Path         string                 `json:"path"`
 	Icon         string                 `json:"icon"`
 	OrderNum     int                    `json:"order_num"`
@@ -59,12 +59,12 @@ type MenuListResponse struct {
 }
 
 type MenuResourceResponse struct {
-	ID         uint64                  `json:"id"`
-	MenuID     uint64                  `json:"menu_id"`
-	ResourceID uint64                  `json:"resource_id"`
+	ID         uint64                  `json:"id,string"`
+	MenuID     uint64                  `json:"menu_id,string"`
+	ResourceID uint64                  `json:"resource_id,string"`
 	Resource   *ResourceBriefResponse `json:"resource,omitempty"`
 }
 
 type BindMenuResourceRequest struct {
-	ResourceID uint64 `json:"resource_id" binding:"required"`
+	ResourceID uint64 `json:"resource_id,string" binding:"required"`
 }

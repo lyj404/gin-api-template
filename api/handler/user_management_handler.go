@@ -46,11 +46,16 @@ func (h *UserManagementHandler) ListUsers(c *gin.Context) {
 
 	responses := make([]dto.UserResponse, len(users))
 	for i, u := range users {
+		rids := roleIDsMap[u.ID]
+		roleIDs := make([]string, len(rids))
+		for j, id := range rids {
+			roleIDs[j] = strconv.FormatUint(id, 10)
+		}
 		responses[i] = dto.UserResponse{
 			ID:      u.ID,
 			Name:    u.Name,
 			Email:   u.Email,
-			RoleIDs: roleIDsMap[u.ID],
+			RoleIDs: roleIDs,
 			Roles:   roleNamesMap[u.ID],
 		}
 	}
@@ -81,11 +86,15 @@ func (h *UserManagementHandler) GetUser(c *gin.Context) {
 		return
 	}
 
+	rids := make([]string, len(roleIDs))
+	for i, id := range roleIDs {
+		rids[i] = strconv.FormatUint(id, 10)
+	}
 	result.SuccessResponse(c, "获取用户成功", &dto.UserResponse{
 		ID:      user.ID,
 		Name:    user.Name,
 		Email:   user.Email,
-		RoleIDs: roleIDs,
+		RoleIDs: rids,
 		Roles:   roleNames,
 	})
 }
