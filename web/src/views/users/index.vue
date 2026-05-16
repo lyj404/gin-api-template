@@ -21,6 +21,7 @@
         single-column
         remote
         @update:page="handlePageChange"
+        @update:page-size="handlePageSizeChange"
       />
     </n-card>
 
@@ -94,7 +95,9 @@ const pagination = reactive({
   pageSize: 10,
   pageCount: 1,
   itemCount: 0,
-  pageSlots: 5
+  pageSlots: 5,
+  pageSizes: [10, 20, 50, 100],
+  showSizePicker: true
 })
 
 const rules: FormRules = {
@@ -169,6 +172,12 @@ const fetchRoles = async () => {
 
 const handlePageChange = (page: number) => {
   pagination.page = page
+  fetchData()
+}
+
+const handlePageSizeChange = (pageSize: number) => {
+  pagination.page = 1
+  pagination.pageSize = pageSize
   fetchData()
 }
 

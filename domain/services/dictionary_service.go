@@ -11,7 +11,7 @@ type DictionaryService interface {
 	UpdateDict(ctx context.Context, dict *entity.SysDictionary) error
 	DeleteDict(ctx context.Context, id string) error
 	GetDictByID(ctx context.Context, id string) (entity.SysDictionary, error)
-	ListDict(ctx context.Context, name, dictType string) ([]entity.SysDictionary, error)
+	ListDict(ctx context.Context, name, dictType string, page, pageSize int) ([]entity.SysDictionary, int64, error)
 
 	CreateDictDetail(ctx context.Context, detail *entity.SysDictionaryDetail) error
 	UpdateDictDetail(ctx context.Context, detail *entity.SysDictionaryDetail) error

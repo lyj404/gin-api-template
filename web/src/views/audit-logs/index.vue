@@ -29,7 +29,7 @@
         </div>
       </div>
 
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" :scroll-x="1000" bordered single-column />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" :scroll-x="1000" bordered single-column remote @update:page="handlePageChange" @update:page-size="handlePageSizeChange" />
     </n-card>
   </div>
 </template>
@@ -49,7 +49,7 @@ const operatorId = ref('')
 const targetType = ref('')
 const targetId = ref('')
 const timeRange = ref<[number, number] | null>(null)
-const pagination = reactive({ page: 1, pageSize: 10, itemCount: 0, pageCount: 1 })
+const pagination = reactive({ page: 1, pageSize: 10, itemCount: 0, pageCount: 1, pageSizes: [10, 20, 50, 100], showSizePicker: true })
 
 const searchTypeOptions = [
   { label: '全部', value: 'all' },
@@ -62,7 +62,7 @@ const { options: targetTypeOptions, load: loadTargetTypes, lookup: targetTypeLab
 const { load: loadActionTypes, lookup: actionLabel } = useDict('audit_action')
 
 const columns: DataTableColumns<any> = [
-  { title: 'ID', key: 'id', width: 180 },
+  { title: '序号', key: 'index', width: 70, render: (_row: any, index: number) => index + 1 },
   { title: '操作者', key: 'operator_name' },
   { title: '操作', key: 'action', render: (row: any) => actionLabel(row.action) },
   { title: '目标类型', key: 'target_type', render: (row: any) => targetTypeLabel(row.target_type) },
@@ -76,6 +76,17 @@ const applyPage = (p: any) => {
   pagination.page = p.page
   pagination.pageCount = p.total_page
   pagination.itemCount = p.total
+}
+
+const handlePageChange = (page: number) => {
+  pagination.page = page
+  searchAll()
+}
+
+const handlePageSizeChange = (pageSize: number) => {
+  pagination.page = 1
+  pagination.pageSize = pageSize
+  searchAll()
 }
 
 const searchAll = async () => {

@@ -55,8 +55,8 @@ func (s *dictionaryService) GetDictByID(ctx context.Context, id string) (entity.
 	return s.repo.GetDictByID(ctx, id)
 }
 
-func (s *dictionaryService) ListDict(ctx context.Context, name, dictType string) ([]entity.SysDictionary, error) {
-	return s.repo.ListDict(ctx, name, dictType)
+func (s *dictionaryService) ListDict(ctx context.Context, name, dictType string, page, pageSize int) ([]entity.SysDictionary, int64, error) {
+	return s.repo.ListDict(ctx, name, dictType, page, pageSize)
 }
 
 func (s *dictionaryService) CreateDictDetail(ctx context.Context, detail *entity.SysDictionaryDetail) error {

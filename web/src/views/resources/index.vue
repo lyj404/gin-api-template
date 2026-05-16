@@ -13,7 +13,7 @@
         API 类型控制接口访问，实体类型控制业务数据操作。
       </n-alert>
 
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" :scroll-x="1100" bordered single-column />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" :scroll-x="1100" bordered single-column remote @update:page="handlePageChange" @update:page-size="handlePageSizeChange" />
     </n-card>
 
     <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑资源' : '新增资源'" :style="{ width: '90vw', maxWidth: '580px' }">
@@ -93,7 +93,7 @@ const editingId = ref<string | null>(null)
 
 const form = reactive({ name: '', type: 'api', pattern: '', method: '', entity: '', action: '', description: '' })
 const data = ref<ResourceResponse[]>([])
-const pagination = reactive({ page: 1, pageSize: 20, pageCount: 1, itemCount: 0 })
+const pagination = reactive({ page: 1, pageSize: 20, pageCount: 1, itemCount: 0, pageSizes: [10, 20, 50, 100], showSizePicker: true })
 
 const isApiType = computed(() => form.type === 'api')
 
@@ -142,6 +142,17 @@ const fetchData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const handlePageChange = (page: number) => {
+  pagination.page = page
+  fetchData()
+}
+
+const handlePageSizeChange = (pageSize: number) => {
+  pagination.page = 1
+  pagination.pageSize = pageSize
+  fetchData()
 }
 
 const openModal = (row?: ResourceResponse) => {

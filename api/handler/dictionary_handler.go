@@ -107,16 +107,23 @@ func (h *DictionaryHandler) GetDict(c *gin.Context) {
 
 // ListDict 字典列表
 func (h *DictionaryHandler) ListDict(c *gin.Context) {
+	var req dto.PaginationRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		result.ErrorResponse(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	req.SetDefaults()
+
 	name := c.Query("name")
 	dictType := c.Query("type")
 
-	dicts, err := h.dictService.ListDict(c.Request.Context(), name, dictType)
+	dicts, total, err := h.dictService.ListDict(c.Request.Context(), name, dictType, req.Page, req.PageSize)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	result.SuccessResponse(c, "获取成功", &dicts)
+	result.SuccessResponse(c, "获取成功", dto.NewPaginationResponse(req.Page, req.PageSize, total, dicts))
 }
 
 // CreateDictDetail 创建字典详情

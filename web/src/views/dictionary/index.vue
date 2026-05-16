@@ -10,10 +10,14 @@
         :columns="dictColumns"
         :data="dictList"
         :loading="loading"
+        :pagination="pagination"
         :row-key="(row: any) => row.id"
         :scroll-x="800"
         bordered
         single-column
+        remote
+        @update:page="handlePageChange"
+        @update:page-size="handlePageSizeChange"
         @update:checked-row-keys="handleDictSelect"
       />
     </n-card>
@@ -113,8 +117,10 @@ const drawerWidth = computed<number | string>(() => layout.isMobile ? '100%' : 6
 const loading = ref(false)
 const dictList = ref<DictResponse[]>([])
 const selectedDict = ref<DictResponse | null>(null)
+const pagination = reactive({ page: 1, pageSize: 10, pageCount: 1, itemCount: 0, pageSizes: [10, 20, 50, 100], showSizePicker: true })
 
 const dictColumns: DataTableColumns<DictResponse> = [
+  { title: '序号', key: 'index', width: 70, render: (_row: DictResponse, index: number) => index + 1 },
   { title: '名称', key: 'name', width: 150 },
   { title: '类型标识', key: 'type', width: 180 },
   { title: '状态', key: 'status', width: 80, render(row) { return h(NTag, { type: row.status === 1 ? 'success' : 'error' }, { default: () => row.status === 1 ? '启用' : '禁用' }) } },
@@ -134,13 +140,28 @@ const dictColumns: DataTableColumns<DictResponse> = [
 const loadDicts = async () => {
   loading.value = true
   try {
-    const res = await getDicts()
-    dictList.value = res.data.data || []
+    const res = await getDicts({ page: pagination.page, page_size: pagination.pageSize })
+    const p = res.data.data
+    dictList.value = p.data || []
+    pagination.page = p.page
+    pagination.itemCount = p.total
+    pagination.pageCount = p.total_page
   } catch (err: any) {
     message.error(err?.response?.data?.message || '获取字典列表失败')
   } finally {
     loading.value = false
   }
+}
+
+const handlePageChange = (page: number) => {
+  pagination.page = page
+  loadDicts()
+}
+
+const handlePageSizeChange = (pageSize: number) => {
+  pagination.page = 1
+  pagination.pageSize = pageSize
+  loadDicts()
 }
 
 const handleDictSelect = (keys: Array<string | number>) => {

@@ -66,7 +66,7 @@ export const deleteUser = (id: string) => api.delete(`/users/${id}`)
 export const getDashboardStats = () => api.get<{ data: DashboardStats }>('/dashboard/stats')
 export const getAuditTrend = () => api.get<{ data: AuditTrendItem[] }>('/dashboard/audit-trend')
 
-export const getDicts = () => api.get<{ data: DictResponse[] }>('/dict')
+export const getDicts = (params?: PaginationRequest) => api.get<{ data: PaginationResponse<DictResponse> }>('/dict', { params })
 export const getDict = (id: string) => api.get<{ data: DictResponse }>(`/dict/${id}`)
 export const createDict = (data: CreateDictRequest) => api.post('/dict', data)
 export const updateDict = (id: string, data: UpdateDictRequest) => api.put(`/dict/${id}`, data)
