@@ -52,6 +52,7 @@ const menuIcons = [
   'i-material-symbols:shield-outline',
   'i-material-symbols:receipt-long-outline',
   'i-material-symbols:circle-outline',
+  'i-material-symbols:book-outline',
   'i-material-symbols:dark-mode',
   'i-material-symbols:light-mode'
 ]

@@ -39,6 +39,7 @@ import { ref, reactive, h, onMounted } from 'vue'
 import { NButton, NDataTable, NCard, NInput, NSelect, NDatePicker, NH2, useMessage } from 'naive-ui'
 import type { DataTableColumns } from 'naive-ui'
 import { getAuditLogs, getAuditLogsByTarget, getAuditLogsByTime } from '@/api'
+import { useDict } from '@/composables/useDict'
 
 const message = useMessage()
 const searchType = ref('all')
@@ -57,20 +58,15 @@ const searchTypeOptions = [
   { label: '按时间', value: 'time' }
 ]
 
-const targetTypeOptions = [
-  { label: '角色', value: 'role' },
-  { label: '用户', value: 'user' },
-  { label: '菜单', value: 'menu' },
-  { label: '组织', value: 'org_unit' },
-  { label: '资源', value: 'resource' }
-]
+const { options: targetTypeOptions, load: loadTargetTypes, lookup: targetTypeLabel } = useDict('audit_target_type')
+const { load: loadActionTypes, lookup: actionLabel } = useDict('audit_action')
 
 const columns: DataTableColumns<any> = [
-  { title: 'ID', key: 'id', width: 80 },
+  { title: 'ID', key: 'id', width: 180 },
   { title: '操作者', key: 'operator_name' },
-  { title: '操作', key: 'action' },
-  { title: '目标类型', key: 'target_type' },
-  { title: '目标ID', key: 'target_id', width: 80 },
+  { title: '操作', key: 'action', render: (row: any) => actionLabel(row.action) },
+  { title: '目标类型', key: 'target_type', render: (row: any) => targetTypeLabel(row.target_type) },
+  { title: '目标ID', key: 'target_id', width: 180 },
   { title: '描述', key: 'description' },
   { title: '时间', key: 'created_at', render: (row: any) => new Date(row.created_at).toLocaleString() }
 ]
@@ -119,7 +115,11 @@ const searchByTime = async () => {
   } catch { message.error('查询失败') } finally { loading.value = false }
 }
 
-onMounted(searchAll)
+onMounted(() => {
+  searchAll()
+  loadTargetTypes()
+  loadActionTypes()
+})
 </script>
 
 <style scoped>

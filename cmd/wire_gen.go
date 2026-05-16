@@ -61,8 +61,11 @@ func InitializeApp() (*App, error) {
 	resourceService := service.NewResourceService(resourceRepository)
 	resourceHandler := handler.NewResourceHandler(resourceService)
 	dashboardHandler := handler.NewDashboardHandler()
+	dictionaryRepo := repository.NewDictionaryRepo(db)
+	dictionaryService := service.NewDictionaryService(dictionaryRepo)
+	dictionaryHandler := handler.NewDictionaryHandler(dictionaryService)
 	rbacMiddleware := middleware.NewRBACMiddleware(permissionService)
-	v := provideRouteRegistration(engine, userHandler, refreshTokenHandler, roleHandler, orgUnitHandler, auditLogHandler, userPermissionHandler, userProfileHandler, menuHandler, userManagementHandler, resourceHandler, dashboardHandler)
+	v := provideRouteRegistration(engine, userHandler, refreshTokenHandler, roleHandler, orgUnitHandler, auditLogHandler, userPermissionHandler, userProfileHandler, menuHandler, userManagementHandler, resourceHandler, dashboardHandler, dictionaryHandler)
 	app := &App{
 		DB:             db,
 		Redis:          client,
@@ -82,6 +85,7 @@ func InitializeApp() (*App, error) {
 		UserMgmtHdlr:   userManagementHandler,
 		ResourceHdlr:   resourceHandler,
 		DashboardHdlr:  dashboardHandler,
+		DictHdlr:       dictionaryHandler,
 		RBACMiddleware: rbacMiddleware,
 		PermSvc:        permissionService,
 		RegisterRoutes: v,
@@ -111,6 +115,7 @@ type App struct {
 	UserMgmtHdlr   *handler.UserManagementHandler
 	ResourceHdlr   *handler.ResourceHandler
 	DashboardHdlr  *handler.DashboardHandler
+	DictHdlr       *handler.DictionaryHandler
 	RBACMiddleware *middleware.RBACMiddleware
 	PermSvc        services.PermissionService
 	RegisterRoutes func()
@@ -150,11 +155,13 @@ func provideRouteRegistration(
 	userMgmtHdlr *handler.UserManagementHandler,
 	resourceHdlr *handler.ResourceHandler,
 	dashboardHdlr *handler.DashboardHandler,
+	dictHdlr *handler.DictionaryHandler,
 ) func() {
 	return func() {
 
 		publicGroup := router.Group("")
 		route.NewUserRouter(userHdlr, refreshTokenHdlr, publicGroup)
+		route.NewPublicDictionaryRouter(dictHdlr, publicGroup)
 
 		protectedGroup := router.Group("")
 		protectedGroup.Use(route.JwtAuthMiddleware())
@@ -166,6 +173,7 @@ func provideRouteRegistration(
 		route.NewUserManagementRouter(userMgmtHdlr, protectedGroup)
 		route.NewResourceRouter(resourceHdlr, protectedGroup)
 		route.NewDashboardRouter(dashboardHdlr, protectedGroup)
+		route.NewDictionaryRouter(dictHdlr, protectedGroup)
 	}
 }
 
@@ -181,5 +189,5 @@ var providerSet = wire.NewSet(
 	provideLogger,
 	provideRouter,
 	provideRouteRegistration,
-	provideTimeout, repository.NewUserRepo, repository.NewRoleRepository, repository.NewOrgUnitRepository, repository.NewAuditLogRepository, repository.NewMenuRepository, repository.NewUserManagementRepository, repository.NewResourceRepository, service.NewUserService, service.NewRefreshTokenService, service.NewPermissionService, service.NewRoleService, service.NewOrgUnitService, service.NewAuditLogService, service.NewMenuService, service.NewUserManagementService, service.NewUserProfileService, service.NewResourceService, middleware.NewRBACMiddleware, handler.NewUserHandler, handler.NewRefreshTokenHandler, handler.NewRoleHandler, handler.NewOrgUnitHandler, handler.NewUserPermissionHandler, handler.NewUserProfileHandler, handler.NewAuditLogHandler, handler.NewMenuHandler, handler.NewUserManagementHandler, handler.NewResourceHandler, handler.NewDashboardHandler,
+	provideTimeout, repository.NewUserRepo, repository.NewRoleRepository, repository.NewOrgUnitRepository, repository.NewAuditLogRepository, repository.NewMenuRepository, repository.NewUserManagementRepository, repository.NewResourceRepository, repository.NewDictionaryRepo, service.NewUserService, service.NewRefreshTokenService, service.NewPermissionService, service.NewRoleService, service.NewOrgUnitService, service.NewAuditLogService, service.NewMenuService, service.NewUserManagementService, service.NewUserProfileService, service.NewResourceService, service.NewDictionaryService, middleware.NewRBACMiddleware, handler.NewUserHandler, handler.NewRefreshTokenHandler, handler.NewRoleHandler, handler.NewOrgUnitHandler, handler.NewUserPermissionHandler, handler.NewUserProfileHandler, handler.NewAuditLogHandler, handler.NewMenuHandler, handler.NewUserManagementHandler, handler.NewResourceHandler, handler.NewDashboardHandler, handler.NewDictionaryHandler,
 )

@@ -64,6 +64,12 @@ export const routes: RouteRecordRaw[] = [
         meta: { title: '审计日志', icon: 'i-material-symbols:receipt-long-outline' }
       },
       {
+        path: 'dictionary',
+        name: 'Dictionary',
+        component: () => import('@/views/dictionary/index.vue'),
+        meta: { title: '字典管理', icon: 'i-material-symbols:book-outline' }
+      },
+      {
         path: 'profile',
         name: 'Profile',
         component: () => import('@/views/profile/index.vue'),

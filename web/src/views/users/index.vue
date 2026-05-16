@@ -76,18 +76,18 @@ const formRef = ref()
 const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
-const editingId = ref<number | null>(null)
+const editingId = ref<string | null>(null)
 const keyword = ref('')
 
 const form = reactive<{
   name: string
   email: string
   password: string
-  role_ids: number[]
+  role_ids: string[]
 }>({ name: '', email: '', password: '', role_ids: [] })
 
 const data = ref<UserResponse[]>([])
-const roleOptions = ref<{ label: string; value: number }[]>([])
+const roleOptions = ref<{ label: string; value: string }[]>([])
 
 const pagination = reactive({
   page: 1,
@@ -112,7 +112,7 @@ const rules: FormRules = {
 }
 
 const columns: DataTableColumns<UserResponse> = [
-  { title: 'ID', key: 'id', width: 80 },
+  { title: 'ID', key: 'id', width: 180 },
   { title: '姓名', key: 'name' },
   { title: '邮箱', key: 'email' },
   {

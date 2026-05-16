@@ -53,6 +53,10 @@ seed-resources:
 seed-menus:
 	$(GO) run ./cmd/rbaccli/main.go seed-menus
 
-# 初始化所有基础数据（资源 + 菜单）
-seed: seed-resources seed-menus
+# 初始化所有基础数据（资源 + 菜单 + 字典）
+seed: seed-resources seed-menus seed-dict
+
+# 初始化系统字典数据（菜单状态、资源类型等）
+seed-dict:
+	$(GO) run ./cmd/rbaccli/main.go seed-dict
 

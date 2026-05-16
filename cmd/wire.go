@@ -24,27 +24,28 @@ import (
 
 // App 应用结构体，包含所有依赖
 type App struct {
-	DB             *gorm.DB
-	Redis          *redis.Client
-	Logger         *zap.Logger
-	Router         *gin.Engine
-	UserRepo       domain.UserRepo
-	UserSvc        domain.LoginService
-	TokenSvc       domain.RefreshTokenService
-	UserHdlr       *handler.UserHandler
-	RefreshHdlr    *handler.RefreshTokenHandler
-	RoleHdlr       *handler.RoleHandler
-	OrgHdlr        *handler.OrgUnitHandler
-	AuditHdlr      *handler.AuditLogHandler
-	UserPermHdlr   *handler.UserPermissionHandler
+	DB              *gorm.DB
+	Redis           *redis.Client
+	Logger          *zap.Logger
+	Router          *gin.Engine
+	UserRepo        domain.UserRepo
+	UserSvc         domain.LoginService
+	TokenSvc        domain.RefreshTokenService
+	UserHdlr        *handler.UserHandler
+	RefreshHdlr     *handler.RefreshTokenHandler
+	RoleHdlr        *handler.RoleHandler
+	OrgHdlr         *handler.OrgUnitHandler
+	AuditHdlr       *handler.AuditLogHandler
+	UserPermHdlr    *handler.UserPermissionHandler
 	UserProfileHdlr *handler.UserProfileHandler
-	MenuHdlr       *handler.MenuHandler
-	UserMgmtHdlr   *handler.UserManagementHandler
-	ResourceHdlr   *handler.ResourceHandler
-	DashboardHdlr  *handler.DashboardHandler
-	RBACMiddleware *middleware.RBACMiddleware
-	PermSvc        domainservices.PermissionService
-	RegisterRoutes func()
+	MenuHdlr        *handler.MenuHandler
+	UserMgmtHdlr    *handler.UserManagementHandler
+	ResourceHdlr    *handler.ResourceHandler
+	DashboardHdlr   *handler.DashboardHandler
+	DictHdlr        *handler.DictionaryHandler
+	RBACMiddleware  *middleware.RBACMiddleware
+	PermSvc         domainservices.PermissionService
+	RegisterRoutes  func()
 }
 
 // InitializeApp 初始化应用，使用 Wire 自动生成依赖注入代码
@@ -90,11 +91,13 @@ func provideRouteRegistration(
 	userMgmtHdlr *handler.UserManagementHandler,
 	resourceHdlr *handler.ResourceHandler,
 	dashboardHdlr *handler.DashboardHandler,
+	dictHdlr *handler.DictionaryHandler,
 ) func() {
 	return func() {
 		// 注册公共路由（根路径）
 		publicGroup := router.Group("")
 		route.NewUserRouter(userHdlr, refreshTokenHdlr, publicGroup)
+		route.NewPublicDictionaryRouter(dictHdlr, publicGroup)
 
 		// 注册受保护的路由
 		protectedGroup := router.Group("")
@@ -107,6 +110,7 @@ func provideRouteRegistration(
 		route.NewUserManagementRouter(userMgmtHdlr, protectedGroup)
 		route.NewResourceRouter(resourceHdlr, protectedGroup)
 		route.NewDashboardRouter(dashboardHdlr, protectedGroup)
+		route.NewDictionaryRouter(dictHdlr, protectedGroup)
 	}
 }
 
@@ -132,6 +136,7 @@ var providerSet = wire.NewSet(
 	repository.NewMenuRepository,
 	repository.NewUserManagementRepository,
 	repository.NewResourceRepository,
+	repository.NewDictionaryRepo,
 
 	// Service 层
 	service.NewUserService,
@@ -144,6 +149,7 @@ var providerSet = wire.NewSet(
 	service.NewUserManagementService,
 	service.NewUserProfileService,
 	service.NewResourceService,
+	service.NewDictionaryService,
 	middleware.NewRBACMiddleware,
 
 	// Handler 层
@@ -158,4 +164,5 @@ var providerSet = wire.NewSet(
 	handler.NewUserManagementHandler,
 	handler.NewResourceHandler,
 	handler.NewDashboardHandler,
+	handler.NewDictionaryHandler,
 )

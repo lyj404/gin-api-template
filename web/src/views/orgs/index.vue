@@ -37,15 +37,15 @@ const message = useMessage()
 const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
-const editingId = ref<number | null>(null)
+const editingId = ref<string | null>(null)
 
-const form = reactive({ name: '', parent_id: null as number | null })
+const form = reactive({ name: '', parent_id: null as string | null })
 const allOrgs = ref<OrgUnitResponse[]>([])
 
 interface FlatNode {
-  id: number
+  id: string
   name: string
-  parent_id: number | null
+  parent_id: string | null
   level: number
 }
 
@@ -54,13 +54,13 @@ const buildFlat = (units: OrgUnitResponse[]): FlatNode[] => {
 }
 
 const treeData = computed(() => buildFlat(allOrgs.value))
-const orgOptions = computed<SelectOption[]>(() => [{ label: '顶级组织', value: 0 }, ...allOrgs.value.map((o: OrgUnitResponse) => ({ label: o.name, value: o.id }))])
+const orgOptions = computed<SelectOption[]>(() => [{ label: '顶级组织', value: '0' }, ...allOrgs.value.map((o: OrgUnitResponse) => ({ label: o.name, value: o.id }))])
 
 const columns = computed<DataTableColumns<FlatNode>>(() => [
   {
     title: 'ID',
     key: 'id',
-    width: 80
+    width: 180
   },
   {
     title: '名称',
@@ -112,7 +112,7 @@ const handleSave = async () => {
   saving.value = true
   try {
     const payload: any = { name: form.name }
-    if (form.parent_id) payload.parent_id = form.parent_id === 0 ? null : form.parent_id
+    if (form.parent_id) payload.parent_id = form.parent_id
     if (editingId.value) {
       await updateOrgUnit(editingId.value, payload)
     } else {

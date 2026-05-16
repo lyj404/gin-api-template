@@ -19,7 +19,7 @@ import (
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("可用命令: create-admin, seed-resources, seed-menus")
+		fmt.Println("可用命令: create-admin, seed-resources, seed-menus, seed-dict")
 		os.Exit(1)
 	}
 
@@ -32,6 +32,8 @@ func main() {
 		seedResources()
 	case "seed-menus":
 		seedMenus()
+	case "seed-dict":
+		seedDictData()
 	default:
 		fmt.Printf("未知命令: %s\n", command)
 		os.Exit(1)
@@ -97,6 +99,13 @@ func createAdmin() {
 	}
 
 	fmt.Println("系统管理员创建成功！")
+	fmt.Println()
+
+	// 自动初始化基础数据
+	bootstrap.BootDBOnly()
+	seedResources()
+	seedMenus()
+	seedDictData()
 }
 
 func createSystemAdmin(email, password string) error {
@@ -244,6 +253,17 @@ func createDefaultResources(tx *gorm.DB) error {
 		// API 资源 - 仪表盘
 		{Name: "dashboard:read", Type: "api", Pattern: "/dashboard/stats", Method: "GET", Description: "查看仪表盘统计"},
 		{Name: "dashboard:audit-trend", Type: "api", Pattern: "/dashboard/audit-trend", Method: "GET", Description: "查看审计趋势"},
+
+		// API 资源 - 字典管理
+		{Name: "dict:read", Type: "api", Pattern: "/dict", Method: "GET", Description: "查看字典列表"},
+		{Name: "dict:read:detail", Type: "api", Pattern: "/dict/:id", Method: "GET", Description: "查看字典详情"},
+		{Name: "dict:create", Type: "api", Pattern: "/dict", Method: "POST", Description: "创建字典"},
+		{Name: "dict:update", Type: "api", Pattern: "/dict/:id", Method: "PUT", Description: "更新字典"},
+		{Name: "dict:delete", Type: "api", Pattern: "/dict/:id", Method: "DELETE", Description: "删除字典"},
+		{Name: "dict:detail:read", Type: "api", Pattern: "/dict/:id/details", Method: "GET", Description: "查看字典详情列表"},
+		{Name: "dict:detail:create", Type: "api", Pattern: "/dict/:id/details", Method: "POST", Description: "创建字典详情"},
+		{Name: "dict:detail:update", Type: "api", Pattern: "/dict/:id/details/:detailId", Method: "PUT", Description: "更新字典详情"},
+		{Name: "dict:detail:delete", Type: "api", Pattern: "/dict/:id/details/:detailId", Method: "DELETE", Description: "删除字典详情"},
 
 		// 实体资源
 		{Name: "entity:all", Type: "entity", Pattern: "*", Entity: "*", Action: "*", Description: "所有实体权限"},
@@ -396,6 +416,7 @@ func createDefaultMenus(tx *gorm.DB) error {
 		{Name: "菜单管理", Path: "/menus", Icon: "i-material-symbols:list-alt-outline", OrderNum: 40, ResourceName: "menu:read"},
 		{Name: "组织管理", Path: "/orgs", Icon: "i-material-symbols:account-tree-outline", OrderNum: 50, ResourceName: "org:manage"},
 		{Name: "资源管理", Path: "/resources", Icon: "i-material-symbols:shield-outline", OrderNum: 60, ResourceName: "resource:manage"},
+		{Name: "字典管理", Path: "/dictionary", Icon: "i-material-symbols:book-outline", OrderNum: 65, ResourceName: "dict:read"},
 		{Name: "审计日志", Path: "/audit-logs", Icon: "i-material-symbols:receipt-long-outline", OrderNum: 70, ResourceName: "audit:read"},
 	}
 
@@ -431,4 +452,111 @@ func createDefaultMenus(tx *gorm.DB) error {
 		}
 	}
 	return nil
+}
+
+type dictSeed struct {
+	Name  string
+	Type  string
+	Desc  string
+	Items []dictItem
+}
+
+type dictItem struct {
+	Label string
+	Value string
+	Sort  int
+}
+
+func seedDictData() {
+	fmt.Println("=== 字典数据初始化 ===")
+
+	config.InitConfig()
+	bootstrap.BootDBOnly()
+
+	seeds := []dictSeed{
+		{
+			Name: "菜单状态", Type: "menu_status", Desc: "菜单的启用/禁用状态",
+			Items: []dictItem{
+				{Label: "启用", Value: "enabled", Sort: 1},
+				{Label: "禁用", Value: "disabled", Sort: 2},
+			},
+		},
+		{
+			Name: "资源类型", Type: "resource_type", Desc: "资源的类型分类",
+			Items: []dictItem{
+				{Label: "API — 接口权限", Value: "api", Sort: 1},
+				{Label: "实体 — 数据权限", Value: "entity", Sort: 2},
+			},
+		},
+		{
+			Name: "审计日志操作", Type: "audit_action", Desc: "审计日志记录的操作类型",
+			Items: []dictItem{
+				{Label: "创建", Value: "create", Sort: 1},
+				{Label: "更新", Value: "update", Sort: 2},
+				{Label: "删除", Value: "delete", Sort: 3},
+				{Label: "登录", Value: "login", Sort: 4},
+				{Label: "登出", Value: "logout", Sort: 5},
+				{Label: "注册", Value: "signup", Sort: 6},
+				{Label: "绑定", Value: "bind", Sort: 7},
+				{Label: "解绑", Value: "unbind", Sort: 8},
+				{Label: "分配", Value: "assign", Sort: 9},
+				{Label: "撤销", Value: "revoke", Sort: 10},
+				{Label: "更新个人信息", Value: "update_profile", Sort: 11},
+				{Label: "修改密码", Value: "change_password", Sort: 12},
+			},
+		},
+		{
+			Name: "审计日志目标类型", Type: "audit_target_type", Desc: "审计日志记录的目标对象类型",
+			Items: []dictItem{
+				{Label: "用户", Value: "user", Sort: 1},
+				{Label: "角色", Value: "role", Sort: 2},
+				{Label: "菜单", Value: "menu", Sort: 3},
+				{Label: "资源", Value: "resource", Sort: 4},
+				{Label: "组织", Value: "org_unit", Sort: 5},
+				{Label: "角色资源", Value: "role_resource", Sort: 6},
+				{Label: "角色组织范围", Value: "role_org_scope", Sort: 7},
+				{Label: "用户角色", Value: "user_role", Sort: 8},
+				{Label: "角色菜单", Value: "role_menu", Sort: 9},
+				{Label: "菜单资源", Value: "menu_resource", Sort: 10},
+			},
+		},
+	}
+
+	for _, s := range seeds {
+		var dict entity.SysDictionary
+		err := global.G_DB.Where("type = ?", s.Type).First(&dict).Error
+		if err == nil {
+			// 更新已有字典值：删除旧值，重新插入
+			global.G_DB.Where("dict_id = ?", dict.ID).Delete(&entity.SysDictionaryDetail{})
+		} else {
+			dict = entity.SysDictionary{
+				Name:   s.Name,
+				Type:   s.Type,
+				Status: 1,
+				Desc:   s.Desc,
+			}
+			if err := global.G_DB.Create(&dict).Error; err != nil {
+				fmt.Printf("创建字典「%s」失败: %v\n", s.Name, err)
+				continue
+			}
+		}
+
+		for _, item := range s.Items {
+			detail := entity.SysDictionaryDetail{
+				DictID: dict.ID,
+				Label:  item.Label,
+				Value:  item.Value,
+				Sort:   item.Sort,
+				Status: 1,
+			}
+			if err := global.G_DB.Create(&detail).Error; err != nil {
+				fmt.Printf("创建字典值「%s」失败: %v\n", item.Label, err)
+			}
+		}
+		fmt.Printf("字典「%s」初始化完成 (%d 项)\n", s.Name, len(s.Items))
+	}
+
+	var count int64
+	global.G_DB.Model(&entity.SysDictionary{}).Count(&count)
+	fmt.Printf("字典数据初始化成功，当前字典总数: %d\n", count)
 }

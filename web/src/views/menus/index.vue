@@ -35,6 +35,9 @@
         <n-form-item label="是否显示">
           <n-switch v-model:value="form.is_visible" />
         </n-form-item>
+        <n-form-item label="状态">
+          <n-select v-model:value="form.status" :options="statusOptions" />
+        </n-form-item>
       </n-form>
       <template #footer>
         <n-button @click="showModal = false">取消</n-button>
@@ -60,12 +63,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted, computed } from 'vue'
-import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NH2, NCard, NTag, NSpace, useMessage } from 'naive-ui'
+import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NTag, NH2, NCard, NSpace, useMessage } from 'naive-ui'
 import type { DataTableColumns, SelectOption } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import { getMenuTree, getMenu, createMenu, updateMenu, deleteMenu, getResources, bindMenuResource, unbindMenuResource } from '@/api'
 import { usePermissionStore } from '@/stores/permission'
 import type { MenuTreeNode, MenuResponse, ResourceResponse } from '@/types'
+import { useDict } from '@/composables/useDict'
 
 const message = useMessage()
 const permission = usePermissionStore()
@@ -73,7 +77,7 @@ const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
 const showIconPicker = ref(false)
-const editingId = ref<number | null>(null)
+const editingId = ref<string | null>(null)
 
 const toIconifyName = (icon?: string) => (icon || '').replace(/^i-/, '')
 
@@ -101,19 +105,25 @@ const onIconGridScroll = (e: Event) => {
   }
 }
 
-const form = reactive({ name: '', parent_id: null as number | null, path: '', icon: '', order_num: 0, resource_ids: [] as number[], is_visible: true })
+const form = reactive({ name: '', parent_id: null as string | null, path: '', icon: '', order_num: 0, resource_ids: [] as string[], is_visible: true, status: 'enabled' })
 const data = ref<MenuTreeNode[]>([])
 
-const menuOptions = computed<SelectOption[]>(() => [{ label: '顶级菜单', value: 0 }, ...data.value.map((m: MenuTreeNode) => ({ label: m.name, value: m.id }))])
+const { options: statusOptions, lookup: statusLabel, load: loadStatusOptions } = useDict('menu_status')
+
+const menuOptions = computed<SelectOption[]>(() => [{ label: '顶级菜单', value: '0' }, ...data.value.map((m: MenuTreeNode) => ({ label: m.name, value: m.id }))])
 const allResourceOptions = ref<SelectOption[]>([])
 const resourcesLoading = ref(false)
 
 const columns: DataTableColumns<MenuTreeNode> = [
-  { title: 'ID', key: 'id', width: 80 },
+  { title: 'ID', key: 'id', width: 180 },
   { title: '菜单名称', key: 'name' },
   { title: '路由路径', key: 'path', render: (row: MenuTreeNode) => row.path || '-' },
   { title: '图标', key: 'icon', render: (row: MenuTreeNode) => h(Icon, { icon: toIconifyName(row.icon) || 'material-symbols:circle-outline', class: 'text-lg' }) },
   { title: '排序', key: 'order_num', width: 80 },
+  {
+    title: '状态', key: 'status', width: 80,
+    render: (row: MenuTreeNode) => h(NTag, { type: row.status === 'enabled' ? 'success' : 'error', size: 'small' }, { default: () => statusLabel(row.status || '') })
+  },
   { title: '操作', key: 'actions', width: 160, render: (row: MenuTreeNode) => h(NSpace, null, {
     default: () => [
       h(NButton, { size: 'small', onClick: () => openModal(row) }, { default: () => '编辑' }),
@@ -142,6 +152,7 @@ const fetchAllResources = async () => {
 }
 
 const openModal = async (row?: MenuTreeNode) => {
+  loadStatusOptions()
   if (row) {
     editingId.value = row.id
     form.name = row.name
@@ -149,6 +160,7 @@ const openModal = async (row?: MenuTreeNode) => {
     form.icon = row.icon
     form.order_num = row.order_num
     form.is_visible = row.is_visible
+    form.status = (row as any).status || 'enabled'
 
     // 加载当前资源的资源绑定
     try {
@@ -160,7 +172,7 @@ const openModal = async (row?: MenuTreeNode) => {
     }
   } else {
     editingId.value = null
-    Object.assign(form, { name: '', parent_id: null, path: '', icon: '', order_num: 0, resource_ids: [], is_visible: true })
+    Object.assign(form, { name: '', parent_id: null, path: '', icon: '', order_num: 0, resource_ids: [], is_visible: true, status: 'enabled' })
   }
   showModal.value = true
   fetchAllResources()
@@ -169,12 +181,12 @@ const openModal = async (row?: MenuTreeNode) => {
 const handleSave = async () => {
   saving.value = true
   try {
-    const payload: any = { name: form.name, path: form.path, icon: form.icon, order_num: form.order_num, is_visible: form.is_visible }
+    const payload: any = { name: form.name, path: form.path, icon: form.icon, order_num: form.order_num, is_visible: form.is_visible, status: form.status }
     if (form.parent_id !== null && form.parent_id !== undefined) {
-      payload.parent_id = form.parent_id === 0 ? null : form.parent_id
+      payload.parent_id = form.parent_id === '0' ? null : form.parent_id
     }
 
-    let menuId: number
+    let menuId: string
     if (editingId.value) {
       await updateMenu(editingId.value, payload)
       menuId = editingId.value
@@ -184,15 +196,15 @@ const handleSave = async () => {
     }
 
     // 同步资源绑定：先获取当前的，再 diff
-    let currentIds: number[] = []
+    let currentIds: string[] = []
     try {
       const detail = await getMenu(menuId)
       currentIds = ((detail.data.data as MenuResponse).resources || []).map((r: any) => r.id)
     } catch { /* ignore */ }
 
     const newIds = form.resource_ids || []
-    const toAdd = newIds.filter((id: number) => !currentIds.includes(id))
-    const toRemove = currentIds.filter((id: number) => !newIds.includes(id))
+    const toAdd = newIds.filter((id: string) => !currentIds.includes(id))
+    const toRemove = currentIds.filter((id: string) => !newIds.includes(id))
 
     for (const id of toRemove) {
       await unbindMenuResource(menuId, id)

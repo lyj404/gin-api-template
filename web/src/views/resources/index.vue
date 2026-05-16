@@ -81,6 +81,7 @@ import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NH2, NC
 import type { DataTableColumns, SelectOption } from 'naive-ui'
 import { getResources, createResource, updateResource, deleteResource } from '@/api'
 import type { ResourceResponse } from '@/types'
+import { useDict } from '@/composables/useDict'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -88,7 +89,7 @@ const dialog = useDialog()
 const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
-const editingId = ref<number | null>(null)
+const editingId = ref<string | null>(null)
 
 const form = reactive({ name: '', type: 'api', pattern: '', method: '', entity: '', action: '', description: '' })
 const data = ref<ResourceResponse[]>([])
@@ -96,10 +97,7 @@ const pagination = reactive({ page: 1, pageSize: 20, pageCount: 1, itemCount: 0 
 
 const isApiType = computed(() => form.type === 'api')
 
-const typeOptions: SelectOption[] = [
-  { label: 'API — 接口权限', value: 'api' },
-  { label: '实体 — 数据权限', value: 'entity' }
-]
+const { options: typeOptions, load: loadTypeOptions } = useDict('resource_type')
 
 const methodOptions: SelectOption[] = [
   { label: 'GET (读取)', value: 'GET' },
@@ -110,13 +108,19 @@ const methodOptions: SelectOption[] = [
 ]
 
 const columns: DataTableColumns<ResourceResponse> = [
-  { title: 'ID', key: 'id', width: 60 },
+  { title: 'ID', key: 'id', width: 180 },
   { title: '名称', key: 'name', width: 150 },
-  { title: '类型', key: 'type', width: 80, render: (row: ResourceResponse) => h(NTag, { type: row.type === 'api' ? 'info' : 'warning', size: 'small' }, { default: () => row.type === 'api' ? 'API' : '实体' }) },
-  { title: '模式', key: 'pattern' },
-  { title: '方法', key: 'method', width: 70, render: (row: ResourceResponse) => row.method ? h(NTag, { size: 'small', bordered: false }, { default: () => row.method }) : null },
-  { title: '实体', key: 'entity', width: 80 },
-  { title: '操作', key: 'action', width: 70 },
+  {
+    title: '类型', key: 'type', width: 150,
+    render: (row: ResourceResponse) => {
+      const typeLabel = typeOptions.value.find(o => o.value === row.type)?.label || row.type
+      return h(NTag, { type: row.type === 'api' ? 'info' : 'warning', size: 'small' }, { default: () => typeLabel })
+    }
+  },
+  { title: '模式', key: 'pattern', width: 200 },
+  { title: '方法', key: 'method', width: 100, render: (row: ResourceResponse) => row.method ? h(NTag, { size: 'small', bordered: false }, { default: () => row.method }) : null },
+  { title: '实体', key: 'entity', width: 100 },
+  { title: '操作', key: 'action', width: 100 },
   { title: '描述', key: 'description', ellipsis: true },
   { title: '操作', key: 'actions', width: 160, render: (row: ResourceResponse) => h(NSpace, null, {
     default: () => [
@@ -246,5 +250,8 @@ const handleDelete = (row: ResourceResponse) => {
   })
 }
 
-onMounted(fetchData)
+onMounted(() => {
+  fetchData()
+  loadTypeOptions()
+})
 </script>

@@ -48,7 +48,7 @@ import type { ProfileResponse, UpdateProfileRequest, ChangePasswordRequest } fro
 
 const message = useMessage()
 
-const profile = ref<ProfileResponse>({ id: 0, name: '', email: '', created_at: '', updated_at: '' })
+const profile = ref<ProfileResponse>({ id: '', name: '', email: '', created_at: '', updated_at: '' })
 const profileLoading = ref(false)
 const passwordLoading = ref(false)
 const profileFormRef = ref<any>(null)

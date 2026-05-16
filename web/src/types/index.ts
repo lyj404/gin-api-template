@@ -58,14 +58,14 @@ export interface RoleRequest {
 }
 
 export interface RoleResponse {
-  id: number
+  id: string
   name: string
   description: string
   is_system: boolean
 }
 
 export interface ResourceBrief {
-  id: number
+  id: string
   name: string
   type: string
   pattern: string
@@ -76,37 +76,37 @@ export interface ResourceBrief {
 }
 
 export interface MenuResourceResponse {
-  id: number
-  menu_id: number
-  resource_id: number
+  id: string
+  menu_id: string
+  resource_id: string
   resource?: ResourceBrief
 }
 
 export interface RoleResourceResponse {
-  id: number
-  role_id: number
-  resource_id: number
+  id: string
+  role_id: string
+  resource_id: string
   is_read: boolean
   is_write: boolean
   resource?: ResourceBrief
 }
 
 export interface RoleMenuResponse {
-  id: number
-  role_id: number
-  menu_id: number
+  id: string
+  role_id: string
+  menu_id: string
   menu?: MenuBrief
 }
 
 export interface MenuBrief {
-  id: number
+  id: string
   name: string
   path: string
   icon: string
 }
 
 export interface RoleDetailResponse {
-  id: number
+  id: string
   name: string
   description: string
   is_system: boolean
@@ -116,16 +116,17 @@ export interface RoleDetailResponse {
 
 export interface CreateMenuRequest {
   name: string
-  parent_id?: number | null
+  parent_id?: string | null
   path?: string
   icon?: string
   order_num?: number
   is_visible?: boolean
+  status?: string
 }
 
 export interface UpdateMenuRequest {
   name?: string
-  parent_id?: number | null
+  parent_id?: string | null
   path?: string
   icon?: string
   order_num?: number
@@ -134,9 +135,9 @@ export interface UpdateMenuRequest {
 }
 
 export interface MenuResponse {
-  id: number
+  id: string
   name: string
-  parent_id: number | null
+  parent_id: string | null
   path: string
   icon: string
   order_num: number
@@ -147,35 +148,36 @@ export interface MenuResponse {
 }
 
 export interface MenuTreeNode {
-  id: number
+  id: string
   name: string
   path: string
   icon: string
   order_num: number
   is_visible: boolean
+  status?: string
   children?: MenuTreeNode[]
 }
 
 export interface CreateOrgUnitRequest {
   name: string
-  parent_id?: number | null
+  parent_id?: string | null
 }
 
 export interface UpdateOrgUnitRequest {
   name?: string
-  parent_id?: number | null
+  parent_id?: string | null
 }
 
 export interface OrgUnitResponse {
-  id: number
+  id: string
   name: string
-  parent_id: number | null
+  parent_id: string | null
   path: string
   level: number
 }
 
 export interface ResourceResponse {
-  id: number
+  id: string
   name: string
   type: string
   pattern: string
@@ -190,11 +192,11 @@ export interface BindResourceRequest {
 }
 
 export interface BindMenuRequest {
-  menu_id: number
+  menu_id: string
 }
 
 export interface BindMenuResourceRequest {
-  resource_id: number
+  resource_id: string
 }
 
 export interface Permission {
@@ -204,15 +206,15 @@ export interface Permission {
 
 export interface UserPermissions {
   permissions: Permission[]
-  org_scope: number[]
+  org_scope: string[]
   resources: ResourceResponse[]
 }
 
 export interface UserResponse {
-  id: number
+  id: string
   name: string
   email: string
-  role_ids: number[]
+  role_ids: string[]
   roles: string[]
 }
 
@@ -220,20 +222,20 @@ export interface CreateUserRequest {
   name: string
   email: string
   password: string
-  role_ids?: number[]
-  org_unit_id?: number
+  role_ids?: string[]
+  org_unit_id?: string
 }
 
 export interface UpdateUserRequest {
   name?: string
   email?: string
   password?: string
-  role_ids?: number[]
-  org_unit_id?: number
+  role_ids?: string[]
+  org_unit_id?: string
 }
 
 export interface ProfileResponse {
-  id: number
+  id: string
   name: string
   email: string
   created_at: string
@@ -258,6 +260,57 @@ export interface DashboardStats {
 }
 
 export interface AuditTrendItem {
-  date: string
-  count: number
+	date: string
+	count: number
+}
+
+// 字典管理
+export interface DictResponse {
+	id: string
+	name: string
+	type: string
+	status: number
+	desc: string
+	details?: DictDetailResponse[]
+}
+
+export interface DictDetailResponse {
+	id: string
+	dict_id: string
+	label: string
+	value: string
+	sort: number
+	status: number
+	remark: string
+}
+
+export interface CreateDictRequest {
+	name: string
+	type: string
+	status?: number
+	desc?: string
+}
+
+export interface UpdateDictRequest {
+	name?: string
+	type?: string
+	status?: number
+	desc?: string
+}
+
+export interface CreateDictDetailRequest {
+	dict_id: string
+	label: string
+	value: string
+	sort?: number
+	status?: number
+	remark?: string
+}
+
+export interface UpdateDictDetailRequest {
+	label?: string
+	value?: string
+	sort?: number
+	status?: number
+	remark?: string
 }

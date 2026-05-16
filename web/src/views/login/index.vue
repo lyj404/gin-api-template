@@ -189,7 +189,7 @@ onMounted(() => {
 
 .login-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 440px;
   padding: 20px;
   position: relative;
   z-index: 1;
@@ -277,7 +277,13 @@ onMounted(() => {
 }
 
 .login-input :deep(.n-input-wrapper) {
-  padding-left: 0;
+  padding-left: 8px;
+}
+
+.login-input :deep(.n-input__prefix) {
+  margin-right: 8px;
+  margin-left: 4px;
+  color: var(--color-text-muted, #a8a29e);
 }
 
 .login-input :deep(.n-input__input-el) {

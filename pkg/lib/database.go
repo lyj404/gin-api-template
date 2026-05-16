@@ -33,7 +33,7 @@ func NewDataBase() *gorm.DB {
 	}
 
 	// 设置自动迁移
-	db.AutoMigrate(
+	if err := db.AutoMigrate(
 		&entity.User{},
 		&entity.Resource{},
 		&entity.Role{},
@@ -46,7 +46,11 @@ func NewDataBase() *gorm.DB {
 		&entity.Menu{},
 		&entity.RoleMenu{},
 		&entity.MenuResource{},
-	)
+		&entity.SysDictionary{},
+		&entity.SysDictionaryDetail{},
+	); err != nil {
+		log.Fatalf("数据库自动迁移失败: %v", err)
+	}
 
 	// 设置数据库连接池
 	sqlDB, err := db.DB()

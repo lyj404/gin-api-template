@@ -96,7 +96,7 @@ const drawerWidth = computed<number | string>(() => layout.isMobile ? '100%' : 6
 const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
-const editingId = ref<number | null>(null)
+const editingId = ref<string | null>(null)
 const form = reactive({ name: '', description: '' })
 const data = ref<RoleResponse[]>([])
 const pagination = reactive({ page: 1, pageSize: 10, pageCount: 1, itemCount: 0 })
@@ -105,17 +105,17 @@ const pagination = reactive({ page: 1, pageSize: 10, pageCount: 1, itemCount: 0 
 const showDrawer = ref(false)
 const configRole = ref<RoleResponse | null>(null)
 const menuTree = ref<TreeOption[]>([])
-const checkedMenuIds = ref<number[]>([])
+const checkedMenuIds = ref<string[]>([])
 const menuLoading = ref(false)
 const menuSaving = ref(false)
 const allResources = ref<ResourceResponse[]>([])
 const resLoading = ref(false)
 const resSaving = ref(false)
 // 资源勾选状态: key=resource_id, value={checked, is_write}
-const resourceChecked = ref<Record<number, { checked: boolean; is_write: boolean }>>({})
+const resourceChecked = ref<Record<string, { checked: boolean; is_write: boolean }>>({})
 
 const columns: DataTableColumns<RoleResponse> = [
-  { title: 'ID', key: 'id', width: 80 },
+  { title: 'ID', key: 'id', width: 180 },
   { title: '角色名称', key: 'name' },
   { title: '描述', key: 'description' },
   { title: '系统角色', key: 'is_system', render: (row: RoleResponse) => h(NTag, { type: row.is_system ? 'success' : 'default', size: 'small' }, { default: () => row.is_system ? '是' : '否' }) },
@@ -151,10 +151,10 @@ const toggleResourcePerm = (row: ResourceResponse) => {
 }
 
 const resColumns: DataTableColumns<ResourceResponse> = [
-  { title: 'ID', key: 'id', width: 60 },
+  { title: 'ID', key: 'id', width: 180 },
   { title: '名称', key: 'name' },
-  { title: '类型', key: 'type', width: 80, render: (row: ResourceResponse) => h(NTag, { type: row.type === 'api' ? 'info' : 'warning', size: 'small' }, { default: () => row.type }) },
-  { title: '模式', key: 'pattern' },
+  { title: '类型', key: 'type', width: 100, render: (row: ResourceResponse) => h(NTag, { type: row.type === 'api' ? 'info' : 'warning', size: 'small' }, { default: () => row.type }) },
+  { title: '模式', key: 'pattern', width: 200 },
   { title: '方法/操作', key: 'method', width: 90, render: (row: ResourceResponse) => row.method || row.action || '-' },
   { title: '选中', key: 'checked', width: 70, render: (row: ResourceResponse) => h('div', { style: 'display:flex;justify-content:center' }, [
     h('input', { type: 'checkbox', checked: resourceChecked.value[row.id]?.checked || false, onChange: (e: any) => {
@@ -249,7 +249,7 @@ const openConfig = async (row: RoleResponse) => {
   await loadRoleConfig(row.id)
 }
 
-const loadRoleConfig = async (roleId: number) => {
+const loadRoleConfig = async (roleId: string) => {
   checkedMenuIds.value = []
   resourceChecked.value = {}
 
@@ -279,7 +279,7 @@ const loadRoleConfig = async (roleId: number) => {
       checkedMenuIds.value = d.menus.map(m => m.menu_id)
     }
     if (d.resources) {
-      const rc: Record<number, { checked: boolean; is_write: boolean }> = {}
+      const rc: Record<string, { checked: boolean; is_write: boolean }> = {}
       for (const r of d.resources) {
         const res = allResources.value.find(res => res.id === r.resource_id)
         const perms = res ? getResourcePerms(res) : { read: true, write: false }
@@ -295,7 +295,7 @@ const loadRoleConfig = async (roleId: number) => {
 const selectedResCount = computed(() => Object.values(resourceChecked.value).filter(v => v.checked).length)
 
 const selectAllResources = (select: boolean) => {
-  const rc: Record<number, { checked: boolean; is_write: boolean }> = {}
+  const rc: Record<string, { checked: boolean; is_write: boolean }> = {}
   for (const res of allResources.value) {
     const perms = getResourcePerms(res)
     rc[res.id] = { checked: select, is_write: perms.write }
@@ -303,11 +303,11 @@ const selectAllResources = (select: boolean) => {
   resourceChecked.value = rc
 }
 
-const collectMenuIds = (nodes: TreeOption[]): number[] => {
-  const ids: number[] = []
+const collectMenuIds = (nodes: TreeOption[]): string[] => {
+  const ids: string[] = []
   const walk = (list: TreeOption[]) => {
     for (const n of list) {
-      ids.push(n.id as number)
+      ids.push(n.id as string)
       if (n.children) walk(n.children)
     }
   }
@@ -336,7 +336,7 @@ const saveMenus = async () => {
   menuSaving.value = true
   try {
     const detail = await getRoleDetail(configRole.value.id)
-    const currentIds: number[] = detail.data.data.menus?.map(m => m.menu_id) || []
+    const currentIds: string[] = detail.data.data.menus?.map(m => m.menu_id) || []
     const newIds = checkedMenuIds.value
 
     const toAdd = newIds.filter(id => !currentIds.includes(id))
@@ -361,14 +361,13 @@ const saveResources = async () => {
   resSaving.value = true
   try {
     const detail = await getRoleDetail(configRole.value.id)
-    const currentMap: Record<number, { is_write: boolean }> = {}
+    const currentMap: Record<string, { is_write: boolean }> = {}
     for (const r of detail.data.data.resources || []) {
       currentMap[r.resource_id] = { is_write: r.is_write }
     }
 
     const entryArr = Object.entries(resourceChecked.value) as [string, { checked: boolean; is_write: boolean }][]
-    for (const [resIdStr, val] of entryArr) {
-      const resId = parseInt(resIdStr)
+    for (const [resId, val] of entryArr) {
       const res = allResources.value.find(r => r.id === resId)
       const perms = res ? getResourcePerms(res) : { read: true, write: false }
       const isWrite = val.is_write && perms.write // 只有资源支持写才有效
