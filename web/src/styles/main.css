@@ -37,7 +37,43 @@ body {
 }
 
 .n-layout-sider {
-  transition: all 0.3s ease !important;
+  min-width: 0;
+  transition:
+    min-width 0.3s var(--n-bezier, ease),
+    max-width 0.3s var(--n-bezier, ease),
+    transform 0.3s var(--n-bezier, ease),
+    background-color 0.3s var(--n-bezier, ease);
+}
+
+/* Force icon visibility in collapsed menu — bypass Naive UI inline iconStyle (font-size/em can collapse to 0). Hard-set explicit pixel size + opacity. */
+.n-menu .n-menu-item-content__icon {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 22px !important;
+  line-height: 1 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  overflow: visible !important;
+  flex-shrink: 0;
+}
+
+.n-menu .n-menu-item-content__icon > * {
+  display: inline-block !important;
+  width: 20px !important;
+  height: 20px !important;
+  flex-shrink: 0;
+  color: inherit !important;
+}
+
+.n-menu--collapsed .n-menu-item-content__icon {
+  color: var(--n-item-icon-color-collapsed) !important;
+}
+
+.n-menu .n-menu-item-content--collapsed {
+  justify-content: center;
 }
 
 .app-content {

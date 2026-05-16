@@ -6,6 +6,7 @@
       :width="220"
       :collapsed-width="64"
       :collapsed="layout.sidebarCollapsed"
+      collapse-mode="width"
       :native-scrollbar="false"
       :show-trigger="false"
       class="sider"
