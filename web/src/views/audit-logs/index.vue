@@ -62,7 +62,7 @@ const { options: targetTypeOptions, load: loadTargetTypes, lookup: targetTypeLab
 const { load: loadActionTypes, lookup: actionLabel } = useDict('audit_action')
 
 const columns: DataTableColumns<any> = [
-  { title: '序号', key: 'index', width: 70, render: (_row: any, index: number) => index + 1 },
+  { title: '序号', key: 'index', width: 70, render: (_row: any, index: number) => (pagination.page - 1) * pagination.pageSize + index + 1 },
   { title: '操作者', key: 'operator_name' },
   { title: '操作', key: 'action', render: (row: any) => actionLabel(row.action) },
   { title: '目标类型', key: 'target_type', render: (row: any) => targetTypeLabel(row.target_type) },

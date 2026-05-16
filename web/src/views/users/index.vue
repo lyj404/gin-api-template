@@ -115,7 +115,7 @@ const rules: FormRules = {
 }
 
 const columns: DataTableColumns<UserResponse> = [
-  { title: '序号', key: 'index', width: 70, render: (_row: UserResponse, index: number) => index + 1 },
+  { title: '序号', key: 'index', width: 70, render: (_row: UserResponse, index: number) => (pagination.page - 1) * pagination.pageSize + index + 1 },
   { title: '姓名', key: 'name' },
   { title: '邮箱', key: 'email' },
   {

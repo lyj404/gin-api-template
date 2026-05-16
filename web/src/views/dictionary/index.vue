@@ -120,7 +120,7 @@ const selectedDict = ref<DictResponse | null>(null)
 const pagination = reactive({ page: 1, pageSize: 10, pageCount: 1, itemCount: 0, pageSizes: [10, 20, 50, 100], showSizePicker: true })
 
 const dictColumns: DataTableColumns<DictResponse> = [
-  { title: '序号', key: 'index', width: 70, render: (_row: DictResponse, index: number) => index + 1 },
+  { title: '序号', key: 'index', width: 70, render: (_row: DictResponse, index: number) => (pagination.page - 1) * pagination.pageSize + index + 1 },
   { title: '名称', key: 'name', width: 150 },
   { title: '类型标识', key: 'type', width: 180 },
   { title: '状态', key: 'status', width: 80, render(row) { return h(NTag, { type: row.status === 1 ? 'success' : 'error' }, { default: () => row.status === 1 ? '启用' : '禁用' }) } },

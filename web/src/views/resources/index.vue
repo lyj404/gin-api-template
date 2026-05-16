@@ -108,7 +108,7 @@ const methodOptions: SelectOption[] = [
 ]
 
 const columns: DataTableColumns<ResourceResponse> = [
-  { title: '序号', key: 'index', width: 70, render: (_row: ResourceResponse, index: number) => index + 1 },
+  { title: '序号', key: 'index', width: 70, render: (_row: ResourceResponse, index: number) => (pagination.page - 1) * pagination.pageSize + index + 1 },
   { title: '名称', key: 'name', width: 150 },
   {
     title: '类型', key: 'type', width: 150,
