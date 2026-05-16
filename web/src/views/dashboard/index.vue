@@ -81,14 +81,14 @@ use([CanvasRenderer, LineChart, PieChart, TitleComponent, TooltipComponent, Grid
 const themeStore = useThemeStore()
 
 const loading = ref(true)
-const stats = ref({ user_count: 0, role_count: 0, menu_count: 0, audit_log_count: 0 })
+const stats = ref({ user_count: 0, role_count: 0, menu_count: 0, resource_count: 0 })
 const trend = ref<{ date: string; count: number }[]>([])
 
 const statsCards = computed(() => [
   { label: '用户总数', value: stats.value.user_count, icon: 'i-material-symbols:group-outline', color: 'primary' },
   { label: '角色总数', value: stats.value.role_count, icon: 'i-material-symbols:manage-accounts-outline', color: 'success' },
   { label: '菜单总数', value: stats.value.menu_count, icon: 'i-material-symbols:menu', color: 'amber' },
-  { label: '审计日志', value: stats.value.audit_log_count, icon: 'i-material-symbols:receipt-long-outline', color: 'info' }
+  { label: '资源总数', value: stats.value.resource_count, icon: 'i-material-symbols:shield-outline', color: 'info' }
 ])
 
 const isDark = computed(() => themeStore.isDark)

@@ -20,7 +20,7 @@ type dashboardStats struct {
 	UserCount     int64 `json:"user_count"`
 	RoleCount     int64 `json:"role_count"`
 	MenuCount     int64 `json:"menu_count"`
-	AuditLogCount int64 `json:"audit_log_count"`
+	ResourceCount int64 `json:"resource_count"`
 }
 
 type auditTrendItem struct {
@@ -30,7 +30,7 @@ type auditTrendItem struct {
 
 // Stats 仪表盘统计
 // @Summary 仪表盘汇总统计
-// @Description 获取用户、角色、菜单、审计日志的总数统计
+// @Description 获取用户、角色、菜单、资源的总数统计
 // @Tags 仪表盘
 // @Produce json
 // @Success 200 {object} result.ResponseResult[dashboardStats] "获取成功"
@@ -51,7 +51,7 @@ func (h *DashboardHandler) Stats(c *gin.Context) {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
-	if err := global.G_DB.Model(&entity.AuditLog{}).Count(&stats.AuditLogCount).Error; err != nil {
+	if err := global.G_DB.Model(&entity.Resource{}).Count(&stats.ResourceCount).Error; err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}

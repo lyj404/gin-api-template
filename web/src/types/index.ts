@@ -260,7 +260,7 @@ export interface DashboardStats {
   user_count: number
   role_count: number
   menu_count: number
-  audit_log_count: number
+  resource_count: number
 }
 
 export interface AuditTrendItem {
