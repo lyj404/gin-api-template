@@ -11,6 +11,10 @@ export interface PaginationRequest {
   operator_id?: string
   order_by?: string
   sort?: 'asc' | 'desc'
+  name?: string
+  type?: string
+  status?: number
+  method?: string
 }
 
 export interface PaginationResponse<T = any> {

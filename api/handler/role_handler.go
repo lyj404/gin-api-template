@@ -389,7 +389,7 @@ func (h *RoleHandler) GetRoleMenus(c *gin.Context) {
 // @Produce json
 // @Param page query int false "页码，默认1"
 // @Param page_size query int false "每页数量，默认10，最大100"
-// @Param keyword query string false "搜索关键词（搜索角色名称）"
+// @Param keyword query string false "搜索关键词（搜索角色名称/描述）"
 // @Param order_by query string false "排序字段"
 // @Param sort query string false "排序方式：asc/desc"
 // @Success 200 {object} result.ResponseResult[dto.PaginationResponse] "获取成功"
@@ -427,7 +427,8 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 		OrderBy(orderBy)
 
 	if req.Keyword != "" {
-		builder = builder.Where("name LIKE ?", "%"+req.Keyword+"%")
+		kw := "%" + req.Keyword + "%"
+		builder = builder.Where("name LIKE ? OR description LIKE ?", kw, kw)
 	}
 
 	// 非系统角色只能看到非系统角色

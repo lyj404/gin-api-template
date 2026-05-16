@@ -116,8 +116,10 @@ func (h *DictionaryHandler) ListDict(c *gin.Context) {
 
 	name := c.Query("name")
 	dictType := c.Query("type")
+	statusStr := c.Query("status")
+	status, _ := strconv.Atoi(statusStr)
 
-	dicts, total, err := h.dictService.ListDict(c.Request.Context(), name, dictType, req.Page, req.PageSize)
+	dicts, total, err := h.dictService.ListDict(c.Request.Context(), name, dictType, status, req.Page, req.PageSize)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

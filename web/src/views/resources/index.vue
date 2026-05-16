@@ -2,7 +2,13 @@
   <div class="page-padding">
     <div class="toolbar-row mb-3">
       <n-h2 class="!my-0">资源管理</n-h2>
-      <n-button type="primary" @click="openModal()">新增资源</n-button>
+      <n-space wrap class="w-full md:w-auto">
+        <n-input v-model:value="keyword" placeholder="搜索资源名称" clearable class="search-input" @keyup.enter="onSearch" @clear="onSearch" />
+        <n-select v-model:value="typeFilter" :options="typeOptions" placeholder="类型" clearable class="search-select" @update:value="onSearch" />
+        <n-select v-model:value="methodFilter" :options="methodOptions" placeholder="方法" clearable class="search-select" @update:value="onSearch" />
+        <n-button @click="onSearch">搜索</n-button>
+        <n-button type="primary" @click="openModal()">新增资源</n-button>
+      </n-space>
     </div>
 
     <n-card>
@@ -90,6 +96,9 @@ const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
 const editingId = ref<string | null>(null)
+const keyword = ref('')
+const typeFilter = ref('')
+const methodFilter = ref('')
 
 const form = reactive({ name: '', type: 'api', pattern: '', method: '', entity: '', action: '', description: '' })
 const data = ref<ResourceResponse[]>([])
@@ -133,7 +142,13 @@ const columns: DataTableColumns<ResourceResponse> = [
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getResources({ page: pagination.page, page_size: pagination.pageSize })
+    const res = await getResources({
+      page: pagination.page,
+      page_size: pagination.pageSize,
+      keyword: keyword.value || undefined,
+      type: typeFilter.value || undefined,
+      method: methodFilter.value || undefined
+    })
     const p = res.data.data
     data.value = p.data || []
     pagination.page = p.page
@@ -142,6 +157,11 @@ const fetchData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const onSearch = () => {
+  pagination.page = 1
+  fetchData()
 }
 
 const handlePageChange = (page: number) => {
@@ -266,3 +286,12 @@ onMounted(() => {
   loadTypeOptions()
 })
 </script>
+
+<style scoped>
+.search-input { width: 100%; }
+.search-select { width: 100%; }
+@media (min-width: 768px) {
+  .search-input { width: 180px; }
+  .search-select { width: 130px; }
+}
+</style>

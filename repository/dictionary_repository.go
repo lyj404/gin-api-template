@@ -48,7 +48,7 @@ func (r *dictionaryRepo) GetDictByType(ctx context.Context, dictType string) (en
 	return dict, err
 }
 
-func (r *dictionaryRepo) ListDict(ctx context.Context, name, dictType string, page, pageSize int) ([]entity.SysDictionary, int64, error) {
+func (r *dictionaryRepo) ListDict(ctx context.Context, name, dictType string, status int, page, pageSize int) ([]entity.SysDictionary, int64, error) {
 	var dicts []entity.SysDictionary
 	var total int64
 	db := r.db.WithContext(ctx).Model(&entity.SysDictionary{})
@@ -57,6 +57,9 @@ func (r *dictionaryRepo) ListDict(ctx context.Context, name, dictType string, pa
 	}
 	if dictType != "" {
 		db = db.Where("type LIKE ?", "%"+dictType+"%")
+	}
+	if status > 0 {
+		db = db.Where("status = ?", status)
 	}
 	err := db.Count(&total).Error
 	if err != nil {

@@ -2,7 +2,13 @@
   <div class="page-padding">
     <div class="toolbar-row mb-3">
       <n-h2 class="!my-0">字典管理</n-h2>
-      <n-button type="primary" @click="openDictModal()">新增字典</n-button>
+      <n-space wrap class="w-full md:w-auto">
+        <n-input v-model:value="nameFilter" placeholder="搜索名称" clearable class="search-input" @keyup.enter="onSearch" @clear="onSearch" />
+        <n-input v-model:value="typeFilter" placeholder="搜索类型标识" clearable class="search-input" @keyup.enter="onSearch" @clear="onSearch" />
+        <n-select v-model:value="statusFilter" :options="statusOptions" placeholder="状态" clearable class="search-select" @update:value="onSearch" />
+        <n-button @click="onSearch">搜索</n-button>
+        <n-button type="primary" @click="openDictModal()">新增字典</n-button>
+      </n-space>
     </div>
 
     <n-card>
@@ -101,8 +107,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, h } from 'vue'
-import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber, NH2, NCard, NSwitch, NTag, NDrawer, NDrawerContent, useMessage, useDialog } from 'naive-ui'
-import type { DataTableColumns } from 'naive-ui'
+import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NInputNumber, NH2, NCard, NSwitch, NTag, NSelect, NSpace, NDrawer, NDrawerContent, useMessage, useDialog } from 'naive-ui'
+import type { DataTableColumns, SelectOption } from 'naive-ui'
 import { getDicts, getDict, getDictDetails, createDict, updateDict, deleteDict, createDictDetail, updateDictDetail, deleteDictDetail } from '@/api'
 import type { DictResponse, DictDetailResponse, CreateDictRequest, UpdateDictRequest, CreateDictDetailRequest, UpdateDictDetailRequest } from '@/types'
 import { useLayoutStore } from '@/stores/layout'
@@ -117,7 +123,14 @@ const drawerWidth = computed<number | string>(() => layout.isMobile ? '100%' : 6
 const loading = ref(false)
 const dictList = ref<DictResponse[]>([])
 const selectedDict = ref<DictResponse | null>(null)
+const nameFilter = ref('')
+const typeFilter = ref('')
+const statusFilter = ref<number | null>(null)
 const pagination = reactive({ page: 1, pageSize: 10, pageCount: 1, itemCount: 0, pageSizes: [10, 20, 50, 100], showSizePicker: true })
+const statusOptions: SelectOption[] = [
+  { label: '启用', value: 1 },
+  { label: '禁用', value: 2 }
+]
 
 const dictColumns: DataTableColumns<DictResponse> = [
   { title: '序号', key: 'index', width: 70, render: (_row: DictResponse, index: number) => (pagination.page - 1) * pagination.pageSize + index + 1 },
@@ -140,7 +153,13 @@ const dictColumns: DataTableColumns<DictResponse> = [
 const loadDicts = async () => {
   loading.value = true
   try {
-    const res = await getDicts({ page: pagination.page, page_size: pagination.pageSize })
+    const res = await getDicts({
+      page: pagination.page,
+      page_size: pagination.pageSize,
+      name: nameFilter.value || undefined,
+      type: typeFilter.value || undefined,
+      status: statusFilter.value || undefined
+    })
     const p = res.data.data
     dictList.value = p.data || []
     pagination.page = p.page
@@ -151,6 +170,11 @@ const loadDicts = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const onSearch = () => {
+  pagination.page = 1
+  loadDicts()
 }
 
 const handlePageChange = (page: number) => {
@@ -352,3 +376,12 @@ const handleDeleteDetail = (row: DictDetailResponse) => {
 
 onMounted(loadDicts)
 </script>
+
+<style scoped>
+.search-input { width: 100%; }
+.search-select { width: 100%; }
+@media (min-width: 768px) {
+  .search-input { width: 180px; }
+  .search-select { width: 130px; }
+}
+</style>

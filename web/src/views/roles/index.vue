@@ -2,7 +2,11 @@
   <div class="page-padding">
     <div class="toolbar-row mb-3">
       <n-h2 class="!my-0">角色管理</n-h2>
-      <n-button type="primary" @click="openModal()">新增角色</n-button>
+      <n-space wrap class="w-full md:w-auto">
+        <n-input v-model:value="keyword" placeholder="搜索角色名称/描述" clearable class="search-input" @keyup.enter="onSearch" @clear="onSearch" />
+        <n-button @click="onSearch">搜索</n-button>
+        <n-button type="primary" @click="openModal()">新增角色</n-button>
+      </n-space>
     </div>
 
     <n-card>
@@ -97,6 +101,7 @@ const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
 const editingId = ref<string | null>(null)
+const keyword = ref('')
 const form = reactive({ name: '', description: '' })
 const data = ref<RoleResponse[]>([])
 const pagination = reactive({ page: 1, pageSize: 10, pageCount: 1, itemCount: 0, pageSizes: [10, 20, 50, 100], showSizePicker: true })
@@ -181,7 +186,7 @@ const resColumns: DataTableColumns<ResourceResponse> = [
 const fetchData = async () => {
   loading.value = true
   try {
-    const res = await getRoles({ page: pagination.page, page_size: pagination.pageSize })
+    const res = await getRoles({ page: pagination.page, page_size: pagination.pageSize, keyword: keyword.value || undefined })
     const p = res.data.data
     data.value = p.data || []
     pagination.page = p.page
@@ -190,6 +195,11 @@ const fetchData = async () => {
   } finally {
     loading.value = false
   }
+}
+
+const onSearch = () => {
+  pagination.page = 1
+  fetchData()
 }
 
 const handlePageChange = (page: number) => {
@@ -402,3 +412,10 @@ const saveResources = async () => {
 
 onMounted(fetchData)
 </script>
+
+<style scoped>
+.search-input { width: 100%; }
+@media (min-width: 768px) {
+  .search-input { width: 220px; }
+}
+</style>

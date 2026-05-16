@@ -159,6 +159,12 @@ func (h *ResourceHandler) ListResources(c *gin.Context) {
 	if req.Keyword != "" {
 		builder = builder.Where("name LIKE ?", "%"+req.Keyword+"%")
 	}
+	if resType := c.Query("type"); resType != "" {
+		builder = builder.Where("type = ?", resType)
+	}
+	if method := c.Query("method"); method != "" {
+		builder = builder.Where("method = ?", method)
+	}
 
 	paginationResult, err := builder.Build(&resources)
 	if err != nil {
