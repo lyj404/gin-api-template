@@ -115,7 +115,7 @@ const resSaving = ref(false)
 const resourceChecked = ref<Record<string, { checked: boolean; is_write: boolean }>>({})
 
 const columns: DataTableColumns<RoleResponse> = [
-  { title: 'ID', key: 'id', width: 180 },
+  { title: '序号', key: 'index', width: 70, render: (_row: RoleResponse, index: number) => index + 1 },
   { title: '角色名称', key: 'name' },
   { title: '描述', key: 'description' },
   { title: '系统角色', key: 'is_system', render: (row: RoleResponse) => h(NTag, { type: row.is_system ? 'success' : 'default', size: 'small' }, { default: () => row.is_system ? '是' : '否' }) },
@@ -151,7 +151,7 @@ const toggleResourcePerm = (row: ResourceResponse) => {
 }
 
 const resColumns: DataTableColumns<ResourceResponse> = [
-  { title: 'ID', key: 'id', width: 180 },
+  { title: '序号', key: 'index', width: 70, render: (_row: ResourceResponse, index: number) => index + 1 },
   { title: '名称', key: 'name' },
   { title: '类型', key: 'type', width: 100, render: (row: ResourceResponse) => h(NTag, { type: row.type === 'api' ? 'info' : 'warning', size: 'small' }, { default: () => row.type }) },
   { title: '模式', key: 'pattern', width: 200 },

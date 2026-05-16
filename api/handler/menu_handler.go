@@ -85,7 +85,7 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /menus/:id [put]
 func (h *MenuHandler) UpdateMenu(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	var request dto.UpdateMenuRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -94,7 +94,7 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	}
 
 	menu := &entity.Menu{
-		G_MODEL:   global.G_MODEL{ID: uint64(id)},
+		G_MODEL:   global.G_MODEL{ID: id},
 		Name:      request.Name,
 		ParentID:  request.ParentID,
 		Path:      request.Path,
@@ -139,10 +139,10 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /menus/:id [delete]
 func (h *MenuHandler) DeleteMenu(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.menuService.DeleteMenu(uint64(id), operatorID); err != nil {
+	if err := h.menuService.DeleteMenu(id, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -160,9 +160,9 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 // @Failure 404 {object} result.ResponseResult[string] "菜单不存在"
 // @Router /menus/:id [get]
 func (h *MenuHandler) GetMenu(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	menu, err := h.menuService.GetMenuByID(uint64(id))
+	menu, err := h.menuService.GetMenuByID(id)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "菜单不存在")
 		return
@@ -279,7 +279,7 @@ func (h *MenuHandler) GetMenuTree(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /menus/:id/resources [post]
 func (h *MenuHandler) BindResource(c *gin.Context) {
-	menuID, _ := strconv.Atoi(c.Param("id"))
+	menuID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	var req dto.BindMenuResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -288,7 +288,7 @@ func (h *MenuHandler) BindResource(c *gin.Context) {
 	}
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.menuService.BindResource(uint64(menuID), req.ResourceID, operatorID); err != nil {
+	if err := h.menuService.BindResource(menuID, req.ResourceID, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -307,11 +307,11 @@ func (h *MenuHandler) BindResource(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /menus/:id/resources/:resourceId [delete]
 func (h *MenuHandler) UnbindResource(c *gin.Context) {
-	menuID, _ := strconv.Atoi(c.Param("id"))
-	resourceID, _ := strconv.Atoi(c.Param("resourceId"))
+	menuID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	resourceID, _ := strconv.ParseUint(c.Param("resourceId"), 10, 64)
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.menuService.UnbindResource(uint64(menuID), uint64(resourceID), operatorID); err != nil {
+	if err := h.menuService.UnbindResource(menuID, resourceID, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -329,9 +329,9 @@ func (h *MenuHandler) UnbindResource(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /menus/:id/resources [get]
 func (h *MenuHandler) GetMenuResources(c *gin.Context) {
-	menuID, _ := strconv.Atoi(c.Param("id"))
+	menuID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	resources, err := h.menuService.GetMenuResources(uint64(menuID))
+	resources, err := h.menuService.GetMenuResources(menuID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

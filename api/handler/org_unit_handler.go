@@ -79,7 +79,7 @@ func (h *OrgUnitHandler) CreateOrgUnit(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /org-units/:id [put]
 func (h *OrgUnitHandler) UpdateOrgUnit(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	var request dto.UpdateOrgUnitRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -88,7 +88,7 @@ func (h *OrgUnitHandler) UpdateOrgUnit(c *gin.Context) {
 	}
 
 	orgUnit := &entity.OrgUnit{
-		G_MODEL:  global.G_MODEL{ID: uint64(id)},
+		G_MODEL:  global.G_MODEL{ID: id},
 		Name:     request.Name,
 		ParentID: request.ParentID,
 	}
@@ -122,10 +122,10 @@ func (h *OrgUnitHandler) UpdateOrgUnit(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /org-units/:id [delete]
 func (h *OrgUnitHandler) DeleteOrgUnit(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.orgService.DeleteOrgUnit(uint64(id), operatorID); err != nil {
+	if err := h.orgService.DeleteOrgUnit(id, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -143,9 +143,9 @@ func (h *OrgUnitHandler) DeleteOrgUnit(c *gin.Context) {
 // @Failure 404 {object} result.ResponseResult[string] "组织不存在"
 // @Router /org-units/:id [get]
 func (h *OrgUnitHandler) GetOrgUnit(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	orgUnit, err := h.orgService.GetOrgUnitByID(uint64(id))
+	orgUnit, err := h.orgService.GetOrgUnitByID(id)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "组织节点不存在")
 		return

@@ -74,13 +74,13 @@ func (h *UserManagementHandler) ListUsers(c *gin.Context) {
 // @Failure 404 {object} result.ResponseResult[string] "用户不存在"
 // @Router /users/{id} [get]
 func (h *UserManagementHandler) GetUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusBadRequest, "无效的用户ID")
 		return
 	}
 
-	user, roleIDs, roleNames, err := h.userMgmt.GetByID(uint64(id))
+	user, roleIDs, roleNames, err := h.userMgmt.GetByID(id)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "用户不存在")
 		return
@@ -146,7 +146,7 @@ func (h *UserManagementHandler) CreateUser(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /users/{id} [put]
 func (h *UserManagementHandler) UpdateUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusBadRequest, "无效的用户ID")
 		return
@@ -159,7 +159,7 @@ func (h *UserManagementHandler) UpdateUser(c *gin.Context) {
 	}
 
 	operatorID := c.GetUint64("user_id")
-	user, err := h.userMgmt.Update(uint64(id), &req, operatorID)
+	user, err := h.userMgmt.Update(id, &req, operatorID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -184,18 +184,18 @@ func (h *UserManagementHandler) UpdateUser(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /users/{id} [delete]
 func (h *UserManagementHandler) DeleteUser(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusBadRequest, "无效的用户ID")
 		return
 	}
 
 	operatorID := c.GetUint64("user_id")
-	if uint64(id) == operatorID {
+	if id == operatorID {
 		result.ErrorResponse(c, http.StatusBadRequest, "不能删除自己")
 		return
 	}
-	if err := h.userMgmt.Delete(uint64(id), operatorID); err != nil {
+	if err := h.userMgmt.Delete(id, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}

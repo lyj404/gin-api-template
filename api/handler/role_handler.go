@@ -77,7 +77,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /roles/:id [put]
 func (h *RoleHandler) UpdateRole(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	var request dto.UpdateRoleRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -86,7 +86,7 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	}
 
 	role := &entity.Role{
-		G_MODEL:     global.G_MODEL{ID: uint64(id)},
+		G_MODEL:     global.G_MODEL{ID: id},
 		Name:        request.Name,
 		Description: request.Description,
 	}
@@ -119,10 +119,10 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /roles/:id [delete]
 func (h *RoleHandler) DeleteRole(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.roleService.DeleteRole(uint64(id), operatorID); err != nil {
+	if err := h.roleService.DeleteRole(id, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -140,15 +140,15 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 // @Failure 404 {object} result.ResponseResult[string] "角色不存在"
 // @Router /roles/:id [get]
 func (h *RoleHandler) GetRole(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	role, err := h.roleService.GetRoleByID(uint64(id))
+	role, err := h.roleService.GetRoleByID(id)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "角色不存在")
 		return
 	}
 
-	resources, _ := h.roleService.GetRoleResources(uint64(id))
+	resources, _ := h.roleService.GetRoleResources(id)
 	resourceResponses := make([]dto.RoleResourceResponse, len(resources))
 	for i, rr := range resources {
 		resourceResponses[i] = dto.RoleResourceResponse{
@@ -170,7 +170,7 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 		}
 	}
 
-	roleMenus, _ := h.roleService.GetRoleMenus(uint64(id))
+	roleMenus, _ := h.roleService.GetRoleMenus(id)
 	menuResponses := make([]dto.RoleMenuResponse, len(roleMenus))
 	for i, rm := range roleMenus {
 		menuResponses[i] = dto.RoleMenuResponse{
@@ -211,7 +211,7 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /roles/:id/resources [post]
 func (h *RoleHandler) BindResource(c *gin.Context) {
-	roleID, _ := strconv.Atoi(c.Param("id"))
+	roleID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	var req dto.BindRoleResourceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -220,7 +220,7 @@ func (h *RoleHandler) BindResource(c *gin.Context) {
 	}
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.roleService.BindResource(uint64(roleID), req.ResourceID, req.IsWrite, operatorID); err != nil {
+	if err := h.roleService.BindResource(roleID, req.ResourceID, req.IsWrite, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -239,11 +239,11 @@ func (h *RoleHandler) BindResource(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /roles/:id/resources/:resourceId [delete]
 func (h *RoleHandler) UnbindResource(c *gin.Context) {
-	roleID, _ := strconv.Atoi(c.Param("id"))
-	resourceID, _ := strconv.Atoi(c.Param("resourceId"))
+	roleID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	resourceID, _ := strconv.ParseUint(c.Param("resourceId"), 10, 64)
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.roleService.UnbindResource(uint64(roleID), uint64(resourceID), operatorID); err != nil {
+	if err := h.roleService.UnbindResource(roleID, resourceID, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -261,9 +261,9 @@ func (h *RoleHandler) UnbindResource(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /roles/:id/resources [get]
 func (h *RoleHandler) GetRoleResources(c *gin.Context) {
-	roleID, _ := strconv.Atoi(c.Param("id"))
+	roleID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	resources, err := h.roleService.GetRoleResources(uint64(roleID))
+	resources, err := h.roleService.GetRoleResources(roleID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -306,7 +306,7 @@ func (h *RoleHandler) GetRoleResources(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /roles/:id/menus [post]
 func (h *RoleHandler) BindMenu(c *gin.Context) {
-	roleID, _ := strconv.Atoi(c.Param("id"))
+	roleID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
 	var req dto.BindRoleMenuRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -315,7 +315,7 @@ func (h *RoleHandler) BindMenu(c *gin.Context) {
 	}
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.roleService.BindMenu(uint64(roleID), req.MenuID, operatorID); err != nil {
+	if err := h.roleService.BindMenu(roleID, req.MenuID, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -334,11 +334,11 @@ func (h *RoleHandler) BindMenu(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /roles/:id/menus/:menuId [delete]
 func (h *RoleHandler) UnbindMenu(c *gin.Context) {
-	roleID, _ := strconv.Atoi(c.Param("id"))
-	menuID, _ := strconv.Atoi(c.Param("menuId"))
+	roleID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	menuID, _ := strconv.ParseUint(c.Param("menuId"), 10, 64)
 
 	operatorID := c.GetUint64("user_id")
-	if err := h.roleService.UnbindMenu(uint64(roleID), uint64(menuID), operatorID); err != nil {
+	if err := h.roleService.UnbindMenu(roleID, menuID, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -356,9 +356,9 @@ func (h *RoleHandler) UnbindMenu(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /roles/:id/menus [get]
 func (h *RoleHandler) GetRoleMenus(c *gin.Context) {
-	roleID, _ := strconv.Atoi(c.Param("id"))
+	roleID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	roleMenus, err := h.roleService.GetRoleMenus(uint64(roleID))
+	roleMenus, err := h.roleService.GetRoleMenus(roleID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

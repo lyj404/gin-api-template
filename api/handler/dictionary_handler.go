@@ -47,9 +47,9 @@ func (h *DictionaryHandler) CreateDict(c *gin.Context) {
 
 // UpdateDict 更新字典类型
 func (h *DictionaryHandler) UpdateDict(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	dict, err := h.dictService.GetDictByID(c.Request.Context(), strconv.Itoa(id))
+	dict, err := h.dictService.GetDictByID(c.Request.Context(), strconv.FormatUint(id, 10))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "字典不存在")
 		return
@@ -82,9 +82,9 @@ func (h *DictionaryHandler) UpdateDict(c *gin.Context) {
 
 // DeleteDict 删除字典类型
 func (h *DictionaryHandler) DeleteDict(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	if err := h.dictService.DeleteDict(c.Request.Context(), strconv.Itoa(id)); err != nil {
+	if err := h.dictService.DeleteDict(c.Request.Context(), strconv.FormatUint(id, 10)); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -94,9 +94,9 @@ func (h *DictionaryHandler) DeleteDict(c *gin.Context) {
 
 // GetDict 获取字典详情
 func (h *DictionaryHandler) GetDict(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
+	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	dict, err := h.dictService.GetDictByID(c.Request.Context(), strconv.Itoa(id))
+	dict, err := h.dictService.GetDictByID(c.Request.Context(), strconv.FormatUint(id, 10))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "字典不存在")
 		return
@@ -149,9 +149,9 @@ func (h *DictionaryHandler) CreateDictDetail(c *gin.Context) {
 
 // UpdateDictDetail 更新字典详情
 func (h *DictionaryHandler) UpdateDictDetail(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("detailId"))
+	id, _ := strconv.ParseUint(c.Param("detailId"), 10, 64)
 
-	detail, err := h.dictService.GetDictDetailByID(c.Request.Context(), strconv.Itoa(id))
+	detail, err := h.dictService.GetDictDetailByID(c.Request.Context(), strconv.FormatUint(id, 10))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "字典详情不存在")
 		return
@@ -187,9 +187,9 @@ func (h *DictionaryHandler) UpdateDictDetail(c *gin.Context) {
 
 // DeleteDictDetail 删除字典详情
 func (h *DictionaryHandler) DeleteDictDetail(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("detailId"))
+	id, _ := strconv.ParseUint(c.Param("detailId"), 10, 64)
 
-	if err := h.dictService.DeleteDictDetail(c.Request.Context(), strconv.Itoa(id)); err != nil {
+	if err := h.dictService.DeleteDictDetail(c.Request.Context(), strconv.FormatUint(id, 10)); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}

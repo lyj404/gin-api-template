@@ -42,9 +42,9 @@ func (h *AuditLogHandler) GetAuditLogsByOperator(c *gin.Context) {
 	}
 	req.SetDefaults()
 
-	operatorID, _ := strconv.Atoi(c.Query("operator_id"))
+	operatorID, _ := strconv.ParseUint(c.Query("operator_id"), 10, 64)
 	if operatorID != 0 {
-		logs, total, err := h.auditLogService.GetAuditLogsByOperator(uint64(operatorID), req.Page, req.PageSize)
+		logs, total, err := h.auditLogService.GetAuditLogsByOperator(operatorID, req.Page, req.PageSize)
 		if err != nil {
 			result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
@@ -99,13 +99,13 @@ func (h *AuditLogHandler) GetAuditLogsByTarget(c *gin.Context) {
 		return
 	}
 
-	targetID, _ := strconv.Atoi(c.Query("target_id"))
+	targetID, _ := strconv.ParseUint(c.Query("target_id"), 10, 64)
 	if targetID == 0 {
 		result.ErrorResponse(c, http.StatusBadRequest, "缺少目标ID")
 		return
 	}
 
-	logs, total, err := h.auditLogService.GetAuditLogsByTarget(targetType, uint64(targetID), req.Page, req.PageSize)
+	logs, total, err := h.auditLogService.GetAuditLogsByTarget(targetType, targetID, req.Page, req.PageSize)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

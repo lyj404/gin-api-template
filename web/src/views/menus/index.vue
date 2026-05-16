@@ -115,7 +115,7 @@ const allResourceOptions = ref<SelectOption[]>([])
 const resourcesLoading = ref(false)
 
 const columns: DataTableColumns<MenuTreeNode> = [
-  { title: 'ID', key: 'id', width: 180 },
+  { title: '序号', key: 'index', width: 70, render: (_row: MenuTreeNode, index: number) => index + 1 },
   { title: '菜单名称', key: 'name' },
   { title: '路由路径', key: 'path', render: (row: MenuTreeNode) => row.path || '-' },
   { title: '图标', key: 'icon', render: (row: MenuTreeNode) => h(Icon, { icon: toIconifyName(row.icon) || 'material-symbols:circle-outline', class: 'text-lg' }) },
