@@ -6,7 +6,7 @@ const menuIcons = [
   'i-material-symbols:group-outline',
   'i-material-symbols:person-outline',
   'i-material-symbols:manage-accounts-outline',
-  'i-material-symbols:menu-outline',
+  'i-material-symbols:menu',
   'i-material-symbols:corporate-fare-outline',
   'i-material-symbols:security-outline',
   'i-material-symbols:history-outline',

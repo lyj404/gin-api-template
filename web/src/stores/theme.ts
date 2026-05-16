@@ -14,7 +14,10 @@ export const useThemeStore = defineStore('theme', () => {
   }
 
   const toggle = () => {
+    const html = document.documentElement
+    html.classList.add('theming')
     isDark.value = !isDark.value
+    setTimeout(() => html.classList.remove('theming'), 400)
   }
 
   watch(isDark, (val) => {

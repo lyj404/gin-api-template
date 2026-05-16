@@ -3,8 +3,8 @@
     <n-layout-sider
       v-if="!layout.isMobile"
       bordered
-      :width="220"
-      :collapsed-width="64"
+      :width="240"
+      :collapsed-width="68"
       :collapsed="layout.sidebarCollapsed"
       collapse-mode="width"
       :native-scrollbar="false"
@@ -19,7 +19,7 @@
     <n-drawer
       v-else
       v-model:show="layout.mobileDrawerOpen"
-      :width="260"
+      :width="280"
       placement="left"
       :block-scroll="true"
       :auto-focus="false"
@@ -31,21 +31,22 @@
     </n-drawer>
 
     <n-layout>
-      <n-layout-header bordered class="header">
-        <button class="action-btn collapse-btn" @click="layout.toggleSidebar()">
+      <n-layout-header bordered class="layout-header">
+        <button class="header-btn" @click="layout.toggleSidebar()">
           <span :class="[hamburgerIcon, 'text-xl']" />
         </button>
 
-        <n-breadcrumb class="breadcrumb">
+        <n-breadcrumb class="header-breadcrumb">
           <n-breadcrumb-item v-for="crumb in breadcrumbs" :key="crumb.path">
+            <span class="breadcrumb-dot" />
             {{ crumb.title }}
           </n-breadcrumb-item>
         </n-breadcrumb>
 
-        <div class="actions">
+        <div class="header-actions">
           <n-tooltip trigger="hover">
             <template #trigger>
-              <button class="action-btn hide-on-mobile" @click="reload">
+              <button class="header-btn hide-on-mobile" @click="reload">
                 <span class="i-material-symbols:refresh text-xl" />
               </button>
             </template>
@@ -54,7 +55,7 @@
 
           <n-tooltip trigger="hover">
             <template #trigger>
-              <button class="action-btn hide-on-mobile" @click="toggleFullscreen">
+              <button class="header-btn hide-on-mobile" @click="toggleFullscreen">
                 <span :class="[isFullscreen ? 'i-material-symbols:fullscreen-exit' : 'i-material-symbols:fullscreen', 'text-xl']" />
               </button>
             </template>
@@ -68,11 +69,11 @@
             @select="handleUserCommand"
           >
             <div class="user-box">
-              <n-avatar round :size="32" class="user-avatar">
+              <n-avatar round :size="30" class="user-avatar">
                 {{ userInitial }}
               </n-avatar>
               <span class="user-name hidden md:inline">{{ userName }}</span>
-              <span class="i-material-symbols:keyboard-arrow-down text-base text-gray-400 hidden md:inline" />
+              <span class="i-material-symbols:keyboard-arrow-down text-sm text-gray-400 hidden md:inline" />
             </div>
           </n-dropdown>
         </div>
@@ -164,43 +165,27 @@ const toggleFullscreen = () => {
 </script>
 
 <style scoped>
-.header {
-  height: var(--header-height, 60px);
+.layout-header {
+  height: var(--header-height, 64px);
   display: flex;
   align-items: center;
-  padding: 0 16px 0 8px;
-  background-color: #fff;
-  gap: 8px;
+  padding: 0 16px 0 10px;
+  background: var(--color-header-bg, rgba(255,255,255,0.78));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-header-border, rgba(229,221,213,0.6));
+  gap: 6px;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 @media (min-width: 768px) {
-  .header {
-    padding: 0 24px 0 12px;
+  .layout-header {
+    padding: 0 24px 0 14px;
+    gap: 10px;
   }
 }
 
-.collapse-btn {
-  color: #444;
-  flex-shrink: 0;
-}
-
-.breadcrumb {
-  flex: 1;
-  min-width: 0;
-  margin-left: 4px;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-.action-btn {
+.header-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -210,13 +195,47 @@ const toggleFullscreen = () => {
   background: transparent;
   border-radius: 8px;
   cursor: pointer;
-  color: #555;
-  transition: background-color 0.2s, color 0.2s;
+  color: var(--color-text-secondary, #78716c);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.action-btn:hover {
-  background-color: rgba(0, 0, 0, 0.04);
-  color: #18a058;
+.header-btn:hover {
+  background: var(--color-primary-soft, rgba(194, 112, 74, 0.08));
+  color: var(--color-primary, #c2704a);
+}
+
+.header-breadcrumb {
+  flex: 1;
+  min-width: 0;
+  margin-left: 4px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.breadcrumb-dot {
+  display: inline-block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-primary, #c2704a);
+  margin-right: 6px;
+  vertical-align: middle;
+  opacity: 0.6;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  .header-actions {
+    gap: 8px;
+  }
 }
 
 .user-box {
@@ -226,22 +245,28 @@ const toggleFullscreen = () => {
   padding: 4px 10px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s ease;
   margin-left: 4px;
 }
 
 .user-box:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background: var(--color-primary-soft, rgba(194, 112, 74, 0.08));
 }
 
 .user-avatar {
-  background-color: #18a058 !important;
+  background: linear-gradient(135deg, #c2704a, #d97706) !important;
   color: #fff !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  flex-shrink: 0;
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 500;
-  color: #333;
+  color: var(--color-text, #1c1917);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
