@@ -66,7 +66,7 @@
                 <n-button size="tiny" @click="selectAllResources(false)">取消全选</n-button>
                 <span class="text-sm text-gray-400">已选 {{ selectedResCount }} / {{ allResources.length }}</span>
               </n-space>
-              <n-data-table :columns="resColumns" :data="allResources" :loading="resLoading" :scroll-x="700" bordered single-column />
+              <n-data-table :columns="resColumns" :data="allResources" :loading="resLoading" :scroll-x="900" bordered single-column />
               <n-space wrap class="mt-16">
                 <n-button type="primary" :loading="resSaving" @click="saveResources">保存资源权限</n-button>
                 <n-button @click="loadRoleConfig(configRole!.id)">重置</n-button>
@@ -152,7 +152,7 @@ const toggleResourcePerm = (row: ResourceResponse) => {
 
 const resColumns: DataTableColumns<ResourceResponse> = [
   { title: '序号', key: 'index', width: 70, render: (_row: ResourceResponse, index: number) => index + 1 },
-  { title: '名称', key: 'name' },
+  { title: '名称', key: 'name', width: 220, ellipsis: { tooltip: true } },
   { title: '类型', key: 'type', width: 100, render: (row: ResourceResponse) => h(NTag, { type: row.type === 'api' ? 'info' : 'warning', size: 'small' }, { default: () => row.type }) },
   { title: '模式', key: 'pattern', width: 200 },
   { title: '方法/操作', key: 'method', width: 90, render: (row: ResourceResponse) => row.method || row.action || '-' },
