@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, h } from 'vue'
 import { NButton, NCard, NDataTable, NModal, NForm, NFormItem, NInput, NSelect, NH2, NSpace, useMessage } from 'naive-ui'
 import type { DataTableColumns, SelectOption } from 'naive-ui'
 import { getOrgTree, createOrgUnit, updateOrgUnit, deleteOrgUnit } from '@/api'
@@ -84,8 +84,6 @@ const columns = computed<DataTableColumns<FlatNode>>(() => [
     }
   }
 ])
-
-import { h } from 'vue'
 
 const fetchData = async () => {
   loading.value = true

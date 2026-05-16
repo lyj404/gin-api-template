@@ -58,7 +58,7 @@ const profileForm = reactive<UpdateProfileRequest>({ name: '', email: '' })
 
 const profileRules = {
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
-  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email', message: '邮箱格式错误', trigger: 'blur' }]
+  email: [{ required: true, message: '请输入邮箱', trigger: 'blur' }, { type: 'email' as const, message: '邮箱格式错误', trigger: 'blur' }]
 }
 
 const passwordForm = reactive<ChangePasswordRequest>({ old_password: '', new_password: '' })

@@ -1,8 +1,6 @@
 import api from '@/utils/http'
 import type {
-  LoginRequest, LoginResponse,
-  SignupRequest, SignupResponse,
-  RefreshTokenRequest, RefreshTokenResponse,
+  LoginRequest,
   RoleRequest, RoleResponse,
   PaginationRequest, PaginationResponse,
   CreateMenuRequest, UpdateMenuRequest, MenuResponse, MenuTreeNode,
@@ -13,25 +11,20 @@ import type {
   UserResponse, CreateUserRequest, UpdateUserRequest,
   ProfileResponse, UpdateProfileRequest, ChangePasswordRequest,
   DashboardStats, AuditTrendItem,
-  RoleDetailResponse, RoleMenuResponse
+  RoleDetailResponse
 } from '@/types'
 
 export const login = (data: LoginRequest) => api.post('/login', data)
-export const signup = (data: SignupRequest) => api.post('/signup', data)
-export const refreshToken = (data: RefreshTokenRequest) => api.post('/refresh-token', data)
-export const getCaptcha = () => api.get('/captcha', { responseType: 'blob' })
 
-export const getRoles = (params?: PaginationRequest) => api.get<PaginationResponse<RoleResponse>>('/roles', { params })
+export const getRoles = (params?: PaginationRequest) => api.get<{ data: PaginationResponse<RoleResponse> }>('/roles', { params })
 export const getRoleDetail = (id: number) => api.get<{ data: RoleDetailResponse }>(`/roles/${id}`)
 export const createRole = (data: RoleRequest) => api.post<{ data: RoleResponse }>('/roles', data)
 export const updateRole = (id: number, data: RoleRequest) => api.put(`/roles/${id}`, data)
 export const deleteRole = (id: number) => api.delete(`/roles/${id}`)
 export const bindRoleResource = (roleId: number, resourceId: number, data: BindResourceRequest) => api.post(`/roles/${roleId}/resources`, { ...data, resource_id: resourceId })
 export const unbindRoleResource = (roleId: number, resourceId: number) => api.delete(`/roles/${roleId}/resources/${resourceId}`)
-export const getRoleResources = (roleId: number) => api.get<{ data: RoleResourceResponse[] }>(`/roles/${roleId}/resources`)
 export const bindRoleMenu = (roleId: number, data: BindMenuRequest) => api.post(`/roles/${roleId}/menus`, data)
 export const unbindRoleMenu = (roleId: number, menuId: number) => api.delete(`/roles/${roleId}/menus/${menuId}`)
-export const getRoleMenus = (roleId: number) => api.get<{ data: RoleMenuResponse[] }>(`/roles/${roleId}/menus`)
 
 export const getMenuTree = () => api.get<{ data: MenuTreeNode[] }>('/menus/tree')
 export const getMenu = (id: number) => api.get<{ data: MenuResponse }>(`/menus/${id}`)
@@ -40,24 +33,20 @@ export const updateMenu = (id: number, data: UpdateMenuRequest) => api.put(`/men
 export const deleteMenu = (id: number) => api.delete(`/menus/${id}`)
 export const bindMenuResource = (menuId: number, data: BindMenuResourceRequest) => api.post(`/menus/${menuId}/resources`, data)
 export const unbindMenuResource = (menuId: number, resourceId: number) => api.delete(`/menus/${menuId}/resources/${resourceId}`)
-export const getMenuResources = (menuId: number) => api.get<{ data: MenuResourceResponse[] }>(`/menus/${menuId}/resources`)
 
-export const getOrgUnits = (params?: PaginationRequest) => api.get<PaginationResponse<OrgUnitResponse>>('/org-units', { params })
 export const getOrgTree = () => api.get<{ data: OrgUnitResponse[] }>('/org-units/tree')
-export const getOrgUnit = (id: number) => api.get<{ data: OrgUnitResponse }>(`/org-units/${id}`)
 export const createOrgUnit = (data: CreateOrgUnitRequest) => api.post('/org-units', data)
 export const updateOrgUnit = (id: number, data: UpdateOrgUnitRequest) => api.put(`/org-units/${id}`, data)
 export const deleteOrgUnit = (id: number) => api.delete(`/org-units/${id}`)
 
-export const getResources = (params?: PaginationRequest) => api.get<PaginationResponse<ResourceResponse>>('/resources', { params })
-export const getResource = (id: number) => api.get<{ data: ResourceResponse }>(`/resources/${id}`)
+export const getResources = (params?: PaginationRequest) => api.get<{ data: PaginationResponse<ResourceResponse> }>('/resources', { params })
 export const createResource = (data: ResourceResponse) => api.post('/resources', data)
 export const updateResource = (id: number, data: ResourceResponse) => api.put(`/resources/${id}`, data)
 export const deleteResource = (id: number) => api.delete(`/resources/${id}`)
 
-export const getAuditLogs = (params?: PaginationRequest) => api.get<PaginationResponse<any>>('/audit-logs', { params })
-export const getAuditLogsByTarget = (params: { target_type: string; target_id: string }) => api.get<{ data: any[] }>('/audit-logs/target', { params })
-export const getAuditLogsByTime = (params: { start_time: string; end_time: string }) => api.get<{ data: any[] }>('/audit-logs/time', { params })
+export const getAuditLogs = (params?: PaginationRequest) => api.get<{ data: PaginationResponse<any> }>('/audit-logs', { params })
+export const getAuditLogsByTarget = (params: { target_type: string; target_id: string }) => api.get<{ data: { data: any[] } }>('/audit-logs/target', { params })
+export const getAuditLogsByTime = (params: { start_time: string; end_time: string }) => api.get<{ data: { data: any[] } }>('/audit-logs/time', { params })
 
 export const getUserPermissions = () => api.get<{ data: UserPermissions }>('/user/permissions')
 export const getUserMenus = () => api.get<{ data: { menus: MenuTreeNode[] } }>('/user/menus')
@@ -65,7 +54,7 @@ export const getProfile = () => api.get<{ data: ProfileResponse }>('/user/profil
 export const updateProfile = (data: UpdateProfileRequest) => api.put('/user/profile', data)
 export const changePassword = (data: ChangePasswordRequest) => api.put('/user/password', data)
 
-export const getUsers = (params?: PaginationRequest) => api.get<PaginationResponse<UserResponse>>('/users', { params })
+export const getUsers = (params?: PaginationRequest) => api.get<{ data: PaginationResponse<UserResponse> }>('/users', { params })
 export const getUser = (id: number) => api.get<{ data: UserResponse }>(`/users/${id}`)
 export const createUser = (data: CreateUserRequest) => api.post('/users', data)
 export const updateUser = (id: number, data: UpdateUserRequest) => api.put(`/users/${id}`, data)
