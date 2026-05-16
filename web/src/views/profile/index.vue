@@ -1,9 +1,9 @@
 <template>
-  <div class="p-8">
+  <div class="page-padding">
     <n-h2>个人信息</n-h2>
 
     <n-card title="基本信息" class="mb-6">
-      <n-form ref="profileFormRef" :model="profileForm" :rules="profileRules" label-placement="left" label-width="120px">
+      <n-form ref="profileFormRef" :model="profileForm" :rules="profileRules" label-placement="left" :label-width="100">
         <n-form-item label="姓名" path="name">
           <n-input v-model:value="profileForm.name" />
         </n-form-item>
@@ -23,7 +23,7 @@
     </n-card>
 
     <n-card title="修改密码">
-      <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-placement="left" label-width="120px">
+      <n-form ref="passwordFormRef" :model="passwordForm" :rules="passwordRules" label-placement="left" :label-width="100">
         <n-form-item label="原密码" path="old_password">
           <n-input v-model:value="passwordForm.old_password" type="password" show-password-on="click" />
         </n-form-item>

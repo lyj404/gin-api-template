@@ -1,40 +1,41 @@
 <template>
   <n-layout has-sider class="h-full">
     <n-layout-sider
+      v-if="!layout.isMobile"
       bordered
       :width="220"
       :collapsed-width="64"
-      :collapsed="collapsed"
+      :collapsed="layout.sidebarCollapsed"
       :native-scrollbar="false"
+      :show-trigger="false"
       class="sider"
-      @update:collapsed="collapsed = $event"
+      @update:collapsed="layout.sidebarCollapsed = $event"
     >
-      <div class="logo">
-        <span class="i-material-symbols:shield-person-outline text-2xl text-primary" />
-        <transition name="fade">
-          <span v-if="!collapsed" class="logo-text">Admin 后台</span>
-        </transition>
-      </div>
-
-      <n-menu
-        v-model:value="activeKey"
-        :collapsed="collapsed"
-        :collapsed-width="64"
-        :collapsed-icon-size="20"
-        :indent="20"
-        :options="menuOptions"
-        :render-label="renderLabel"
-        :default-expand-all="true"
-      />
+      <Logo :collapsed="layout.sidebarCollapsed" />
+      <SideMenu :collapsed="layout.sidebarCollapsed" />
     </n-layout-sider>
+
+    <n-drawer
+      v-else
+      v-model:show="layout.mobileDrawerOpen"
+      :width="260"
+      placement="left"
+      :block-scroll="true"
+      :auto-focus="false"
+    >
+      <n-drawer-content :native-scrollbar="false" body-content-style="padding:0">
+        <Logo :collapsed="false" />
+        <SideMenu :collapsed="false" @select="layout.closeMobileDrawer()" />
+      </n-drawer-content>
+    </n-drawer>
 
     <n-layout>
       <n-layout-header bordered class="header">
-        <button class="action-btn collapse-btn" @click="collapsed = !collapsed">
-          <span :class="[collapsed ? 'i-material-symbols:menu' : 'i-material-symbols:menu-open', 'text-xl']" />
+        <button class="action-btn collapse-btn" @click="layout.toggleSidebar()">
+          <span :class="[hamburgerIcon, 'text-xl']" />
         </button>
 
-        <n-breadcrumb class="ml-4">
+        <n-breadcrumb class="breadcrumb">
           <n-breadcrumb-item v-for="crumb in breadcrumbs" :key="crumb.path">
             {{ crumb.title }}
           </n-breadcrumb-item>
@@ -43,7 +44,7 @@
         <div class="actions">
           <n-tooltip trigger="hover">
             <template #trigger>
-              <button class="action-btn" @click="reload">
+              <button class="action-btn hide-on-mobile" @click="reload">
                 <span class="i-material-symbols:refresh text-xl" />
               </button>
             </template>
@@ -52,7 +53,7 @@
 
           <n-tooltip trigger="hover">
             <template #trigger>
-              <button class="action-btn" @click="toggleFullscreen">
+              <button class="action-btn hide-on-mobile" @click="toggleFullscreen">
                 <span :class="[isFullscreen ? 'i-material-symbols:fullscreen-exit' : 'i-material-symbols:fullscreen', 'text-xl']" />
               </button>
             </template>
@@ -69,8 +70,8 @@
               <n-avatar round :size="32" class="user-avatar">
                 {{ userInitial }}
               </n-avatar>
-              <span class="user-name">{{ userName }}</span>
-              <span class="i-material-symbols:keyboard-arrow-down text-base text-gray-400" />
+              <span class="user-name hidden md:inline">{{ userName }}</span>
+              <span class="i-material-symbols:keyboard-arrow-down text-base text-gray-400 hidden md:inline" />
             </div>
           </n-dropdown>
         </div>
@@ -88,33 +89,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, watch } from 'vue'
+import { ref, computed, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
   NLayout, NLayoutSider, NLayoutHeader, NLayoutContent,
-  NMenu, NDropdown, NAvatar, NBreadcrumb, NBreadcrumbItem, NTooltip
+  NDrawer, NDrawerContent,
+  NDropdown, NAvatar, NBreadcrumb, NBreadcrumbItem, NTooltip
 } from 'naive-ui'
-import type { MenuOption, DropdownOption } from 'naive-ui'
-import { Icon } from '@iconify/vue'
+import type { DropdownOption } from 'naive-ui'
 import { useAuthStore } from '@/stores/auth'
-import { usePermissionStore } from '@/stores/permission'
+import { useLayoutStore } from '@/stores/layout'
 import { getUserInfo } from '@/utils/auth'
+import Logo from './components/Logo.vue'
+import SideMenu from './components/SideMenu.vue'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
-const permission = usePermissionStore()
+const layout = useLayoutStore()
 
-const collapsed = ref(false)
-const activeKey = ref<string>(route.path)
 const userName = ref(getUserInfo()?.name || 'Admin')
 const userInitial = computed(() => userName.value.charAt(0).toUpperCase())
 const isFullscreen = ref(false)
 
-const toIconifyName = (icon?: string) => (icon || '').replace(/^i-/, '') || 'material-symbols:circle-outline'
-
-watch(() => route.path, (newPath) => {
-  activeKey.value = newPath
+const hamburgerIcon = computed(() => {
+  if (layout.isMobile) {
+    return layout.mobileDrawerOpen ? 'i-material-symbols:close' : 'i-material-symbols:menu'
+  }
+  return layout.sidebarCollapsed ? 'i-material-symbols:menu' : 'i-material-symbols:menu-open'
 })
 
 const breadcrumbs = computed(() => {
@@ -122,34 +124,6 @@ const breadcrumbs = computed(() => {
     .filter(r => r.meta?.title)
     .map(r => ({ path: r.path, title: r.meta.title as string }))
 })
-
-const menuOptions = computed<MenuOption[]>(() => {
-  return permission.menus.map(menu => ({
-    key: menu.path || String(menu.id),
-    label: menu.name,
-    path: menu.path,
-    icon: () => h(Icon, { icon: toIconifyName(menu.icon), class: 'text-lg' }),
-    children: menu.children?.map(child => ({
-      key: child.path,
-      label: child.name,
-      path: child.path,
-      icon: () => h(Icon, { icon: toIconifyName(child.icon), class: 'text-lg' })
-    }))
-  }))
-})
-
-const renderLabel = (option: MenuOption) => {
-  const menuKey = option.key as string
-  if (menuKey && menuKey.startsWith('/')) {
-    return h('a', {
-      onClick: (e: Event) => {
-        e.preventDefault()
-        router.push(menuKey)
-      }
-    }, option.label as string)
-  }
-  return option.label as string
-}
 
 const userOptions: DropdownOption[] = [
   {
@@ -189,52 +163,32 @@ const toggleFullscreen = () => {
 </script>
 
 <style scoped>
-.sider :deep(.n-layout-sider-scroll-container) {
-  display: flex;
-  flex-direction: column;
-}
-
-.logo {
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border-bottom: 1px solid #efeff5;
-  font-weight: 700;
-  font-size: 16px;
-  letter-spacing: 0.5px;
-  overflow: hidden;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.logo-text {
-  background: linear-gradient(90deg, #18a058 0%, #36ad6a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.text-primary {
-  color: #18a058;
-}
-
 .header {
-  height: 60px;
+  height: var(--header-height, 60px);
   display: flex;
   align-items: center;
-  padding: 0 24px 0 12px;
+  padding: 0 16px 0 8px;
   background-color: #fff;
   gap: 8px;
 }
 
-.collapse-btn {
-  color: #444;
+@media (min-width: 768px) {
+  .header {
+    padding: 0 24px 0 12px;
+  }
 }
 
-.ml-4 {
+.collapse-btn {
+  color: #444;
+  flex-shrink: 0;
+}
+
+.breadcrumb {
+  flex: 1;
+  min-width: 0;
   margin-left: 4px;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .actions {
@@ -242,6 +196,7 @@ const toggleFullscreen = () => {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .action-btn {
@@ -287,15 +242,5 @@ const toggleFullscreen = () => {
   font-size: 14px;
   font-weight: 500;
   color: #333;
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
 }
 </style>

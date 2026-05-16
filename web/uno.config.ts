@@ -72,7 +72,11 @@ export default defineConfig({
     })
   ],
   shortcuts: {
-    'flex-center': 'flex justify-center items-center'
+    'flex-center': 'flex justify-center items-center',
+    'hide-on-mobile': 'hidden md:inline-flex',
+    'show-on-mobile-only': 'inline-flex md:hidden',
+    'page-padding': 'p-2 sm:p-3 md:p-4',
+    'toolbar-row': 'flex flex-col gap-2 md:flex-row md:items-center md:justify-between',
   },
   safelist: menuIcons
 })

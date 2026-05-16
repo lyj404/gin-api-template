@@ -1,15 +1,15 @@
 <template>
-  <div class="p-16">
-    <div class="flex justify-between items-center mb-16">
-      <n-h2>菜单管理</n-h2>
+  <div class="page-padding">
+    <div class="toolbar-row mb-3">
+      <n-h2 class="!my-0">菜单管理</n-h2>
       <n-button type="primary" @click="openModal()">新增菜单</n-button>
     </div>
 
     <n-card>
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="false" :row-key="(row: any) => row.id" bordered single-column />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="false" :row-key="(row: any) => row.id" :scroll-x="800" bordered single-column />
     </n-card>
 
-    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑菜单' : '新增菜单'" style="width: 600px">
+    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑菜单' : '新增菜单'" :style="{ width: '90vw', maxWidth: '600px' }">
       <n-form :model="form" label-placement="left" label-width="90">
         <n-form-item label="菜单名称">
           <n-input v-model:value="form.name" placeholder="请输入菜单名称" />
@@ -42,13 +42,13 @@
       </template>
     </n-modal>
 
-    <n-modal v-model:show="showIconPicker" preset="card" title="选择图标" style="width: 720px">
+    <n-modal v-model:show="showIconPicker" preset="card" title="选择图标" :style="{ width: '95vw', maxWidth: '720px' }">
       <n-input v-model:value="iconSearch" placeholder="搜索图标名称" clearable style="margin-bottom: 12px" />
       <div style="font-size: 12px; color: #999; margin-bottom: 8px">共 {{ filteredIcons.length }} 个，显示前 {{ Math.min(filteredIcons.length, iconDisplayLimit) }} 个</div>
-      <div @scroll="onIconGridScroll" style="display:grid; grid-template-columns: repeat(10, 1fr); gap: 6px; max-height: 420px; overflow-y: auto; padding: 4px;">
+      <div @scroll="onIconGridScroll" class="icon-grid">
         <div v-for="name in displayedIcons" :key="name"
           :title="name"
-          style="display:flex; align-items:center; justify-content:center; padding: 8px; border: 1px solid #e5e7eb; border-radius: 4px; cursor: pointer;"
+          class="icon-cell"
           :style="form.icon === `i-material-symbols:${name}` ? { borderColor: '#18a058', color: '#18a058' } : {}"
           @click="selectIcon(`i-material-symbols:${name}`)">
           <Icon :icon="`material-symbols:${name}`" style="font-size: 1.5rem" />
@@ -242,3 +242,23 @@ onMounted(async () => {
   }
 })
 </script>
+
+<style scoped>
+.icon-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+  gap: 6px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px;
+}
+.icon-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  cursor: pointer;
+}
+</style>

@@ -1,35 +1,35 @@
 <template>
-  <div class="p-16">
-    <div class="flex justify-between items-center mb-16">
-      <n-h2>审计日志</n-h2>
+  <div class="page-padding">
+    <div class="toolbar-row mb-3">
+      <n-h2 class="!my-0">审计日志</n-h2>
     </div>
 
     <n-card>
       <div class="mb-16">
-        <div class="flex gap-8 items-center mb-12">
+        <div class="flex flex-wrap gap-2 items-center mb-12">
           <span class="text-sm text-gray-500 whitespace-nowrap">查询方式：</span>
-          <n-select v-model:value="searchType" :options="searchTypeOptions" style="width: 140px" />
+          <n-select v-model:value="searchType" :options="searchTypeOptions" class="filter-w-sm" />
           <n-button @click="searchAll">刷新</n-button>
         </div>
-        <div class="flex gap-8 items-center">
+        <div class="flex flex-wrap gap-2 items-center">
           <template v-if="searchType === 'operator'">
-            <n-input v-model:value="operatorId" placeholder="请输入操作者ID" clearable style="width: 220px" />
+            <n-input v-model:value="operatorId" placeholder="请输入操作者ID" clearable class="filter-w-md" />
             <n-button type="primary" @click="searchByOperator">查询</n-button>
           </template>
           <template v-else-if="searchType === 'target'">
-            <n-select v-model:value="targetType" :options="targetTypeOptions" placeholder="目标类型" clearable style="width: 130px" />
-            <n-input v-model:value="targetId" placeholder="目标ID" clearable style="width: 180px" />
+            <n-select v-model:value="targetType" :options="targetTypeOptions" placeholder="目标类型" clearable class="filter-w-sm" />
+            <n-input v-model:value="targetId" placeholder="目标ID" clearable class="filter-w-md" />
             <n-button type="primary" @click="searchByTarget">查询</n-button>
           </template>
           <template v-else-if="searchType === 'time'">
-            <n-date-picker v-model:value="timeRange" type="daterange" clearable style="width: 260px" />
+            <n-date-picker v-model:value="timeRange" type="daterange" clearable class="filter-w-lg" />
             <n-button type="primary" @click="searchByTime">查询</n-button>
           </template>
           <span v-else class="text-sm text-gray-400">点击刷新按钮获取最新日志</span>
         </div>
       </div>
 
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" bordered single-column />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" :scroll-x="1000" bordered single-column />
     </n-card>
   </div>
 </template>
@@ -121,3 +121,18 @@ const searchByTime = async () => {
 
 onMounted(searchAll)
 </script>
+
+<style scoped>
+.filter-w-sm,
+.filter-w-md,
+.filter-w-lg {
+  width: 100%;
+  max-width: 100%;
+  flex: 1 1 140px;
+}
+@media (min-width: 640px) {
+  .filter-w-sm { width: 140px; flex: 0 0 auto; }
+  .filter-w-md { width: 200px; flex: 0 0 auto; }
+  .filter-w-lg { width: 260px; flex: 0 0 auto; }
+}
+</style>

@@ -1,16 +1,16 @@
 <template>
-  <div class="p-16">
-    <div class="flex justify-between items-center mb-16">
-      <n-h2>角色管理</n-h2>
+  <div class="page-padding">
+    <div class="toolbar-row mb-3">
+      <n-h2 class="!my-0">角色管理</n-h2>
       <n-button type="primary" @click="openModal()">新增角色</n-button>
     </div>
 
     <n-card>
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" bordered single-column />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" :scroll-x="900" bordered single-column />
     </n-card>
 
     <!-- 新建/编辑模态框 -->
-    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑角色' : '新增角色'" style="width: 500px">
+    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑角色' : '新增角色'" :style="{ width: '90vw', maxWidth: '500px' }">
       <n-form :model="form" label-placement="left" label-width="80">
         <n-form-item label="角色名称">
           <n-input v-model:value="form.name" placeholder="请输入角色名称" />
@@ -26,7 +26,7 @@
     </n-modal>
 
     <!-- 权限配置抽屉 -->
-    <n-drawer v-model:show="showDrawer" :width="640" placement="right">
+    <n-drawer v-model:show="showDrawer" :width="drawerWidth" placement="right">
       <n-drawer-content :title="'权限配置 - ' + (configRole?.name || '')" closable>
         <n-tabs type="line" animated>
           <n-tab-pane name="menus" tab="菜单权限">
@@ -34,10 +34,10 @@
               <n-spin size="large" />
             </template>
             <template v-else>
-              <n-space class="mb-12">
+              <n-space wrap class="mb-12">
                 <n-button size="tiny" @click="selectAllMenus(true)">全选</n-button>
                 <n-button size="tiny" @click="selectAllMenus(false)">取消全选</n-button>
-                <span class="text-sm text-gray-400 ml-8">已选 {{ checkedMenuIds.length }} / {{ totalMenuCount }}</span>
+                <span class="text-sm text-gray-400">已选 {{ checkedMenuIds.length }} / {{ totalMenuCount }}</span>
               </n-space>
               <n-tree
                 :data="menuTree"
@@ -50,7 +50,7 @@
                 :checked-keys="checkedMenuIds"
                 @update:checked-keys="checkedMenuIds = $event"
               />
-              <n-space class="mt-16">
+              <n-space wrap class="mt-16">
                 <n-button type="primary" :loading="menuSaving" @click="saveMenus">保存菜单权限</n-button>
                 <n-button @click="loadRoleConfig(configRole!.id)">重置</n-button>
               </n-space>
@@ -61,13 +61,13 @@
               <n-spin size="large" />
             </template>
             <template v-else>
-              <n-space class="mb-12">
+              <n-space wrap class="mb-12">
                 <n-button size="tiny" @click="selectAllResources(true)">全选</n-button>
                 <n-button size="tiny" @click="selectAllResources(false)">取消全选</n-button>
-                <span class="text-sm text-gray-400 ml-8">已选 {{ selectedResCount }} / {{ allResources.length }}</span>
+                <span class="text-sm text-gray-400">已选 {{ selectedResCount }} / {{ allResources.length }}</span>
               </n-space>
-              <n-data-table :columns="resColumns" :data="allResources" :loading="resLoading" bordered single-column />
-              <n-space class="mt-16">
+              <n-data-table :columns="resColumns" :data="allResources" :loading="resLoading" :scroll-x="700" bordered single-column />
+              <n-space wrap class="mt-16">
                 <n-button type="primary" :loading="resSaving" @click="saveResources">保存资源权限</n-button>
                 <n-button @click="loadRoleConfig(configRole!.id)">重置</n-button>
               </n-space>
@@ -81,13 +81,17 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, computed, onMounted } from 'vue'
-import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NH2, NCard, NTag, NSpace, NDrawer, NDrawerContent, NTabs, NTabPane, NTree, NSpin, NSwitch, useMessage, useDialog } from 'naive-ui'
+import { NButton, NDataTable, NModal, NForm, NFormItem, NInput, NH2, NCard, NTag, NSpace, NDrawer, NDrawerContent, NTabs, NTabPane, NTree, NSpin, useMessage, useDialog } from 'naive-ui'
 import type { DataTableColumns, TreeOption } from 'naive-ui'
 import { getRoles, getRoleDetail, createRole, updateRole, deleteRole, getMenuTree, getResources, bindRoleMenu, unbindRoleMenu, bindRoleResource, unbindRoleResource } from '@/api'
-import type { RoleResponse, ResourceResponse, ResourceBrief, MenuTreeNode } from '@/types'
+import type { RoleResponse, ResourceResponse, MenuTreeNode } from '@/types'
+import { useLayoutStore } from '@/stores/layout'
 
 const message = useMessage()
 const dialog = useDialog()
+const layout = useLayoutStore()
+
+const drawerWidth = computed<number | string>(() => layout.isMobile ? '100%' : 640)
 
 const loading = ref(false)
 const saving = ref(false)

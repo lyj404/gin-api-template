@@ -31,11 +31,11 @@ const themeOverrides: GlobalThemeOverrides = {
 <style scoped>
 .theme-toggle {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: 16px;
+  right: 16px;
   z-index: 9999;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 1px solid #e2e8f0;
   background: #fff;
@@ -44,9 +44,18 @@ const themeOverrides: GlobalThemeOverrides = {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 20px;
   color: #334155;
   transition: all 0.2s;
+}
+@media (min-width: 768px) {
+  .theme-toggle {
+    bottom: 24px;
+    right: 24px;
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
 }
 .theme-toggle:hover {
   transform: scale(1.1);

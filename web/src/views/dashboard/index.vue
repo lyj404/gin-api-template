@@ -1,6 +1,6 @@
 <template>
-  <div class="p-16">
-    <n-grid :cols="4" :x-gap="16" :y-gap="16">
+  <div class="page-padding">
+    <n-grid cols="1 s:2 m:4" responsive="screen" :x-gap="16" :y-gap="16">
       <n-gi v-for="card in statsCards" :key="card.label">
         <n-card>
           <div class="flex items-center justify-between">
@@ -17,8 +17,8 @@
       </n-gi>
     </n-grid>
 
-    <n-grid :cols="3" :x-gap="16" :y-gap="16" class="mt-16">
-      <n-gi :span="2">
+    <n-grid cols="1 m:3" responsive="screen" :x-gap="16" :y-gap="16" class="mt-16">
+      <n-gi span="1 m:2">
         <n-card title="审计日志趋势（近 7 天）">
           <v-chart class="chart" :option="trendOption" autoresize />
         </n-card>
@@ -134,5 +134,11 @@ onMounted(() => {
 <style scoped>
 .chart {
   height: 320px;
+  width: 100%;
+}
+@media (max-width: 767px) {
+  .chart {
+    height: 240px;
+  }
 }
 </style>

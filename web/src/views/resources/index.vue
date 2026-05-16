@@ -1,7 +1,7 @@
 <template>
-  <div class="p-16">
-    <div class="flex justify-between items-center mb-16">
-      <n-h2>资源管理</n-h2>
+  <div class="page-padding">
+    <div class="toolbar-row mb-3">
+      <n-h2 class="!my-0">资源管理</n-h2>
       <n-button type="primary" @click="openModal()">新增资源</n-button>
     </div>
 
@@ -13,10 +13,10 @@
         API 类型控制接口访问，实体类型控制业务数据操作。
       </n-alert>
 
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" bordered single-column />
+      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="pagination" :row-key="(row: any) => row.id" :scroll-x="1100" bordered single-column />
     </n-card>
 
-    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑资源' : '新增资源'" style="width: 580px">
+    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑资源' : '新增资源'" :style="{ width: '90vw', maxWidth: '580px' }">
       <n-alert type="info" closable class="mb-12">
         <template #header>
           {{ isApiType ? 'API 类型 — 控制接口访问权限' : '实体类型 — 控制业务数据操作权限' }}

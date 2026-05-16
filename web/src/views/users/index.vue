@@ -1,9 +1,9 @@
 <template>
-  <div class="p-16">
-    <div class="flex justify-between items-center mb-16">
-      <n-h2>用户管理</n-h2>
-      <n-space>
-        <n-input v-model:value="keyword" placeholder="搜索用户名/邮箱" clearable style="width: 220px" @keyup.enter="onSearch" @clear="onSearch" />
+  <div class="page-padding">
+    <div class="toolbar-row mb-3">
+      <n-h2 class="!my-0">用户管理</n-h2>
+      <n-space wrap class="w-full md:w-auto">
+        <n-input v-model:value="keyword" placeholder="搜索用户名/邮箱" clearable class="search-input" @keyup.enter="onSearch" @clear="onSearch" />
         <n-button @click="onSearch">搜索</n-button>
         <n-button type="primary" @click="openModal()">新增用户</n-button>
       </n-space>
@@ -16,6 +16,7 @@
         :loading="loading"
         :pagination="pagination"
         :row-key="(row: any) => row.id"
+        :scroll-x="900"
         bordered
         single-column
         remote
@@ -23,7 +24,7 @@
       />
     </n-card>
 
-    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑用户' : '新增用户'" style="width: 520px">
+    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑用户' : '新增用户'" :style="{ width: '90vw', maxWidth: '520px' }">
       <n-form :model="form" :rules="rules" label-placement="left" label-width="90" ref="formRef">
         <n-form-item label="姓名" path="name">
           <n-input v-model:value="form.name" placeholder="请输入姓名" maxlength="50" />
@@ -251,3 +252,14 @@ onMounted(() => {
   fetchData()
 })
 </script>
+
+<style scoped>
+.search-input {
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .search-input {
+    width: 220px;
+  }
+}
+</style>

@@ -1,15 +1,15 @@
 <template>
-  <div class="p-16">
-    <div class="flex justify-between items-center mb-16">
-      <n-h2>组织管理</n-h2>
+  <div class="page-padding">
+    <div class="toolbar-row mb-3">
+      <n-h2 class="!my-0">组织管理</n-h2>
       <n-button type="primary" @click="openModal(null)">新增组织</n-button>
     </div>
 
     <n-card>
-      <n-data-table :columns="columns" :data="treeData" :loading="loading" :pagination="false" bordered single-column />
+      <n-data-table :columns="columns" :data="treeData" :loading="loading" :pagination="false" :scroll-x="700" bordered single-column />
     </n-card>
 
-    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑组织' : '新增组织'" style="width: 500px">
+    <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑组织' : '新增组织'" :style="{ width: '90vw', maxWidth: '500px' }">
       <n-form :model="form" label-placement="left" label-width="80">
         <n-form-item label="组织名称">
           <n-input v-model:value="form.name" placeholder="请输入组织名称" />

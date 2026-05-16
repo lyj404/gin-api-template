@@ -1,6 +1,13 @@
 :root {
   --sidebar-width: 220px;
+  --sidebar-collapsed-width: 64px;
   --header-height: 60px;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --header-height: 52px;
+  }
 }
 
 *,
@@ -37,6 +44,12 @@ body {
   height: calc(100vh - var(--header-height));
   overflow-y: auto;
   padding: 16px;
+}
+
+@media (max-width: 767px) {
+  .app-content {
+    padding: 8px;
+  }
 }
 
 .n-data-table td,
