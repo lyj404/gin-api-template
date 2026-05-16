@@ -58,9 +58,8 @@ const orgOptions = computed<SelectOption[]>(() => [{ label: '顶级组织', valu
 
 const columns = computed<DataTableColumns<FlatNode>>(() => [
   {
-    title: 'ID',
-    key: 'id',
-    width: 180
+    title: '序号', key: 'index', width: 70,
+    render: (_row: FlatNode, index: number) => index + 1
   },
   {
     title: '名称',

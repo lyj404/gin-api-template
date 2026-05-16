@@ -6,7 +6,7 @@
     </div>
 
     <n-card>
-      <n-data-table :columns="columns" :data="data" :loading="loading" :pagination="false" :row-key="(row: any) => row.id" :scroll-x="800" bordered single-column />
+      <n-data-table :columns="columns" :data="flatData" :loading="loading" :pagination="false" :row-key="(row: any) => row.id" :scroll-x="800" bordered single-column />
     </n-card>
 
     <n-modal v-model:show="showModal" preset="card" :title="editingId ? '编辑菜单' : '新增菜单'" :style="{ width: '90vw', maxWidth: '600px' }">
@@ -110,21 +110,36 @@ const data = ref<MenuTreeNode[]>([])
 
 const { options: statusOptions, lookup: statusLabel, load: loadStatusOptions } = useDict('menu_status')
 
-const menuOptions = computed<SelectOption[]>(() => [{ label: '顶级菜单', value: '0' }, ...data.value.map((m: MenuTreeNode) => ({ label: m.name, value: m.id }))])
+interface FlatMenuItem {
+  id: string; name: string; path: string; icon: string; order_num: number; is_visible: boolean; status?: string; level: number
+}
+
+const buildFlat = (nodes: MenuTreeNode[], level: number = 0): FlatMenuItem[] => {
+  const result: FlatMenuItem[] = []
+  for (const n of nodes) {
+    result.push({ id: n.id, name: n.name, path: n.path, icon: n.icon, order_num: n.order_num, is_visible: n.is_visible, status: n.status, level })
+    if (n.children) result.push(...buildFlat(n.children, level + 1))
+  }
+  return result
+}
+
+const flatData = computed(() => buildFlat(data.value))
+
+const menuOptions = computed<SelectOption[]>(() => [{ label: '顶级菜单', value: '0' }, ...flatData.value.map((m: FlatMenuItem) => ({ label: m.name, value: m.id }))])
 const allResourceOptions = ref<SelectOption[]>([])
 const resourcesLoading = ref(false)
 
-const columns: DataTableColumns<MenuTreeNode> = [
-  { title: '序号', key: 'index', width: 70, render: (_row: MenuTreeNode, index: number) => index + 1 },
-  { title: '菜单名称', key: 'name' },
-  { title: '路由路径', key: 'path', render: (row: MenuTreeNode) => row.path || '-' },
-  { title: '图标', key: 'icon', render: (row: MenuTreeNode) => h(Icon, { icon: toIconifyName(row.icon) || 'material-symbols:circle-outline', class: 'text-lg' }) },
+const columns: DataTableColumns<FlatMenuItem> = [
+  { title: '序号', key: 'index', width: 70, render: (_row: FlatMenuItem, index: number) => index + 1 },
+  { title: '菜单名称', key: 'name', render: (row: FlatMenuItem) => h('span', { style: { marginLeft: `${row.level * 24}px` } }, row.name) },
+  { title: '路由路径', key: 'path', render: (row: FlatMenuItem) => row.path || '-' },
+  { title: '图标', key: 'icon', render: (row: FlatMenuItem) => h(Icon, { icon: toIconifyName(row.icon) || 'material-symbols:circle-outline', class: 'text-lg' }) },
   { title: '排序', key: 'order_num', width: 80 },
   {
     title: '状态', key: 'status', width: 80,
-    render: (row: MenuTreeNode) => h(NTag, { type: row.status === 'enabled' ? 'success' : 'error', size: 'small' }, { default: () => statusLabel(row.status || '') })
+    render: (row: FlatMenuItem) => h(NTag, { type: row.status === 'enabled' ? 'success' : 'error', size: 'small' }, { default: () => statusLabel(row.status || '') })
   },
-  { title: '操作', key: 'actions', width: 160, render: (row: MenuTreeNode) => h(NSpace, null, {
+  { title: '操作', key: 'actions', width: 160, render: (row: FlatMenuItem) => h(NSpace, null, {
     default: () => [
       h(NButton, { size: 'small', onClick: () => openModal(row) }, { default: () => '编辑' }),
       h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
@@ -151,7 +166,7 @@ const fetchAllResources = async () => {
   finally { resourcesLoading.value = false }
 }
 
-const openModal = async (row?: MenuTreeNode) => {
+const openModal = async (row?: FlatMenuItem) => {
   loadStatusOptions()
   if (row) {
     editingId.value = row.id
@@ -160,7 +175,7 @@ const openModal = async (row?: MenuTreeNode) => {
     form.icon = row.icon
     form.order_num = row.order_num
     form.is_visible = row.is_visible
-    form.status = (row as any).status || 'enabled'
+    form.status = row.status || 'enabled'
 
     // 加载当前资源的资源绑定
     try {
@@ -226,15 +241,6 @@ const handleSave = async () => {
 
 const handleDelete = (row: MenuTreeNode) => {
   deleteMenu(row.id).then(() => { message.success('删除成功'); fetchData(); permission.fetchMenus() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
-}
-
-const fetchResources = async () => {
-  resourcesLoading.value = true
-  try {
-    const res = await getResources({ page: 1, page_size: 200 })
-    allResourceOptions.value = (res.data.data?.data || []).map((r: ResourceResponse) => ({ label: `${r.description} (${r.name})`, value: r.id }))
-  } catch { /* ignore */ }
-  finally { resourcesLoading.value = false }
 }
 
 const selectIcon = (icon: string) => {
