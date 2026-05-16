@@ -54,7 +54,7 @@ func (r *orgUnitRepository) Update(orgUnit *entity.OrgUnit) error {
 	return global.G_DB.Save(orgUnit).Error
 }
 
-func (r *orgUnitRepository) Delete(id uint) error {
+func (r *orgUnitRepository) Delete(id uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		// 检查是否有子节点
 		var count int64
@@ -70,7 +70,7 @@ func (r *orgUnitRepository) Delete(id uint) error {
 	})
 }
 
-func (r *orgUnitRepository) GetByID(id uint) (*entity.OrgUnit, error) {
+func (r *orgUnitRepository) GetByID(id uint64) (*entity.OrgUnit, error) {
 	var org entity.OrgUnit
 	err := global.G_DB.First(&org, id).Error
 	if err != nil {
@@ -94,7 +94,7 @@ func (r *orgUnitRepository) GetAll() ([]entity.OrgUnit, error) {
 	return orgs, err
 }
 
-func (r *orgUnitRepository) GetChildren(parentID uint) ([]entity.OrgUnit, error) {
+func (r *orgUnitRepository) GetChildren(parentID uint64) ([]entity.OrgUnit, error) {
 	var orgs []entity.OrgUnit
 	err := global.G_DB.Where("parent_id = ?", parentID).Order("path").Find(&orgs).Error
 	return orgs, err

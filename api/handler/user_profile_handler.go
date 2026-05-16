@@ -27,7 +27,7 @@ func NewUserProfileHandler(profileService services.ProfileService) *UserProfileH
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /user/profile [get]
 func (h *UserProfileHandler) GetProfile(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID := c.GetUint64("user_id")
 	profile, err := h.profileService.GetProfile(userID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -49,7 +49,7 @@ func (h *UserProfileHandler) GetProfile(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /user/profile [put]
 func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID := c.GetUint64("user_id")
 
 	var req dto.UpdateProfileRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -78,7 +78,7 @@ func (h *UserProfileHandler) UpdateProfile(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /user/password [put]
 func (h *UserProfileHandler) ChangePassword(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID := c.GetUint64("user_id")
 
 	var req dto.ChangePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

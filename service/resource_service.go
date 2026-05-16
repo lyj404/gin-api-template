@@ -21,7 +21,7 @@ func NewResourceService(resourceRepo repositories.ResourceRepository) services.R
 	}
 }
 
-func (s *resourceServiceImpl) CreateResource(resource *entity.Resource, operatorID uint) error {
+func (s *resourceServiceImpl) CreateResource(resource *entity.Resource, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(resource).Error; err != nil {
 			return err
@@ -33,7 +33,7 @@ func (s *resourceServiceImpl) CreateResource(resource *entity.Resource, operator
 	})
 }
 
-func (s *resourceServiceImpl) UpdateResource(resource *entity.Resource, operatorID uint) error {
+func (s *resourceServiceImpl) UpdateResource(resource *entity.Resource, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		oldResource, err := s.resourceRepo.GetByID(resource.ID)
 		if err != nil {
@@ -51,7 +51,7 @@ func (s *resourceServiceImpl) UpdateResource(resource *entity.Resource, operator
 	})
 }
 
-func (s *resourceServiceImpl) DeleteResource(id uint, operatorID uint) error {
+func (s *resourceServiceImpl) DeleteResource(id uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		resource, err := s.resourceRepo.GetByID(id)
 		if err != nil {
@@ -68,7 +68,7 @@ func (s *resourceServiceImpl) DeleteResource(id uint, operatorID uint) error {
 	})
 }
 
-func (s *resourceServiceImpl) GetResourceByID(id uint) (*entity.Resource, error) {
+func (s *resourceServiceImpl) GetResourceByID(id uint64) (*entity.Resource, error) {
 	return s.resourceRepo.GetByID(id)
 }
 
@@ -76,7 +76,7 @@ func (s *resourceServiceImpl) GetAllResources() ([]entity.Resource, error) {
 	return s.resourceRepo.GetAll()
 }
 
-func (s *resourceServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint, action, targetType string, targetID uint, beforeData, afterData, description string) error {
+func (s *resourceServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint64, action, targetType string, targetID uint64, beforeData, afterData, description string) error {
 	auditLog := entity.AuditLog{
 		OperatorID:   operatorID,
 		OperatorName: getOperatorName(tx, operatorID),

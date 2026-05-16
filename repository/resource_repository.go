@@ -20,11 +20,11 @@ func (r *resourceRepository) Update(resource *entity.Resource) error {
 	return global.G_DB.Save(resource).Error
 }
 
-func (r *resourceRepository) Delete(id uint) error {
+func (r *resourceRepository) Delete(id uint64) error {
 	return global.G_DB.Delete(&entity.Resource{}, id).Error
 }
 
-func (r *resourceRepository) GetByID(id uint) (*entity.Resource, error) {
+func (r *resourceRepository) GetByID(id uint64) (*entity.Resource, error) {
 	var resource entity.Resource
 	err := global.G_DB.First(&resource, id).Error
 	if err != nil {

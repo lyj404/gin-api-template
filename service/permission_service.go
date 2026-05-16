@@ -19,7 +19,7 @@ func NewPermissionService() services.PermissionService {
 	return &permissionServiceImpl{}
 }
 
-func (s *permissionServiceImpl) CheckPermission(userID uint, resource string, method string) (bool, error) {
+func (s *permissionServiceImpl) CheckPermission(userID uint64, resource string, method string) (bool, error) {
 	permissions, err := s.getUserPermissions(userID)
 	if err != nil {
 		return false, err
@@ -39,7 +39,7 @@ func (s *permissionServiceImpl) CheckPermission(userID uint, resource string, me
 	return false, nil
 }
 
-func (s *permissionServiceImpl) CheckEntityPermission(userID uint, entityType string, entityID uint, action string) (bool, error) {
+func (s *permissionServiceImpl) CheckEntityPermission(userID uint64, entityType string, entityID uint64, action string) (bool, error) {
 	entityResourceName := fmt.Sprintf("entity:%s:%s", entityType, action)
 
 	permissions, err := s.getUserPermissions(userID)
@@ -92,15 +92,15 @@ func (s *permissionServiceImpl) CheckEntityPermission(userID uint, entityType st
 	return false, nil
 }
 
-func (s *permissionServiceImpl) GetUserPermissions(userID uint) ([]services.PermissionInfo, error) {
+func (s *permissionServiceImpl) GetUserPermissions(userID uint64) ([]services.PermissionInfo, error) {
 	return s.getUserPermissions(userID)
 }
 
-func (s *permissionServiceImpl) GetUserOrgScope(userID uint) ([]services.OrgScopeInfo, error) {
+func (s *permissionServiceImpl) GetUserOrgScope(userID uint64) ([]services.OrgScopeInfo, error) {
 	return s.getUserOrgScope(userID)
 }
 
-func (s *permissionServiceImpl) ClearUserCache(userID uint) error {
+func (s *permissionServiceImpl) ClearUserCache(userID uint64) error {
 	if !config.CfgRedis.Enabled {
 		return nil
 	}
@@ -109,14 +109,14 @@ func (s *permissionServiceImpl) ClearUserCache(userID uint) error {
 	return global.G_REDIS.Del(context.Background(), cacheKey).Err()
 }
 
-func (s *permissionServiceImpl) GetUserMenus(userID uint) ([]services.MenuTreeNode, error) {
+func (s *permissionServiceImpl) GetUserMenus(userID uint64) ([]services.MenuTreeNode, error) {
 	var userRoles []entity.UserRole
 	err := global.G_DB.Preload("Role.RoleMenus.Menu.Resources").Where("user_id = ?", userID).Find(&userRoles).Error
 	if err != nil {
 		return nil, err
 	}
 
-	menuMap := make(map[uint]*entity.Menu)
+	menuMap := make(map[uint64]*entity.Menu)
 	for _, ur := range userRoles {
 		for _, rm := range ur.Role.RoleMenus {
 			if rm.Menu != nil && rm.Menu.IsVisible && rm.Menu.Status == "enabled" {
@@ -139,7 +139,7 @@ func (s *permissionServiceImpl) GetUserMenus(userID uint) ([]services.MenuTreeNo
 }
 
 func (s *permissionServiceImpl) buildMenuTree(menus []entity.Menu) []services.MenuTreeNode {
-	menuMap := make(map[uint]*services.MenuTreeNode)
+	menuMap := make(map[uint64]*services.MenuTreeNode)
 	var roots []services.MenuTreeNode
 
 	for _, menu := range menus {
@@ -165,7 +165,7 @@ func (s *permissionServiceImpl) buildMenuTree(menus []entity.Menu) []services.Me
 	return roots
 }
 
-func (s *permissionServiceImpl) getUserPermissions(userID uint) ([]services.PermissionInfo, error) {
+func (s *permissionServiceImpl) getUserPermissions(userID uint64) ([]services.PermissionInfo, error) {
 	cacheKey := fmt.Sprintf("user:permissions:%d", userID)
 
 	if config.CfgRedis.Enabled {
@@ -234,14 +234,14 @@ func (s *permissionServiceImpl) mergePermission(permMap map[string]*services.Per
 	}
 }
 
-func (s *permissionServiceImpl) getUserOrgScope(userID uint) ([]services.OrgScopeInfo, error) {
+func (s *permissionServiceImpl) getUserOrgScope(userID uint64) ([]services.OrgScopeInfo, error) {
 	var userRoles []entity.UserRole
 	err := global.G_DB.Preload("Role.RoleOrgScopes.OrgUnit").Where("user_id = ?", userID).Find(&userRoles).Error
 	if err != nil {
 		return nil, err
 	}
 
-	scopeMap := make(map[uint]*services.OrgScopeInfo)
+	scopeMap := make(map[uint64]*services.OrgScopeInfo)
 	for _, userRole := range userRoles {
 		for _, scope := range userRole.Role.RoleOrgScopes {
 			if info, exists := scopeMap[scope.OrgUnitID]; exists {

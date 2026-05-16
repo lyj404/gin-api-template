@@ -1,7 +1,7 @@
 package dto
 
 type BindResourceRequest struct {
-	RoleID  uint `json:"role_id" binding:"required"`
+	RoleID  uint64 `json:"role_id" binding:"required"`
 	IsWrite bool `json:"is_write"`
 }
 
@@ -26,7 +26,7 @@ type UpdateResourceRequest struct {
 }
 
 type ResourceListResponse struct {
-	ID          uint   `json:"id"`
+	ID          uint64   `json:"id"`
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 	Pattern     string `json:"pattern"`

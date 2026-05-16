@@ -47,7 +47,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 		IsSystem:    false,
 	}
 
-	operatorID := c.GetUint("user_id")
+	operatorID := c.GetUint64("user_id")
 	if err := h.roleService.CreateRole(role, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -86,12 +86,12 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	}
 
 	role := &entity.Role{
-		G_MODEL:     global.G_MODEL{ID: uint(id)},
+		G_MODEL:     global.G_MODEL{ID: uint64(id)},
 		Name:        request.Name,
 		Description: request.Description,
 	}
 
-	operatorID := c.GetUint("user_id")
+	operatorID := c.GetUint64("user_id")
 	if err := h.roleService.UpdateRole(role, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -121,8 +121,8 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 func (h *RoleHandler) DeleteRole(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	operatorID := c.GetUint("user_id")
-	if err := h.roleService.DeleteRole(uint(id), operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.roleService.DeleteRole(uint64(id), operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -142,13 +142,13 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 func (h *RoleHandler) GetRole(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	role, err := h.roleService.GetRoleByID(uint(id))
+	role, err := h.roleService.GetRoleByID(uint64(id))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "角色不存在")
 		return
 	}
 
-	resources, _ := h.roleService.GetRoleResources(uint(id))
+	resources, _ := h.roleService.GetRoleResources(uint64(id))
 	resourceResponses := make([]dto.RoleResourceResponse, len(resources))
 	for i, rr := range resources {
 		resourceResponses[i] = dto.RoleResourceResponse{
@@ -170,7 +170,7 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 		}
 	}
 
-	roleMenus, _ := h.roleService.GetRoleMenus(uint(id))
+	roleMenus, _ := h.roleService.GetRoleMenus(uint64(id))
 	menuResponses := make([]dto.RoleMenuResponse, len(roleMenus))
 	for i, rm := range roleMenus {
 		menuResponses[i] = dto.RoleMenuResponse{
@@ -219,8 +219,8 @@ func (h *RoleHandler) BindResource(c *gin.Context) {
 		return
 	}
 
-	operatorID := c.GetUint("user_id")
-	if err := h.roleService.BindResource(uint(roleID), req.ResourceID, req.IsWrite, operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.roleService.BindResource(uint64(roleID), req.ResourceID, req.IsWrite, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -242,8 +242,8 @@ func (h *RoleHandler) UnbindResource(c *gin.Context) {
 	roleID, _ := strconv.Atoi(c.Param("id"))
 	resourceID, _ := strconv.Atoi(c.Param("resourceId"))
 
-	operatorID := c.GetUint("user_id")
-	if err := h.roleService.UnbindResource(uint(roleID), uint(resourceID), operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.roleService.UnbindResource(uint64(roleID), uint64(resourceID), operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -263,7 +263,7 @@ func (h *RoleHandler) UnbindResource(c *gin.Context) {
 func (h *RoleHandler) GetRoleResources(c *gin.Context) {
 	roleID, _ := strconv.Atoi(c.Param("id"))
 
-	resources, err := h.roleService.GetRoleResources(uint(roleID))
+	resources, err := h.roleService.GetRoleResources(uint64(roleID))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -314,8 +314,8 @@ func (h *RoleHandler) BindMenu(c *gin.Context) {
 		return
 	}
 
-	operatorID := c.GetUint("user_id")
-	if err := h.roleService.BindMenu(uint(roleID), req.MenuID, operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.roleService.BindMenu(uint64(roleID), req.MenuID, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -337,8 +337,8 @@ func (h *RoleHandler) UnbindMenu(c *gin.Context) {
 	roleID, _ := strconv.Atoi(c.Param("id"))
 	menuID, _ := strconv.Atoi(c.Param("menuId"))
 
-	operatorID := c.GetUint("user_id")
-	if err := h.roleService.UnbindMenu(uint(roleID), uint(menuID), operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.roleService.UnbindMenu(uint64(roleID), uint64(menuID), operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -358,7 +358,7 @@ func (h *RoleHandler) UnbindMenu(c *gin.Context) {
 func (h *RoleHandler) GetRoleMenus(c *gin.Context) {
 	roleID, _ := strconv.Atoi(c.Param("id"))
 
-	roleMenus, err := h.roleService.GetRoleMenus(uint(roleID))
+	roleMenus, err := h.roleService.GetRoleMenus(uint64(roleID))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -408,9 +408,9 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 	}
 	orderBy += " " + req.Sort
 
-	operatorID := c.GetUint("user_id")
+	operatorID := c.GetUint64("user_id")
 
-	var roleIDs []uint
+	var roleIDs []uint64
 	global.G_DB.Model(&entity.UserRole{}).Select("role_id").Where("user_id = ?", operatorID).Find(&roleIDs)
 	hasSystemRole := false
 	if len(roleIDs) > 0 {

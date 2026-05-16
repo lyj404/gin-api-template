@@ -18,7 +18,7 @@ func NewUserProfileService() services.ProfileService {
 	return &userProfileServiceImpl{}
 }
 
-func (s *userProfileServiceImpl) GetProfile(userID uint) (*dto.ProfileResponse, error) {
+func (s *userProfileServiceImpl) GetProfile(userID uint64) (*dto.ProfileResponse, error) {
 	var user entity.User
 	if err := global.G_DB.First(&user, userID).Error; err != nil {
 		return nil, fmt.Errorf("用户不存在: %w", err)
@@ -32,7 +32,7 @@ func (s *userProfileServiceImpl) GetProfile(userID uint) (*dto.ProfileResponse, 
 	}, nil
 }
 
-func (s *userProfileServiceImpl) UpdateProfile(userID uint, req *dto.UpdateProfileRequest) error {
+func (s *userProfileServiceImpl) UpdateProfile(userID uint64, req *dto.UpdateProfileRequest) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		var existing entity.User
 		if err := tx.Where("email = ? AND id != ?", req.Email, userID).First(&existing).Error; err == nil {
@@ -59,7 +59,7 @@ func (s *userProfileServiceImpl) UpdateProfile(userID uint, req *dto.UpdateProfi
 	})
 }
 
-func (s *userProfileServiceImpl) ChangePassword(userID uint, req *dto.ChangePasswordRequest) error {
+func (s *userProfileServiceImpl) ChangePassword(userID uint64, req *dto.ChangePasswordRequest) error {
 	var user entity.User
 	if err := global.G_DB.First(&user, userID).Error; err != nil {
 		return fmt.Errorf("用户不存在: %w", err)

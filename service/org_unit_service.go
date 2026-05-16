@@ -21,7 +21,7 @@ func NewOrgUnitService(orgRepo repositories.OrgUnitRepository) services.OrgUnitS
 	}
 }
 
-func (s *orgUnitServiceImpl) CreateOrgUnit(orgUnit *entity.OrgUnit, operatorID uint) error {
+func (s *orgUnitServiceImpl) CreateOrgUnit(orgUnit *entity.OrgUnit, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(orgUnit).Error; err != nil {
 			return err
@@ -33,7 +33,7 @@ func (s *orgUnitServiceImpl) CreateOrgUnit(orgUnit *entity.OrgUnit, operatorID u
 	})
 }
 
-func (s *orgUnitServiceImpl) UpdateOrgUnit(orgUnit *entity.OrgUnit, operatorID uint) error {
+func (s *orgUnitServiceImpl) UpdateOrgUnit(orgUnit *entity.OrgUnit, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		oldOrg, err := s.orgRepo.GetByID(orgUnit.ID)
 		if err != nil {
@@ -51,7 +51,7 @@ func (s *orgUnitServiceImpl) UpdateOrgUnit(orgUnit *entity.OrgUnit, operatorID u
 	})
 }
 
-func (s *orgUnitServiceImpl) DeleteOrgUnit(id uint, operatorID uint) error {
+func (s *orgUnitServiceImpl) DeleteOrgUnit(id uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		org, err := s.orgRepo.GetByID(id)
 		if err != nil {
@@ -68,7 +68,7 @@ func (s *orgUnitServiceImpl) DeleteOrgUnit(id uint, operatorID uint) error {
 	})
 }
 
-func (s *orgUnitServiceImpl) GetOrgUnitByID(id uint) (*entity.OrgUnit, error) {
+func (s *orgUnitServiceImpl) GetOrgUnitByID(id uint64) (*entity.OrgUnit, error) {
 	return s.orgRepo.GetByID(id)
 }
 
@@ -80,7 +80,7 @@ func (s *orgUnitServiceImpl) GetOrgTree() ([]entity.OrgUnit, error) {
 	return s.orgRepo.GetAll()
 }
 
-func (s *orgUnitServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint, action, targetType string, targetID uint, beforeData, afterData, description string) error {
+func (s *orgUnitServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint64, action, targetType string, targetID uint64, beforeData, afterData, description string) error {
 	auditLog := entity.AuditLog{
 		OperatorID:   operatorID,
 		OperatorName: getOperatorName(tx, operatorID),

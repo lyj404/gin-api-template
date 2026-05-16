@@ -32,7 +32,7 @@ func (m *RBACMiddleware) CheckPermission(resource string) gin.HandlerFunc {
 			return
 		}
 
-		hasPermission, err := m.permissionService.CheckPermission(userID.(uint), resource, c.Request.Method)
+		hasPermission, err := m.permissionService.CheckPermission(userID.(uint64), resource, c.Request.Method)
 		if err != nil {
 			result.ErrorResponse(c, http.StatusInternalServerError, "权限检查失败")
 			c.Abort()
@@ -75,7 +75,7 @@ func (m *RBACMiddleware) CheckEntityPermission(entityType string, action string)
 			return
 		}
 
-		hasPermission, err := m.permissionService.CheckEntityPermission(userID.(uint), entityType, uint(entityID), action)
+		hasPermission, err := m.permissionService.CheckEntityPermission(userID.(uint64), entityType, uint64(entityID), action)
 		if err != nil {
 			result.ErrorResponse(c, http.StatusInternalServerError, "权限检查失败")
 			c.Abort()

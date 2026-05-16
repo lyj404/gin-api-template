@@ -259,7 +259,7 @@ func (u *UserHandler) GenerateMathCaptcha(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /logout [post]
 func (u *UserHandler) Logout(c *gin.Context) {
-	userID := c.GetUint("user_id")
+	userID := c.GetUint64("user_id")
 
 	user, err := u.RefreshTokenUseCase.GetUserByID(c, strconv.FormatUint(uint64(userID), 16))
 	if err != nil {

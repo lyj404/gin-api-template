@@ -66,6 +66,11 @@ type LogConfig struct {
 	Compress   bool   `yaml:"Compress"`   // compress backups
 }
 
+type SnowflakeConfig struct {
+	NodeID    uint   `yaml:"NodeID"`
+	StartTime string `yaml:"StartTime"`
+}
+
 type SessionConfig struct {
 	SessionSecret string `yaml:"SessionSecret"`
 }
@@ -79,17 +84,19 @@ type Config struct {
 	Password PasswordConfig `yaml:"password"`
 	Session  SessionConfig  `yaml:"session"`
 	Log      LogConfig      `yaml:"log"`
+	Snowflake SnowflakeConfig `yaml:"snowflake"`
 }
 
 var (
-	CfgServer   ServerConfig
-	CfgDatabase DatabaseConfig
-	CfgRedis    RedisConfig
-	CfgTimeout  TimeoutConfig
-	CfgToken    TokenConfig
-	CfgPassword PasswordConfig
-	CfgSession  SessionConfig
-	CfgLog      LogConfig
+	CfgServer    ServerConfig
+	CfgDatabase  DatabaseConfig
+	CfgRedis     RedisConfig
+	CfgTimeout   TimeoutConfig
+	CfgToken     TokenConfig
+	CfgPassword  PasswordConfig
+	CfgSession   SessionConfig
+	CfgLog       LogConfig
+	CfgSnowflake SnowflakeConfig
 )
 
 func InitConfig() {
@@ -255,4 +262,5 @@ func InitConfig() {
 	CfgPassword = cfg.Password
 	CfgSession = cfg.Session
 	CfgLog = cfg.Log
+	CfgSnowflake = cfg.Snowflake
 }

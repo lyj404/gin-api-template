@@ -261,7 +261,7 @@ func createDefaultResources(tx *gorm.DB) error {
 	return nil
 }
 
-func syncAllResourcesToRole(tx *gorm.DB, roleID uint) error {
+func syncAllResourcesToRole(tx *gorm.DB, roleID uint64) error {
 	// 清除旧绑定
 	if err := tx.Where("role_id = ?", roleID).Delete(&entity.RoleResource{}).Error; err != nil {
 		return err
@@ -287,7 +287,7 @@ func syncAllResourcesToRole(tx *gorm.DB, roleID uint) error {
 	return nil
 }
 
-func syncAllMenusToRole(tx *gorm.DB, roleID uint) error {
+func syncAllMenusToRole(tx *gorm.DB, roleID uint64) error {
 	if err := tx.Where("role_id = ?", roleID).Delete(&entity.RoleMenu{}).Error; err != nil {
 		return err
 	}
@@ -340,7 +340,7 @@ func seedResources() {
 	fmt.Printf("资源初始化成功，当前资源总数: %d\n", count)
 }
 
-func bindOrgScopeToRole(tx *gorm.DB, roleID, orgUnitID uint, includeDescendants bool) error {
+func bindOrgScopeToRole(tx *gorm.DB, roleID, orgUnitID uint64, includeDescendants bool) error {
 	roleOrgScope := entity.RoleOrgScope{
 		RoleID:             roleID,
 		OrgUnitID:          orgUnitID,

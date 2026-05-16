@@ -20,11 +20,11 @@ func (s *auditLogServiceImpl) Create(auditLog *entity.AuditLog) error {
 	return s.auditLogRepo.Create(auditLog)
 }
 
-func (s *auditLogServiceImpl) GetAuditLogsByOperator(operatorID uint, page, pageSize int) ([]entity.AuditLog, int64, error) {
+func (s *auditLogServiceImpl) GetAuditLogsByOperator(operatorID uint64, page, pageSize int) ([]entity.AuditLog, int64, error) {
 	return s.auditLogRepo.GetByOperator(operatorID, page, pageSize)
 }
 
-func (s *auditLogServiceImpl) GetAuditLogsByTarget(targetType string, targetID uint, page, pageSize int) ([]entity.AuditLog, int64, error) {
+func (s *auditLogServiceImpl) GetAuditLogsByTarget(targetType string, targetID uint64, page, pageSize int) ([]entity.AuditLog, int64, error) {
 	return s.auditLogRepo.GetByTarget(targetType, targetID, page, pageSize)
 }
 

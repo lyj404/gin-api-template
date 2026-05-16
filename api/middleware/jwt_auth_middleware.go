@@ -56,14 +56,14 @@ func JwtAuthMiddleware(secret string) gin.HandlerFunc {
 			}
 		}
 
-		// 将十六进制用户ID解析为 uint 并注入 context
+		// 将十六进制用户ID解析为 uint64 并注入 context
 		userID, err := strconv.ParseUint(idStr, 16, 64)
 		if err != nil {
 			result.ErrorResponse(c, http.StatusUnauthorized, "invalid user id in token")
 			c.Abort()
 			return
 		}
-		c.Set("user_id", uint(userID))
+		c.Set("user_id", uint64(userID))
 
 		// 继续处理请求
 		c.Next()

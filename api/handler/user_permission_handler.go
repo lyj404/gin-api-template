@@ -36,13 +36,13 @@ func (h *UserPermissionHandler) GetUserPermissions(c *gin.Context) {
 		return
 	}
 
-	permissions, err := h.permissionService.GetUserPermissions(userID.(uint))
+	permissions, err := h.permissionService.GetUserPermissions(userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	orgScopes, err := h.permissionService.GetUserOrgScope(userID.(uint))
+	orgScopes, err := h.permissionService.GetUserOrgScope(userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -72,7 +72,7 @@ func (h *UserPermissionHandler) GetUserMenus(c *gin.Context) {
 		return
 	}
 
-	menus, err := h.permissionService.GetUserMenus(userID.(uint))
+	menus, err := h.permissionService.GetUserMenus(userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

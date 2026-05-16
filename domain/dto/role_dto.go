@@ -11,14 +11,14 @@ type UpdateRoleRequest struct {
 }
 
 type RoleResponse struct {
-	ID          uint   `json:"id"`
+	ID          uint64   `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	IsSystem    bool   `json:"is_system"`
 }
 
 type RoleDetailResponse struct {
-	ID          uint                   `json:"id"`
+	ID          uint64                   `json:"id"`
 	Name        string                 `json:"name"`
 	Description string                 `json:"description"`
 	IsSystem    bool                   `json:"is_system"`
@@ -27,39 +27,39 @@ type RoleDetailResponse struct {
 }
 
 type RoleMenuResponse struct {
-	ID         uint            `json:"id"`
-	RoleID     uint            `json:"role_id"`
-	MenuID     uint            `json:"menu_id"`
+	ID         uint64            `json:"id"`
+	RoleID     uint64            `json:"role_id"`
+	MenuID     uint64            `json:"menu_id"`
 	Menu       *MenuBriefResponse `json:"menu,omitempty"`
 }
 
 type MenuBriefResponse struct {
-	ID     uint   `json:"id"`
+	ID     uint64   `json:"id"`
 	Name   string `json:"name"`
 	Path   string `json:"path"`
 	Icon   string `json:"icon"`
 }
 
 type BindRoleResourceRequest struct {
-	ResourceID uint `json:"resource_id" binding:"required"`
+	ResourceID uint64 `json:"resource_id" binding:"required"`
 	IsWrite    bool `json:"is_write"`
 }
 
 type BindRoleMenuRequest struct {
-	MenuID uint `json:"menu_id" binding:"required"`
+	MenuID uint64 `json:"menu_id" binding:"required"`
 }
 
 type RoleResourceResponse struct {
-	ID         uint                  `json:"id"`
-	RoleID     uint                  `json:"role_id"`
-	ResourceID uint                  `json:"resource_id"`
+	ID         uint64                  `json:"id"`
+	RoleID     uint64                  `json:"role_id"`
+	ResourceID uint64                  `json:"resource_id"`
 	IsRead     bool                  `json:"is_read"`
 	IsWrite    bool                  `json:"is_write"`
 	Resource   *ResourceBriefResponse `json:"resource,omitempty"`
 }
 
 type ResourceBriefResponse struct {
-	ID          uint   `json:"id"`
+	ID          uint64   `json:"id"`
 	Name        string `json:"name"`
 	Type        string `json:"type"`
 	Pattern     string `json:"pattern"`

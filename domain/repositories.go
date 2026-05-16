@@ -17,13 +17,13 @@ type UserRepo interface {
 type MenuRepository interface {
 	Create(menu *entity.Menu) error
 	Update(menu *entity.Menu) error
-	Delete(id uint) error
-	GetByID(id uint) (*entity.Menu, error)
+	Delete(id uint64) error
+	GetByID(id uint64) (*entity.Menu, error)
 	GetAll() ([]entity.Menu, error)
-	GetByParentID(parentID *uint) ([]entity.Menu, error)
+	GetByParentID(parentID *uint64) ([]entity.Menu, error)
 	GetRootMenus() ([]entity.Menu, error)
-	HasChildren(id uint) (bool, error)
-	BindResource(menuID, resourceID uint) error
-	UnbindResource(menuID, resourceID uint) error
-	GetMenuResources(menuID uint) ([]entity.MenuResource, error)
+	HasChildren(id uint64) (bool, error)
+	BindResource(menuID, resourceID uint64) error
+	UnbindResource(menuID, resourceID uint64) error
+	GetMenuResources(menuID uint64) ([]entity.MenuResource, error)
 }

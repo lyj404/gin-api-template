@@ -16,7 +16,7 @@ func (r *auditLogRepository) Create(auditLog *entity.AuditLog) error {
 	return global.G_DB.Create(auditLog).Error
 }
 
-func (r *auditLogRepository) GetByID(id uint) (*entity.AuditLog, error) {
+func (r *auditLogRepository) GetByID(id uint64) (*entity.AuditLog, error) {
 	var auditLog entity.AuditLog
 	err := global.G_DB.First(&auditLog, id).Error
 	if err != nil {
@@ -25,7 +25,7 @@ func (r *auditLogRepository) GetByID(id uint) (*entity.AuditLog, error) {
 	return &auditLog, nil
 }
 
-func (r *auditLogRepository) GetByOperator(operatorID uint, page, pageSize int) ([]entity.AuditLog, int64, error) {
+func (r *auditLogRepository) GetByOperator(operatorID uint64, page, pageSize int) ([]entity.AuditLog, int64, error) {
 	var auditLogs []entity.AuditLog
 	var total int64
 
@@ -42,7 +42,7 @@ func (r *auditLogRepository) GetByOperator(operatorID uint, page, pageSize int) 
 	return auditLogs, total, err
 }
 
-func (r *auditLogRepository) GetByTarget(targetType string, targetID uint, page, pageSize int) ([]entity.AuditLog, int64, error) {
+func (r *auditLogRepository) GetByTarget(targetType string, targetID uint64, page, pageSize int) ([]entity.AuditLog, int64, error) {
 	var auditLogs []entity.AuditLog
 	var total int64
 

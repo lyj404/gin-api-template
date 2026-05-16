@@ -34,7 +34,7 @@ func (r *userManagementRepository) List(page, pageSize int, keyword string) ([]e
 	return users, total, nil
 }
 
-func (r *userManagementRepository) GetByID(id uint) (*entity.User, error) {
+func (r *userManagementRepository) GetByID(id uint64) (*entity.User, error) {
 	var user entity.User
 	if err := global.G_DB.First(&user, id).Error; err != nil {
 		return nil, err
@@ -53,26 +53,26 @@ func (r *userManagementRepository) Update(tx *gorm.DB, user *entity.User) error 
 	}).Error
 }
 
-func (r *userManagementRepository) UpdatePassword(tx *gorm.DB, id uint, hashed string) error {
+func (r *userManagementRepository) UpdatePassword(tx *gorm.DB, id uint64, hashed string) error {
 	return tx.Model(&entity.User{}).Where("id = ?", id).Update("password", hashed).Error
 }
 
-func (r *userManagementRepository) Delete(tx *gorm.DB, id uint) error {
+func (r *userManagementRepository) Delete(tx *gorm.DB, id uint64) error {
 	if err := tx.Where("user_id = ?", id).Delete(&entity.UserRole{}).Error; err != nil {
 		return err
 	}
 	return tx.Delete(&entity.User{}, id).Error
 }
 
-func (r *userManagementRepository) GetRoleIDsByUserID(userID uint) ([]uint, error) {
-	var roleIDs []uint
+func (r *userManagementRepository) GetRoleIDsByUserID(userID uint64) ([]uint64, error) {
+	var roleIDs []uint64
 	err := global.G_DB.Model(&entity.UserRole{}).
 		Where("user_id = ?", userID).
 		Pluck("role_id", &roleIDs).Error
 	return roleIDs, err
 }
 
-func (r *userManagementRepository) ReplaceUserRoles(tx *gorm.DB, userID, orgUnitID uint, roleIDs []uint) error {
+func (r *userManagementRepository) ReplaceUserRoles(tx *gorm.DB, userID, orgUnitID uint64, roleIDs []uint64) error {
 	if err := tx.Where("user_id = ?", userID).Delete(&entity.UserRole{}).Error; err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (r *userManagementRepository) ReplaceUserRoles(tx *gorm.DB, userID, orgUnit
 	return tx.Create(&rows).Error
 }
 
-func (r *userManagementRepository) GetRoleNamesByUserID(userID uint) ([]string, error) {
+func (r *userManagementRepository) GetRoleNamesByUserID(userID uint64) ([]string, error) {
 	var names []string
 	err := global.G_DB.Table("user_role").
 		Select("role.name").

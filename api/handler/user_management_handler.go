@@ -75,7 +75,7 @@ func (h *UserManagementHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, roleIDs, roleNames, err := h.userMgmt.GetByID(uint(id))
+	user, roleIDs, roleNames, err := h.userMgmt.GetByID(uint64(id))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "用户不存在")
 		return
@@ -108,7 +108,7 @@ func (h *UserManagementHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	operatorID := c.GetUint("user_id")
+	operatorID := c.GetUint64("user_id")
 	user, err := h.userMgmt.Create(&req, operatorID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
@@ -149,8 +149,8 @@ func (h *UserManagementHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	operatorID := c.GetUint("user_id")
-	user, err := h.userMgmt.Update(uint(id), &req, operatorID)
+	operatorID := c.GetUint64("user_id")
+	user, err := h.userMgmt.Update(uint64(id), &req, operatorID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -181,12 +181,12 @@ func (h *UserManagementHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	operatorID := c.GetUint("user_id")
-	if uint(id) == operatorID {
+	operatorID := c.GetUint64("user_id")
+	if uint64(id) == operatorID {
 		result.ErrorResponse(c, http.StatusBadRequest, "不能删除自己")
 		return
 	}
-	if err := h.userMgmt.Delete(uint(id), operatorID); err != nil {
+	if err := h.userMgmt.Delete(uint64(id), operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}

@@ -21,7 +21,7 @@ func NewRoleService(roleRepo repositories.RoleRepository) services.RoleService {
 	}
 }
 
-func (s *roleServiceImpl) CreateRole(role *entity.Role, operatorID uint) error {
+func (s *roleServiceImpl) CreateRole(role *entity.Role, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(role).Error; err != nil {
 			return err
@@ -33,7 +33,7 @@ func (s *roleServiceImpl) CreateRole(role *entity.Role, operatorID uint) error {
 	})
 }
 
-func (s *roleServiceImpl) UpdateRole(role *entity.Role, operatorID uint) error {
+func (s *roleServiceImpl) UpdateRole(role *entity.Role, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		oldRole, err := s.roleRepo.GetByID(role.ID)
 		if err != nil {
@@ -51,7 +51,7 @@ func (s *roleServiceImpl) UpdateRole(role *entity.Role, operatorID uint) error {
 	})
 }
 
-func (s *roleServiceImpl) DeleteRole(id uint, operatorID uint) error {
+func (s *roleServiceImpl) DeleteRole(id uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		role, err := s.roleRepo.GetByID(id)
 		if err != nil {
@@ -72,7 +72,7 @@ func (s *roleServiceImpl) DeleteRole(id uint, operatorID uint) error {
 	})
 }
 
-func (s *roleServiceImpl) GetRoleByID(id uint) (*entity.Role, error) {
+func (s *roleServiceImpl) GetRoleByID(id uint64) (*entity.Role, error) {
 	return s.roleRepo.GetByID(id)
 }
 
@@ -80,11 +80,11 @@ func (s *roleServiceImpl) GetAllRoles() ([]entity.Role, error) {
 	return s.roleRepo.GetAll()
 }
 
-func (s *roleServiceImpl) GetRoleResources(roleID uint) ([]entity.RoleResource, error) {
+func (s *roleServiceImpl) GetRoleResources(roleID uint64) ([]entity.RoleResource, error) {
 	return s.roleRepo.GetRoleResources(roleID)
 }
 
-func (s *roleServiceImpl) BindResource(roleID, resourceID uint, isWrite bool, operatorID uint) error {
+func (s *roleServiceImpl) BindResource(roleID, resourceID uint64, isWrite bool, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		roleResource := entity.RoleResource{
 			RoleID:     roleID,
@@ -102,7 +102,7 @@ func (s *roleServiceImpl) BindResource(roleID, resourceID uint, isWrite bool, op
 	})
 }
 
-func (s *roleServiceImpl) UnbindResource(roleID, resourceID uint, operatorID uint) error {
+func (s *roleServiceImpl) UnbindResource(roleID, resourceID uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		description := fmt.Sprintf("角色 %d 解绑资源 %d", roleID, resourceID)
 		if err := tx.Where("role_id = ? AND resource_id = ?", roleID, resourceID).Delete(&entity.RoleResource{}).Error; err != nil {
@@ -113,7 +113,7 @@ func (s *roleServiceImpl) UnbindResource(roleID, resourceID uint, operatorID uin
 	})
 }
 
-func (s *roleServiceImpl) BindOrgScope(roleID, orgUnitID uint, includeDescendants bool, operatorID uint) error {
+func (s *roleServiceImpl) BindOrgScope(roleID, orgUnitID uint64, includeDescendants bool, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		roleOrgScope := entity.RoleOrgScope{
 			RoleID:             roleID,
@@ -130,7 +130,7 @@ func (s *roleServiceImpl) BindOrgScope(roleID, orgUnitID uint, includeDescendant
 	})
 }
 
-func (s *roleServiceImpl) UnbindOrgScope(roleID, orgUnitID uint, operatorID uint) error {
+func (s *roleServiceImpl) UnbindOrgScope(roleID, orgUnitID uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		description := fmt.Sprintf("角色 %d 解绑组织范围 %d", roleID, orgUnitID)
 		if err := tx.Where("role_id = ? AND org_unit_id = ?", roleID, orgUnitID).Delete(&entity.RoleOrgScope{}).Error; err != nil {
@@ -141,7 +141,7 @@ func (s *roleServiceImpl) UnbindOrgScope(roleID, orgUnitID uint, operatorID uint
 	})
 }
 
-func (s *roleServiceImpl) AssignRoleToUser(userID, roleID, orgUnitID uint, operatorID uint) error {
+func (s *roleServiceImpl) AssignRoleToUser(userID, roleID, orgUnitID uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		userRole := entity.UserRole{
 			UserID:    userID,
@@ -158,7 +158,7 @@ func (s *roleServiceImpl) AssignRoleToUser(userID, roleID, orgUnitID uint, opera
 	})
 }
 
-func (s *roleServiceImpl) RevokeRoleFromUser(userID, roleID, orgUnitID uint, operatorID uint) error {
+func (s *roleServiceImpl) RevokeRoleFromUser(userID, roleID, orgUnitID uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		description := fmt.Sprintf("用户 %d 撤销角色 %d (组织: %d)", userID, roleID, orgUnitID)
 		if err := tx.Where("user_id = ? AND role_id = ? AND org_unit_id = ?", userID, roleID, orgUnitID).Delete(&entity.UserRole{}).Error; err != nil {
@@ -169,7 +169,7 @@ func (s *roleServiceImpl) RevokeRoleFromUser(userID, roleID, orgUnitID uint, ope
 	})
 }
 
-func (s *roleServiceImpl) BindMenu(roleID, menuID uint, operatorID uint) error {
+func (s *roleServiceImpl) BindMenu(roleID, menuID uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		rm := entity.RoleMenu{RoleID: roleID, MenuID: menuID}
 		if err := tx.Create(&rm).Error; err != nil {
@@ -180,7 +180,7 @@ func (s *roleServiceImpl) BindMenu(roleID, menuID uint, operatorID uint) error {
 	})
 }
 
-func (s *roleServiceImpl) UnbindMenu(roleID, menuID uint, operatorID uint) error {
+func (s *roleServiceImpl) UnbindMenu(roleID, menuID uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		description := fmt.Sprintf("角色 %d 解绑菜单 %d", roleID, menuID)
 		if err := tx.Where("role_id = ? AND menu_id = ?", roleID, menuID).Delete(&entity.RoleMenu{}).Error; err != nil {
@@ -190,11 +190,11 @@ func (s *roleServiceImpl) UnbindMenu(roleID, menuID uint, operatorID uint) error
 	})
 }
 
-func (s *roleServiceImpl) GetRoleMenus(roleID uint) ([]entity.RoleMenu, error) {
+func (s *roleServiceImpl) GetRoleMenus(roleID uint64) ([]entity.RoleMenu, error) {
 	return s.roleRepo.GetRoleMenus(roleID)
 }
 
-func (s *roleServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint, action, targetType string, targetID uint, beforeData, afterData, description string) error {
+func (s *roleServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint64, action, targetType string, targetID uint64, beforeData, afterData, description string) error {
 	auditLog := entity.AuditLog{
 		OperatorID:   operatorID,
 		OperatorName: getOperatorName(tx, operatorID),

@@ -3,10 +3,16 @@ package bootstrap
 import (
 	"github.com/lyj404/gin-api-template/config"
 	"github.com/lyj404/gin-api-template/global"
+	"github.com/lyj404/gin-api-template/internal/idgen"
 	"github.com/lyj404/gin-api-template/pkg/lib"
 )
 
 func Boot() {
+	// 初始化 Snowflake ID 生成器
+	if err := idgen.InitSnowflake(); err != nil {
+		panic(err)
+	}
+
 	// 初始化数据库
 	global.G_DB = lib.NewDataBase()
 
@@ -19,6 +25,9 @@ func Boot() {
 
 // BootDBOnly 仅初始化数据库，适用于 CLI 等不依赖 Redis 的场景
 func BootDBOnly() {
+	if err := idgen.InitSnowflake(); err != nil {
+		panic(err)
+	}
 	global.G_DB = lib.NewDataBase()
 }
 

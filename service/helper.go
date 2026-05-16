@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func getOperatorName(tx *gorm.DB, userID uint) string {
+func getOperatorName(tx *gorm.DB, userID uint64) string {
 	var user entity.User
 	if err := tx.First(&user, userID).Error; err != nil {
 		return "未知"

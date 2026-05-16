@@ -22,14 +22,14 @@ func NewUserManagementService(userRepo repositories.UserRepository) services.Use
 	return &userManagementServiceImpl{userRepo: userRepo}
 }
 
-func (s *userManagementServiceImpl) List(page, pageSize int, keyword string) ([]entity.User, map[uint][]uint, map[uint][]string, int64, error) {
+func (s *userManagementServiceImpl) List(page, pageSize int, keyword string) ([]entity.User, map[uint64][]uint64, map[uint64][]string, int64, error) {
 	users, total, err := s.userRepo.List(page, pageSize, keyword)
 	if err != nil {
 		return nil, nil, nil, 0, err
 	}
 
-	roleIDsMap := make(map[uint][]uint, len(users))
-	roleNamesMap := make(map[uint][]string, len(users))
+	roleIDsMap := make(map[uint64][]uint64, len(users))
+	roleNamesMap := make(map[uint64][]string, len(users))
 	for _, u := range users {
 		ids, err := s.userRepo.GetRoleIDsByUserID(u.ID)
 		if err != nil {
@@ -47,7 +47,7 @@ func (s *userManagementServiceImpl) List(page, pageSize int, keyword string) ([]
 	return users, roleIDsMap, roleNamesMap, total, nil
 }
 
-func (s *userManagementServiceImpl) GetByID(id uint) (*entity.User, []uint, []string, error) {
+func (s *userManagementServiceImpl) GetByID(id uint64) (*entity.User, []uint64, []string, error) {
 	user, err := s.userRepo.GetByID(id)
 	if err != nil {
 		return nil, nil, nil, err
@@ -63,7 +63,7 @@ func (s *userManagementServiceImpl) GetByID(id uint) (*entity.User, []uint, []st
 	return user, roleIDs, roleNames, nil
 }
 
-func (s *userManagementServiceImpl) Create(req *dto.CreateUserRequest, operatorID uint) (*entity.User, error) {
+func (s *userManagementServiceImpl) Create(req *dto.CreateUserRequest, operatorID uint64) (*entity.User, error) {
 	hashed, err := util.HashPassword(req.Password)
 	if err != nil {
 		return nil, fmt.Errorf("密码加密失败: %w", err)
@@ -111,7 +111,7 @@ func (s *userManagementServiceImpl) Create(req *dto.CreateUserRequest, operatorI
 	return user, nil
 }
 
-func (s *userManagementServiceImpl) Update(id uint, req *dto.UpdateUserRequest, operatorID uint) (*entity.User, error) {
+func (s *userManagementServiceImpl) Update(id uint64, req *dto.UpdateUserRequest, operatorID uint64) (*entity.User, error) {
 	old, err := s.userRepo.GetByID(id)
 	if err != nil {
 		return nil, err
@@ -166,7 +166,7 @@ func (s *userManagementServiceImpl) Update(id uint, req *dto.UpdateUserRequest, 
 	return &updated, nil
 }
 
-func (s *userManagementServiceImpl) Delete(id uint, operatorID uint) error {
+func (s *userManagementServiceImpl) Delete(id uint64, operatorID uint64) error {
 	if id == operatorID {
 		return errors.New("不能删除自己")
 	}
@@ -185,7 +185,7 @@ func (s *userManagementServiceImpl) Delete(id uint, operatorID uint) error {
 	})
 }
 
-func (s *userManagementServiceImpl) audit(tx *gorm.DB, operatorID uint, action string, targetID uint, before, after, description string) error {
+func (s *userManagementServiceImpl) audit(tx *gorm.DB, operatorID uint64, action string, targetID uint64, before, after, description string) error {
 	log := entity.AuditLog{
 		OperatorID:   operatorID,
 		OperatorName: getOperatorName(tx, operatorID),

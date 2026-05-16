@@ -24,7 +24,7 @@ func NewMenuService(menuRepo domain.MenuRepository) services.MenuService {
 }
 
 // CreateMenu 创建菜单
-func (s *menuServiceImpl) CreateMenu(menu *entity.Menu, operatorID uint) error {
+func (s *menuServiceImpl) CreateMenu(menu *entity.Menu, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(menu).Error; err != nil {
 			return err
@@ -37,7 +37,7 @@ func (s *menuServiceImpl) CreateMenu(menu *entity.Menu, operatorID uint) error {
 }
 
 // UpdateMenu 更新菜单
-func (s *menuServiceImpl) UpdateMenu(menu *entity.Menu, operatorID uint) error {
+func (s *menuServiceImpl) UpdateMenu(menu *entity.Menu, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		oldMenu, err := s.menuRepo.GetByID(menu.ID)
 		if err != nil {
@@ -56,7 +56,7 @@ func (s *menuServiceImpl) UpdateMenu(menu *entity.Menu, operatorID uint) error {
 }
 
 // DeleteMenu 删除菜单
-func (s *menuServiceImpl) DeleteMenu(id uint, operatorID uint) error {
+func (s *menuServiceImpl) DeleteMenu(id uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		menu, err := s.menuRepo.GetByID(id)
 		if err != nil {
@@ -74,7 +74,7 @@ func (s *menuServiceImpl) DeleteMenu(id uint, operatorID uint) error {
 }
 
 // GetMenuByID 根据ID获取菜单
-func (s *menuServiceImpl) GetMenuByID(id uint) (*entity.Menu, error) {
+func (s *menuServiceImpl) GetMenuByID(id uint64) (*entity.Menu, error) {
 	return s.menuRepo.GetByID(id)
 }
 
@@ -95,7 +95,7 @@ func (s *menuServiceImpl) GetMenuTree() ([]entity.Menu, error) {
 
 // buildMenuTree 将扁平菜单列表构建为树形结构
 func buildMenuTree(menus []entity.Menu) []entity.Menu {
-	menuMap := make(map[uint]*entity.Menu)
+	menuMap := make(map[uint64]*entity.Menu)
 	var roots []entity.Menu
 
 	// 第一遍：创建所有节点映射
@@ -119,7 +119,7 @@ func buildMenuTree(menus []entity.Menu) []entity.Menu {
 }
 
 // createAuditLog 创建审计日志
-func (s *menuServiceImpl) BindResource(menuID, resourceID uint, operatorID uint) error {
+func (s *menuServiceImpl) BindResource(menuID, resourceID uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		mr := entity.MenuResource{MenuID: menuID, ResourceID: resourceID}
 		if err := tx.Create(&mr).Error; err != nil {
@@ -130,7 +130,7 @@ func (s *menuServiceImpl) BindResource(menuID, resourceID uint, operatorID uint)
 	})
 }
 
-func (s *menuServiceImpl) UnbindResource(menuID, resourceID uint, operatorID uint) error {
+func (s *menuServiceImpl) UnbindResource(menuID, resourceID uint64, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		description := fmt.Sprintf("菜单 %d 解绑资源 %d", menuID, resourceID)
 		if err := tx.Where("menu_id = ? AND resource_id = ?", menuID, resourceID).Delete(&entity.MenuResource{}).Error; err != nil {
@@ -140,11 +140,11 @@ func (s *menuServiceImpl) UnbindResource(menuID, resourceID uint, operatorID uin
 	})
 }
 
-func (s *menuServiceImpl) GetMenuResources(menuID uint) ([]entity.MenuResource, error) {
+func (s *menuServiceImpl) GetMenuResources(menuID uint64) ([]entity.MenuResource, error) {
 	return s.menuRepo.GetMenuResources(menuID)
 }
 
-func (s *menuServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint, action, targetType string, targetID uint, beforeData, afterData, description string) error {
+func (s *menuServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint64, action, targetType string, targetID uint64, beforeData, afterData, description string) error {
 	auditLog := entity.AuditLog{
 		OperatorID:   operatorID,
 		OperatorName: getOperatorName(tx, operatorID),

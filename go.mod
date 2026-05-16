@@ -22,6 +22,7 @@ require (
 )
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/term v0.43.0 // indirect

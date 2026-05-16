@@ -44,7 +44,7 @@ func (h *AuditLogHandler) GetAuditLogsByOperator(c *gin.Context) {
 
 	operatorID, _ := strconv.Atoi(c.Query("operator_id"))
 	if operatorID != 0 {
-		logs, total, err := h.auditLogService.GetAuditLogsByOperator(uint(operatorID), req.Page, req.PageSize)
+		logs, total, err := h.auditLogService.GetAuditLogsByOperator(uint64(operatorID), req.Page, req.PageSize)
 		if err != nil {
 			result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 			return
@@ -105,7 +105,7 @@ func (h *AuditLogHandler) GetAuditLogsByTarget(c *gin.Context) {
 		return
 	}
 
-	logs, total, err := h.auditLogService.GetAuditLogsByTarget(targetType, uint(targetID), req.Page, req.PageSize)
+	logs, total, err := h.auditLogService.GetAuditLogsByTarget(targetType, uint64(targetID), req.Page, req.PageSize)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

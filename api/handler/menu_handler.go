@@ -51,7 +51,7 @@ func (h *MenuHandler) CreateMenu(c *gin.Context) {
 		Status:    "enabled",
 	}
 
-	operatorID := c.GetUint("user_id")
+	operatorID := c.GetUint64("user_id")
 	if err := h.menuService.CreateMenu(menu, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -94,7 +94,7 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 	}
 
 	menu := &entity.Menu{
-		G_MODEL:   global.G_MODEL{ID: uint(id)},
+		G_MODEL:   global.G_MODEL{ID: uint64(id)},
 		Name:      request.Name,
 		ParentID:  request.ParentID,
 		Path:      request.Path,
@@ -107,7 +107,7 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 		menu.IsVisible = *request.IsVisible
 	}
 
-	operatorID := c.GetUint("user_id")
+	operatorID := c.GetUint64("user_id")
 	if err := h.menuService.UpdateMenu(menu, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -141,8 +141,8 @@ func (h *MenuHandler) UpdateMenu(c *gin.Context) {
 func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	operatorID := c.GetUint("user_id")
-	if err := h.menuService.DeleteMenu(uint(id), operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.menuService.DeleteMenu(uint64(id), operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -162,7 +162,7 @@ func (h *MenuHandler) DeleteMenu(c *gin.Context) {
 func (h *MenuHandler) GetMenu(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	menu, err := h.menuService.GetMenuByID(uint(id))
+	menu, err := h.menuService.GetMenuByID(uint64(id))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "菜单不存在")
 		return
@@ -287,8 +287,8 @@ func (h *MenuHandler) BindResource(c *gin.Context) {
 		return
 	}
 
-	operatorID := c.GetUint("user_id")
-	if err := h.menuService.BindResource(uint(menuID), req.ResourceID, operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.menuService.BindResource(uint64(menuID), req.ResourceID, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -310,8 +310,8 @@ func (h *MenuHandler) UnbindResource(c *gin.Context) {
 	menuID, _ := strconv.Atoi(c.Param("id"))
 	resourceID, _ := strconv.Atoi(c.Param("resourceId"))
 
-	operatorID := c.GetUint("user_id")
-	if err := h.menuService.UnbindResource(uint(menuID), uint(resourceID), operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.menuService.UnbindResource(uint64(menuID), uint64(resourceID), operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -331,7 +331,7 @@ func (h *MenuHandler) UnbindResource(c *gin.Context) {
 func (h *MenuHandler) GetMenuResources(c *gin.Context) {
 	menuID, _ := strconv.Atoi(c.Param("id"))
 
-	resources, err := h.menuService.GetMenuResources(uint(menuID))
+	resources, err := h.menuService.GetMenuResources(uint64(menuID))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

@@ -35,6 +35,10 @@ token:
   RefreshTokenSecret: "k4rF9vNcX0jHwZ8bQ2lP7yM6oD1iS3t"
   TokenPrefix: "Bearer "
 
+snowflake:
+  NodeID: 1
+  StartTime: "2025-01-01"
+
 session:
   SessionSecret: "djkfdjk23215da113~232"
 

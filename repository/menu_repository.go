@@ -20,11 +20,11 @@ func (r *menuRepository) Update(menu *entity.Menu) error {
 	return global.G_DB.Save(menu).Error
 }
 
-func (r *menuRepository) Delete(id uint) error {
+func (r *menuRepository) Delete(id uint64) error {
 	return global.G_DB.Delete(&entity.Menu{}, id).Error
 }
 
-func (r *menuRepository) GetByID(id uint) (*entity.Menu, error) {
+func (r *menuRepository) GetByID(id uint64) (*entity.Menu, error) {
 	var menu entity.Menu
 	err := global.G_DB.Preload("Resources").First(&menu, id).Error
 	if err != nil {
@@ -39,7 +39,7 @@ func (r *menuRepository) GetAll() ([]entity.Menu, error) {
 	return menus, err
 }
 
-func (r *menuRepository) GetByParentID(parentID *uint) ([]entity.Menu, error) {
+func (r *menuRepository) GetByParentID(parentID *uint64) ([]entity.Menu, error) {
 	var menus []entity.Menu
 	query := global.G_DB.Preload("Resources").Order("order_num ASC")
 	if parentID == nil {
@@ -57,22 +57,22 @@ func (r *menuRepository) GetRootMenus() ([]entity.Menu, error) {
 	return menus, err
 }
 
-func (r *menuRepository) HasChildren(id uint) (bool, error) {
+func (r *menuRepository) HasChildren(id uint64) (bool, error) {
 	var count int64
 	err := global.G_DB.Model(&entity.Menu{}).Where("parent_id = ?", id).Count(&count).Error
 	return count > 0, err
 }
 
-func (r *menuRepository) BindResource(menuID, resourceID uint) error {
+func (r *menuRepository) BindResource(menuID, resourceID uint64) error {
 	mr := entity.MenuResource{MenuID: menuID, ResourceID: resourceID}
 	return global.G_DB.Create(&mr).Error
 }
 
-func (r *menuRepository) UnbindResource(menuID, resourceID uint) error {
+func (r *menuRepository) UnbindResource(menuID, resourceID uint64) error {
 	return global.G_DB.Where("menu_id = ? AND resource_id = ?", menuID, resourceID).Delete(&entity.MenuResource{}).Error
 }
 
-func (r *menuRepository) GetMenuResources(menuID uint) ([]entity.MenuResource, error) {
+func (r *menuRepository) GetMenuResources(menuID uint64) ([]entity.MenuResource, error) {
 	var res []entity.MenuResource
 	err := global.G_DB.Preload("Resource").Where("menu_id = ?", menuID).Find(&res).Error
 	return res, err

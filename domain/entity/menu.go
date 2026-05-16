@@ -5,7 +5,7 @@ import "github.com/lyj404/gin-api-template/global"
 type Menu struct {
 	global.G_MODEL
 	Name       string     `gorm:"type:varchar(100);not null" json:"name"`
-	ParentID   *uint      `gorm:"index" json:"parent_id"`
+	ParentID   *uint64      `gorm:"index" json:"parent_id"`
 	Path       string     `gorm:"type:varchar(255)" json:"path"`
 	Icon       string     `gorm:"type:varchar(100)" json:"icon"`
 	OrderNum   int        `gorm:"default:0" json:"order_num"`

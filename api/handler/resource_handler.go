@@ -40,7 +40,7 @@ func (h *ResourceHandler) CreateResource(c *gin.Context) {
 		Description: request.Description,
 	}
 
-	operatorID := c.GetUint("user_id")
+	operatorID := c.GetUint64("user_id")
 	if err := h.resourceService.CreateResource(resource, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -70,7 +70,7 @@ func (h *ResourceHandler) UpdateResource(c *gin.Context) {
 	}
 
 	resource := &entity.Resource{
-		G_MODEL:     global.G_MODEL{ID: uint(id)},
+		G_MODEL:     global.G_MODEL{ID: uint64(id)},
 		Name:        request.Name,
 		Type:        request.Type,
 		Pattern:     request.Pattern,
@@ -80,7 +80,7 @@ func (h *ResourceHandler) UpdateResource(c *gin.Context) {
 		Description: request.Description,
 	}
 
-	operatorID := c.GetUint("user_id")
+	operatorID := c.GetUint64("user_id")
 	if err := h.resourceService.UpdateResource(resource, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -103,8 +103,8 @@ func (h *ResourceHandler) UpdateResource(c *gin.Context) {
 func (h *ResourceHandler) DeleteResource(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	operatorID := c.GetUint("user_id")
-	if err := h.resourceService.DeleteResource(uint(id), operatorID); err != nil {
+	operatorID := c.GetUint64("user_id")
+	if err := h.resourceService.DeleteResource(uint64(id), operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -115,7 +115,7 @@ func (h *ResourceHandler) DeleteResource(c *gin.Context) {
 func (h *ResourceHandler) GetResource(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 
-	resource, err := h.resourceService.GetResourceByID(uint(id))
+	resource, err := h.resourceService.GetResourceByID(uint64(id))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "资源不存在")
 		return
