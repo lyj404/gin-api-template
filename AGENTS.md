@@ -1,24 +1,103 @@
 # AGENTS.md
 
-## Build, Lint, and Test Commands
- 
-### Build and Run
-```bash
-# Build the project
-make build
- 
-# Run the project
-make run
- 
-# Clean build files
-make clean
- 
-# Generate Swagger documentation
-make swagger
+## High-Signal Development Commands
 
-# Create system administrator (first time only)
-make create-admin
+### Core
+```bash
+rtk make build          # Build binary to bin/
+rtk make run            # Run from cmd/ (entry point)
+rtk make swagger        # Update Swagger docs (swag init -g cmd/main.go)
+rtk wire                # Re-generate dependency injection (run in cmd/)
 ```
+
+### Data & RBAC Setup (Critical Sequence)
+```bash
+rtk make create-admin   # Create superuser (interactive, auto-seeds resources/menus/dicts)
+rtk make seed           # Re-initialize all default data (resources + menus + dicts)
+rtk make seed-resources # Only sync API/Entity definitions to DB
+rtk make seed-menus     # Only sync default side-menu structure
+rtk make seed-dict      # Only sync system dictionaries (status, types, etc.)
+```
+
+### Backend Verification
+```bash
+rtk go test ./...       # Run Go tests
+rtk go fmt ./...        # Standard formatting
+rtk go vet ./...        # Static analysis
+```
+
+### Frontend (web/)
+```bash
+cd web && rtk npm run dev    # Start dev server
+cd web && rtk npm run build  # Production build
+```
+
+## Architecture Signal
+
+- **Dependency Injection**: Uses `google/wire`. If you add new services/repositories, you **MUST** update `cmd/wire.go` and run `wire` inside `cmd/`.
+- **RBAC Enforcement**: Permissions are checked in `api/middleware/rbac_middleware.go`. Resources are defined in `cmd/rbaccli/main.go` and synced via `make seed-resources`.
+- **ID System**: Uses Snowflake IDs (`internal/idgen/snowflake.go`). Database IDs are `uint64`.
+- **Domain Boundaries**: 
+  - `domain/`: Interfaces and DTOs (Source of truth for contracts).
+  - `service/`: Business logic.
+  - `repository/`: Data access.
+- **Frontend State**: Pinia stores in `web/src/stores/` handle auth, permissions, and themes.
+
+## Important Constraints
+
+- **Migrations**: No dedicated migration tool; GORM AutoMigrate is used in `bootstrap/boot.go`.
+- **ID Precision**: Snowflake IDs (uint64) require `json:",string"` tags in DTOs to prevent precision loss in JavaScript.
+- **API Documentation**: Always update Swagger comments in `api/handler/` after changing endpoints, then run `make swagger`.
+- **Context**: Always propagate `context.Context` from handler -> service -> repository for timeout/traceability.
+- **Validation**: Use `binding` tags in DTOs for Gin's built-in validator.
+- **RBAC Sync**: Super admin permissions are reset/synced every time `make create-admin` or `make seed-resources` is run.
+
+## Workflow Quirks
+- **First Run**: `make create-admin` is mandatory to access the UI.
+- **Environment**: `.env` overrides `config/config.yml`. Sensitive keys like `ACCESS_TOKEN_SECRET` belong in `.env`.
+- **Audit Logging**: Automatic for RBAC changes, manual for business logic via `AuditLogService`.
+- **Tree Structures**: Org Units and Menus use parent-child IDs. Recursive queries are handled in services.
+
+### Testing & Linting
+```bash
+# Run all tests
+go test ./...
+
+# Format & Lint
+go fmt ./...
+golint ./...
+go vet ./...
+```
+
+## Architecture Verities
+
+### Dependency Injection (Wire)
+- Entry point: `cmd/wire.go`
+- Pattern: Handlers → Services → Repositories.
+- **Agent Rule**: If you add a new service or repository, you **must** add it to `providerSet` in `cmd/wire.go` and run `wire ./cmd` to update `wire_gen.go`.
+
+### RBAC & Data Model
+- **Snowflake IDs**: Entities use `uint64` (Snowflake). Frontend receives them as strings to avoid precision loss.
+- **Multi-Tenancy (OrgUnit)**: Users are bound to a specific `OrgUnit`. Permissions are scoped to the user's unit and its descendants.
+- **Audit Logs**: Any state-changing operation (POST/PUT/DELETE) should be recorded in `AuditLog`.
+
+### Project Layers
+- `api/handler`: JSON binding & response (uses `domain/dto`)
+- `service`: Business logic & Permission checks
+- `repository`: GORM queries (uses `database.WithContext(ctx)`)
+- `domain/`: Interfaces and shared types (GORM entities, DTOs)
+
+## Operational Gotchas
+- **Database**: Uses GORM. Ensure `global.G_DB` is initialized.
+- **Redis**: Required for Rate Limiting and Permission Caching if enabled in `config.yml`.
+- **Swagger**: Annotations must be on Handler methods. Run `make swagger` to update.
+- **Environment**: `.env` overrides `config.yml`. Use `ADMIN_EMAIL` and `ADMIN_PASSWORD` with `make create-admin` for automation.
+
+## Coding Style
+- Indentation: **Tabs**
+- Comments: **Chinese** for logic/business explanations, **English** for standard API docs (Swagger).
+- Error Handling: Return errors to the caller. Use `result.ErrorResponse()` only in handlers.
+- Context: Always propagate `ctx` from Handler down to Repository for timeout and trace tracking.
 
 ### Testing
 No test framework is currently configured. When adding tests, use Go's built-in `testing` package.

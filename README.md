@@ -13,7 +13,11 @@
 10. 请求追踪（Trace ID）
 11. 统一错误处理
 12. 限流（内存/Redis）
-13. RBAC权限管理系统
+13. 基于雪花算法（Snowflake）的分布式全局唯一ID
+14. 系统字典管理（支持级联、状态控制）
+15. 图形验证码（Captcha）支持
+16. 依赖注入（Wire）实现解耦
+17. RBAC权限管理系统
     - 基于角色的访问控制（RBAC）
     - 支持API路径和业务实体权限
     - 树形组织结构管理
@@ -37,6 +41,7 @@
 │   ├── dto         # 请求处理器的请求和响应结构体
 │   ├── entity      # 数据库实体对应的结构体
 │   └── result      # 通用的响应结构体
+├── dictionary      # 字典管理模块
 ├── global			# 存放全局变量
 ├── internal
 │   ├── redisutil   # Redis工具类
@@ -57,10 +62,15 @@
 |  gin   | v1.10.0  |   web框架   |
 |  jwt   |  v5.2.1  |  用户认证   |
 |  gorm  | v1.25.12 |   ORM框架   |
-|  ini   | v1.67.0  | 处理ini文件 |
+| snowflake | v0.3.0 | 全局唯一ID |
+|  wire  | v0.7.0  | 依赖注入框架 |
 | crypto | v0.33.0  |  密码加密   |
-| zap |  v1.9.3  |  日志框架   |
+| zap |  v1.27.0  |  日志框架   |
 |  swag  | v0.23.0  | 编写API文档 |
+| captcha | - | 图形验证码支持 |
+| redis | v9.7.0 | 高性能缓存 |
+| cors | v1.7.3 | 跨域中间件 |
+| zap | v1.27.0 | 结构化日志 |
 
 # 🚀 运行项目
 ## 安装项目依赖
@@ -102,10 +112,21 @@ REFRESH_TOKEN_SECRET=your_refresh_secret
 
 ### create-admin 环境变量
 
-创建管理员时可使用环境变量自动填充：
+创建管理员时可使用环境变量自动填充，系统会自动级联执行 `seed` 数据初始化：
 
 ```bash
-ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=your_password go run cmd/rbaccli/main.go create-admin
+ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=your_password make create-admin
+```
+
+## 初始化数据
+
+如果需要单独初始化系统默认资源、菜单或字典：
+
+```bash
+make seed           # 完整初始化 (资源+菜单+字典)
+make seed-dict      # 仅初始化字典
+make seed-resources # 仅初始化资源
+make seed-menus     # 仅初始化菜单
 ```
 
 # 🔐 RBAC 权限管理
@@ -254,6 +275,10 @@ make clean          # 清理构建文件
 make clean-logs     # 清理日志文件
 make swagger        # 用户生成Swagger文档
 make create-admin   # 创建系统管理员（首次运行）
+make seed           # 初始化所有基础数据（资源 + 菜单 + 字典）
+make seed-dict      # 初始化系统字典数据
+make seed-resources # 仅初始化系统资源
+make seed-menus     # 仅初始化系统菜单
 ```
 > 执行`make`命令默认执行`make run`
 
@@ -376,6 +401,7 @@ web/
 │   │   ├── roles/      # 角色管理
 │   │   ├── menus/      # 菜单管理
 │   │   ├── orgs/       # 组织管理
+│   │   ├── dicts/      # 字典管理
 │   │   ├── resources/  # 资源管理
 │   │   ├── audit-logs/ # 审计日志
 │   │   ├── common/     # 通用页面
@@ -405,10 +431,12 @@ npm run build
 ## 主要功能
 
 - **登录认证**：邮箱/密码/验证码登录，JWT Token 管理，支持 Token 自动刷新
-- **动态菜单**：根据后端返回的菜单树动态生成侧边栏
+- **动态菜单**：根据后端返回的菜单树动态生成侧边栏（使用 `n-tree` 优化展示）
 - **权限控制**：按钮级权限控制（`v-permission` 指令），基于 RBAC 模型
-- **页面管理**：角色管理、菜单管理、组织管理、资源管理、审计日志
-- **响应式**：支持侧边栏折叠
+- **搜索筛选**：用户、角色、资源及字典管理均支持关键词搜索与状态筛选
+- **主题切换**：支持深色/浅色模式及暖色调 UI 风格
+- **页面管理**：角色管理、菜单管理、组织管理、字典管理、资源管理、审计日志
+- **响应式设计**：完美适配多种屏幕尺寸，侧边栏支持折叠与移动端兼容
 
 ## 认证流程
 
