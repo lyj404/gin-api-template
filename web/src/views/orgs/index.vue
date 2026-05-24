@@ -37,12 +37,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, h } from 'vue'
-import { NButton, NTree, NCard, NModal, NForm, NFormItem, NInput, NSelect, NH2, NSpace, useMessage } from 'naive-ui'
+import { NButton, NTree, NCard, NModal, NForm, NFormItem, NInput, NSelect, NH2, NSpace, useMessage, useDialog } from 'naive-ui'
 import type { TreeOption, SelectOption } from 'naive-ui'
 import { getOrgTree, createOrgUnit, updateOrgUnit, deleteOrgUnit } from '@/api'
 import type { OrgUnitResponse } from '@/types'
 
 const message = useMessage()
+const dialog = useDialog()
 const loading = ref(false)
 const saving = ref(false)
 const showModal = ref(false)
@@ -125,7 +126,15 @@ const handleSave = async () => {
 }
 
 const handleDelete = (opt: TreeOption) => {
-  deleteOrgUnit(opt.id as string).then(() => { message.success('删除成功'); fetchData() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
+  dialog.warning({
+    title: '确认删除',
+    content: `确定要删除组织「${opt.label}」吗？`,
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      deleteOrgUnit(opt.id as string).then(() => { message.success('删除成功'); fetchData() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
+    }
+  })
 }
 
 onMounted(fetchData)

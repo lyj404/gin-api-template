@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, h, onMounted, computed } from 'vue'
-import { NButton, NTree, NCard, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NTag, NH2, NSpace, useMessage } from 'naive-ui'
+import { NButton, NTree, NCard, NModal, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NTag, NH2, NSpace, useMessage, useDialog } from 'naive-ui'
 import type { TreeOption, SelectOption } from 'naive-ui'
 import { Icon } from '@iconify/vue'
 import { getMenuTree, getMenu, createMenu, updateMenu, deleteMenu, getResources, bindMenuResource, unbindMenuResource } from '@/api'
@@ -81,6 +81,7 @@ import type { MenuTreeNode, MenuResponse, ResourceResponse } from '@/types'
 import { useDict } from '@/composables/useDict'
 
 const message = useMessage()
+const dialog = useDialog()
 const permission = usePermissionStore()
 const loading = ref(false)
 const saving = ref(false)
@@ -243,7 +244,15 @@ const handleSave = async () => {
 }
 
 const handleDelete = (opt: TreeOption) => {
-  deleteMenu(opt.id as string).then(() => { message.success('删除成功'); fetchData(); permission.fetchMenus() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
+  dialog.warning({
+    title: '确认删除',
+    content: `确定要删除菜单「${opt.label}」吗？`,
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      deleteMenu(opt.id as string).then(() => { message.success('删除成功'); fetchData(); permission.fetchMenus() }).catch((e: any) => message.error(e?.response?.data?.message || '删除失败'))
+    }
+  })
 }
 
 const selectIcon = (icon: string) => {
