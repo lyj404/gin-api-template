@@ -213,26 +213,16 @@ func (s *roleServiceImpl) GetRoleMenus(roleID uint64) ([]entity.RoleMenu, error)
 }
 
 func (s *roleServiceImpl) ListRoles(req *dto.PaginationRequest, userID uint64) ([]entity.Role, int64, error) {
-	orgScope, err := s.permSvc.GetUserOrgScope(userID)
+	hasSystemRole, err := s.permSvc.HasSystemRole(userID)
 	if err != nil {
-		return nil, 0, fmt.Errorf("获取组织范围失败: %w", err)
+		return nil, 0, fmt.Errorf("检查系统角色失败: %w", err)
 	}
-	orgIDs := CollectOrgIDs(orgScope)
 
 	orderBy := req.OrderBy
 	if orderBy == "" {
 		orderBy = "id"
 	}
 	orderBy += " " + req.Sort
-
-	var roleIDs []uint64
-	global.G_DB.Model(&entity.UserRole{}).Select("role_id").Where("user_id = ?", userID).Find(&roleIDs)
-	hasSystemRole := false
-	if len(roleIDs) > 0 {
-		var cnt int64
-		global.G_DB.Model(&entity.Role{}).Where("id IN ? AND is_system = ?", roleIDs, true).Count(&cnt)
-		hasSystemRole = cnt > 0
-	}
 
 	var roles []entity.Role
 	builder := pagination.NewPaginationBuilder(global.G_DB).
@@ -241,22 +231,24 @@ func (s *roleServiceImpl) ListRoles(req *dto.PaginationRequest, userID uint64) (
 		SetPageSize(req.PageSize).
 		OrderBy(orderBy)
 
-	builder = builder.
-		Distinct().
-		Joins(`JOIN role_org_scope ON role_org_scope.role_id = "role".id AND role_org_scope.deleted_at IS NULL`).
-		Where("role_org_scope.org_unit_id IN ?", orgIDs)
+	if hasSystemRole {
+		builder = builder.Distinct()
+	} else {
+		orgScope, err := s.permSvc.GetUserOrgScope(userID)
+		if err != nil {
+			return nil, 0, fmt.Errorf("获取组织范围失败: %w", err)
+		}
+		orgIDs := CollectOrgIDs(orgScope)
+		builder = builder.
+			Distinct().
+			Joins(`JOIN role_org_scope ON role_org_scope.role_id = "role".id AND role_org_scope.deleted_at IS NULL`).
+			Where("role_org_scope.org_unit_id IN ?", orgIDs).
+			Where(`"role".is_system = ?`, false)
+	}
 
 	if req.Keyword != "" {
 		kw := "%" + req.Keyword + "%"
 		builder = builder.Where(`"role".name LIKE ? OR "role".description LIKE ?`, kw, kw)
-	}
-
-	if !hasSystemRole {
-		builder = builder.Where(`"role".is_system = ?`, false)
-	}
-
-	if !hasSystemRole {
-		builder = builder.Where("role.is_system = ?", false)
 	}
 
 	paginationResult, err := builder.Build(&roles)

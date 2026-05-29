@@ -113,6 +113,9 @@ func (r *auditLogRepository) GetByTimeRange(startTime, endTime string, page, pag
 
 func (r *auditLogRepository) scopedQuery(orgIDs []uint64) *gorm.DB {
 	// 使用 WHERE EXISTS 子查询替代 JOIN，避免操作者有多角色时产生重复行
-	return global.G_DB.Model(&entity.AuditLog{}).
-		Where(`EXISTS (SELECT 1 FROM user_role WHERE user_role.user_id = audit_log.operator_id AND user_role.org_unit_id IN ? AND user_role.deleted_at IS NULL)`, orgIDs)
+	query := global.G_DB.Model(&entity.AuditLog{})
+	if orgIDs != nil {
+		query = query.Where(`EXISTS (SELECT 1 FROM user_role WHERE user_role.user_id = audit_log.operator_id AND user_role.org_unit_id IN ? AND user_role.deleted_at IS NULL)`, orgIDs)
+	}
+	return query
 }

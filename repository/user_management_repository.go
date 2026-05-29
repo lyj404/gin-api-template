@@ -19,8 +19,10 @@ func (r *userManagementRepository) List(page, pageSize int, keyword string, orgI
 
 	// "user" 是 PostgreSQL 保留字，在原始 SQL 中必须用双引号包裹
 	query := global.G_DB.Model(&entity.User{}).
-		Joins(`JOIN user_role ON user_role.user_id = "user".id AND user_role.deleted_at IS NULL`).
-		Where("user_role.org_unit_id IN ?", orgIDs)
+		Joins(`JOIN user_role ON user_role.user_id = "user".id AND user_role.deleted_at IS NULL`)
+	if orgIDs != nil {
+		query = query.Where("user_role.org_unit_id IN ?", orgIDs)
+	}
 	if keyword != "" {
 		like := "%" + keyword + "%"
 		query = query.Where(`"user".name LIKE ? OR "user".email LIKE ?`, like, like)
@@ -28,8 +30,10 @@ func (r *userManagementRepository) List(page, pageSize int, keyword string, orgI
 
 	// 使用 WHERE id IN (子查询) 方式计数，避免 DISTINCT+Count/子查询表名引用 在 PostgreSQL 下的兼容问题
 	userIDs2 := global.G_DB.Model(&entity.User{}).
-		Joins(`JOIN user_role ON user_role.user_id = "user".id AND user_role.deleted_at IS NULL`).
-		Where("user_role.org_unit_id IN ?", orgIDs)
+		Joins(`JOIN user_role ON user_role.user_id = "user".id AND user_role.deleted_at IS NULL`)
+	if orgIDs != nil {
+		userIDs2 = userIDs2.Where("user_role.org_unit_id IN ?", orgIDs)
+	}
 	if keyword != "" {
 		like := "%" + keyword + "%"
 		userIDs2 = userIDs2.Where(`"user".name LIKE ? OR "user".email LIKE ?`, like, like)

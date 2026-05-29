@@ -264,6 +264,15 @@ func (s *permissionServiceImpl) getUserOrgScope(userID uint64) ([]services.OrgSc
 	return scopes, nil
 }
 
+func (s *permissionServiceImpl) HasSystemRole(userID uint64) (bool, error) {
+	var count int64
+	err := global.G_DB.Model(&entity.UserRole{}).
+		Joins(`JOIN role ON role.id = user_role.role_id AND role.deleted_at IS NULL`).
+		Where("user_role.user_id = ? AND role.is_system = ?", userID, true).
+		Count(&count).Error
+	return count > 0, err
+}
+
 func (s *permissionServiceImpl) matchPattern(pattern, target string) bool {
 	if pattern == "*" {
 		return true

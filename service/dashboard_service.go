@@ -20,27 +20,43 @@ func NewDashboardService(permSvc services.PermissionService) services.DashboardS
 }
 
 func (s *dashboardServiceImpl) GetStats(userID uint64) (*services.DashboardStats, error) {
-	orgScope, err := s.permSvc.GetUserOrgScope(userID)
+	isSuper, err := s.permSvc.HasSystemRole(userID)
 	if err != nil {
-		return nil, fmt.Errorf("获取组织范围失败: %w", err)
+		return nil, fmt.Errorf("检查系统角色失败: %w", err)
 	}
-
-	orgIDs := CollectOrgIDs(orgScope)
 
 	var stats services.DashboardStats
 
-	if err := global.G_DB.Model(&entity.UserRole{}).
-		Where("org_unit_id IN ?", orgIDs).
-		Distinct("user_id").
-		Count(&stats.UserCount).Error; err != nil {
-		return nil, err
-	}
+	if isSuper {
+		if err := global.G_DB.Model(&entity.UserRole{}).
+			Distinct("user_id").
+			Count(&stats.UserCount).Error; err != nil {
+			return nil, err
+		}
+		if err := global.G_DB.Model(&entity.RoleOrgScope{}).
+			Distinct("role_id").
+			Count(&stats.RoleCount).Error; err != nil {
+			return nil, err
+		}
+	} else {
+		orgScope, err := s.permSvc.GetUserOrgScope(userID)
+		if err != nil {
+			return nil, fmt.Errorf("获取组织范围失败: %w", err)
+		}
+		orgIDs := CollectOrgIDs(orgScope)
 
-	if err := global.G_DB.Model(&entity.RoleOrgScope{}).
-		Where("org_unit_id IN ?", orgIDs).
-		Distinct("role_id").
-		Count(&stats.RoleCount).Error; err != nil {
-		return nil, err
+		if err := global.G_DB.Model(&entity.UserRole{}).
+			Where("org_unit_id IN ?", orgIDs).
+			Distinct("user_id").
+			Count(&stats.UserCount).Error; err != nil {
+			return nil, err
+		}
+		if err := global.G_DB.Model(&entity.RoleOrgScope{}).
+			Where("org_unit_id IN ?", orgIDs).
+			Distinct("role_id").
+			Count(&stats.RoleCount).Error; err != nil {
+			return nil, err
+		}
 	}
 
 	menus, err := s.permSvc.GetUserMenus(userID)

@@ -77,9 +77,11 @@ func (s *orgUnitServiceImpl) GetOrgUnitByID(id uint64, userID uint64) (*entity.O
 	if err != nil {
 		return nil, err
 	}
-	scope, err := s.permSvc.GetUserOrgScope(userID)
-	if err != nil || !s.orgInScope(org, scope) {
-		return nil, fmt.Errorf("组织不存在")
+	if ok, _ := s.permSvc.HasSystemRole(userID); !ok {
+		scope, err := s.permSvc.GetUserOrgScope(userID)
+		if err != nil || !s.orgInScope(org, scope) {
+			return nil, fmt.Errorf("组织不存在")
+		}
 	}
 	return org, nil
 }
@@ -89,6 +91,9 @@ func (s *orgUnitServiceImpl) GetAllOrgUnits(userID uint64) ([]entity.OrgUnit, er
 	if err != nil {
 		return nil, err
 	}
+	if ok, _ := s.permSvc.HasSystemRole(userID); ok {
+		return all, nil
+	}
 	return s.filterByScope(all, userID), nil
 }
 
@@ -96,6 +101,9 @@ func (s *orgUnitServiceImpl) GetOrgTree(userID uint64) ([]entity.OrgUnit, error)
 	all, err := s.orgRepo.GetAll()
 	if err != nil {
 		return nil, err
+	}
+	if ok, _ := s.permSvc.HasSystemRole(userID); ok {
+		return all, nil
 	}
 	return s.filterByScope(all, userID), nil
 }

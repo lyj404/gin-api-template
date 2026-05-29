@@ -25,7 +25,17 @@ func NewUserManagementService(userRepo repositories.UserRepository, permSvc serv
 }
 
 func (s *userManagementServiceImpl) List(page, pageSize int, keyword string, userID uint64) ([]entity.User, map[uint64][]uint64, map[uint64][]string, int64, error) {
-	orgIDs := s.getOrgIDs(userID)
+	isSuper, err := s.userRepo.HasSystemRole(userID)
+	if err != nil {
+		return nil, nil, nil, 0, err
+	}
+	var orgIDs []uint64
+	if !isSuper {
+		orgIDs, err = s.getOrgIDs(userID)
+		if err != nil {
+			return nil, nil, nil, 0, err
+		}
+	}
 	users, total, err := s.userRepo.List(page, pageSize, keyword, orgIDs)
 	if err != nil {
 		return nil, nil, nil, 0, err
@@ -204,12 +214,19 @@ func (s *userManagementServiceImpl) Delete(id uint64, operatorID uint64) error {
 	})
 }
 
-func (s *userManagementServiceImpl) getOrgIDs(userID uint64) []uint64 {
+func (s *userManagementServiceImpl) getOrgIDs(userID uint64) ([]uint64, error) {
 	scope, err := s.permSvc.GetUserOrgScope(userID)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return CollectOrgIDs(scope)
+	orgIDs := CollectOrgIDs(scope)
+	if len(orgIDs) == 0 {
+		var userRole entity.UserRole
+		if err := global.G_DB.Where("user_id = ?", userID).First(&userRole).Error; err == nil {
+			orgIDs = []uint64{userRole.OrgUnitID}
+		}
+	}
+	return orgIDs, nil
 }
 
 func (s *userManagementServiceImpl) audit(tx *gorm.DB, operatorID uint64, action string, targetID uint64, before, after, description string) error {

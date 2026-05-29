@@ -29,6 +29,9 @@ type PermissionService interface {
 
 	// GetUserMenus 获取用户可见的菜单树（根据用户权限过滤）
 	GetUserMenus(userID uint64) ([]MenuTreeNode, error)
+
+	// HasSystemRole 检查用户是否拥有系统角色（如 super_admin）
+	HasSystemRole(userID uint64) (bool, error)
 }
 
 // PermissionInfo 权限信息结构
