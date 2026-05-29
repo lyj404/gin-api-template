@@ -92,7 +92,7 @@ const openModal = (node: TreeOption | null, isEdit?: boolean) => {
     const org = allOrgs.value.find(o => o.id === node.id)
     editingId.value = node.id as string
     form.name = (org?.name || node.label) as string
-    form.parent_id = org?.parent_id || null
+    form.parent_id = org?.parent_id || '0'
   } else if (node) {
     editingId.value = null
     form.name = ''
@@ -109,7 +109,7 @@ const handleSave = async () => {
   saving.value = true
   try {
     const payload: any = { name: form.name }
-    if (form.parent_id) payload.parent_id = form.parent_id
+    if (form.parent_id && form.parent_id !== '0') payload.parent_id = form.parent_id
     if (editingId.value) {
       await updateOrgUnit(editingId.value, payload)
     } else {

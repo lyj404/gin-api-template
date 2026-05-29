@@ -95,7 +95,7 @@ const message = useMessage()
 const dialog = useDialog()
 const layout = useLayoutStore()
 
-const drawerWidth = computed<number | string>(() => layout.isMobile ? '100%' : 640)
+const drawerWidth = computed<string>(() => layout.isMobile ? '100%' : '50vw')
 
 const loading = ref(false)
 const saving = ref(false)
@@ -156,12 +156,7 @@ const toggleResourcePerm = (row: ResourceResponse) => {
 }
 
 const resColumns: DataTableColumns<ResourceResponse> = [
-  { title: '序号', key: 'index', width: 70, render: (_row: ResourceResponse, index: number) => index + 1 },
-  { title: '名称', key: 'name', width: 220, ellipsis: { tooltip: true } },
-  { title: '类型', key: 'type', width: 100, render: (row: ResourceResponse) => h(NTag, { type: row.type === 'api' ? 'info' : 'warning', size: 'small' }, { default: () => row.type }) },
-  { title: '模式', key: 'pattern', width: 200 },
-  { title: '方法/操作', key: 'method', width: 90, render: (row: ResourceResponse) => row.method || row.action || '-' },
-  { title: '选中', key: 'checked', width: 70, render: (row: ResourceResponse) => h('div', { style: 'display:flex;justify-content:center' }, [
+  { title: '选中', key: 'checked', width: 60, render: (row: ResourceResponse) => h('div', { style: 'display:flex;justify-content:center' }, [
     h('input', { type: 'checkbox', checked: resourceChecked.value[row.id]?.checked || false, onChange: (e: any) => {
       const perms = getResourcePerms(row)
       if (!resourceChecked.value[row.id]) resourceChecked.value[row.id] = { checked: false, is_write: perms.write }
@@ -170,17 +165,11 @@ const resColumns: DataTableColumns<ResourceResponse> = [
       resourceChecked.value = { ...resourceChecked.value }
     } })
   ]) },
-  { title: '权限', key: 'perm', width: 120, render: (row: ResourceResponse) => {
-    const checked = resourceChecked.value[row.id]?.checked
-    if (!checked) return null
-    const perms = getResourcePerms(row)
-    const isWrite = resourceChecked.value[row.id]?.is_write ?? perms.write
-    const canToggle = perms.read && perms.write
-    if (perms.read && !perms.write) return h(NTag, { type: 'info', size: 'small' }, { default: () => '只读' })
-    if (!perms.read && perms.write) return h(NTag, { type: 'warning', size: 'small' }, { default: () => '只写' })
-    // 读写都支持 → 可点击切换
-    return h(NButton, { size: 'tiny', tertiary: true, type: isWrite ? 'warning' : 'info', onClick: () => toggleResourcePerm(row) }, { default: () => isWrite ? '读写' : '只读' })
-  } }
+  { title: '名称', key: 'name', width: 220, ellipsis: { tooltip: true } },
+  { title: '类型', key: 'type', width: 100, render: (row: ResourceResponse) => h(NTag, { type: row.type === 'api' ? 'info' : 'warning', size: 'small' }, { default: () => row.type }) },
+  { title: '模式', key: 'pattern', width: 200 },
+  { title: '方法/操作', key: 'method', width: 90, render: (row: ResourceResponse) => row.method || row.action || '-' },
+  { title: '描述', key: 'description', width: 200, ellipsis: { tooltip: true } }
 ]
 
 const fetchData = async () => {
