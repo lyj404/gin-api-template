@@ -15,29 +15,27 @@ func NewOrgUnitRepository() repositories.OrgUnitRepository {
 	return &orgUnitRepository{}
 }
 
-func (r *orgUnitRepository) Create(orgUnit *entity.OrgUnit) error {
+func (r *orgUnitRepository) Create(tx *gorm.DB, orgUnit *entity.OrgUnit) error {
 	// 计算路径和层级
 	if orgUnit.ParentID == nil {
 		orgUnit.Path = "/" + "0"
 		orgUnit.Level = 0
 	} else {
 		var parent entity.OrgUnit
-		if err := global.G_DB.First(&parent, orgUnit.ParentID).Error; err != nil {
+		if err := tx.First(&parent, orgUnit.ParentID).Error; err != nil {
 			return err
 		}
 		orgUnit.Path = parent.Path + "/" + "0"
 		orgUnit.Level = parent.Level + 1
 	}
 
-	return global.G_DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(orgUnit).Error; err != nil {
-			return err
-		}
+	if err := tx.Create(orgUnit).Error; err != nil {
+		return err
+	}
 
-		// 更新实际ID到路径
-		orgUnit.Path = orgUnit.Path[:len(orgUnit.Path)-1] + fmt.Sprintf("%d", orgUnit.ID)
-		return tx.Save(orgUnit).Error
-	})
+	// 更新实际ID到路径
+	orgUnit.Path = orgUnit.Path[:len(orgUnit.Path)-1] + fmt.Sprintf("%d", orgUnit.ID)
+	return tx.Save(orgUnit).Error
 }
 
 func (r *orgUnitRepository) Update(orgUnit *entity.OrgUnit) error {

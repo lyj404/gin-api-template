@@ -6,7 +6,7 @@ import (
 
 type AuditLogService interface {
 	Create(auditLog *entity.AuditLog) error
-	GetAuditLogsByOperator(operatorID uint64, page, pageSize int) ([]entity.AuditLog, int64, error)
-	GetAuditLogsByTarget(targetType string, targetID uint64, page, pageSize int) ([]entity.AuditLog, int64, error)
-	GetAuditLogsByTimeRange(startTime, endTime string, page, pageSize int) ([]entity.AuditLog, int64, error)
+	GetAuditLogsByOperator(operatorID uint64, page, pageSize int, userID uint64) ([]entity.AuditLog, int64, error)
+	GetAuditLogsByTarget(targetType string, targetID uint64, page, pageSize int, userID uint64) ([]entity.AuditLog, int64, error)
+	GetAuditLogsByTimeRange(startTime, endTime string, page, pageSize int, userID uint64) ([]entity.AuditLog, int64, error)
 }

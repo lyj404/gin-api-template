@@ -4,20 +4,24 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/lyj404/gin-api-template/domain/dto"
 	"github.com/lyj404/gin-api-template/domain/entity"
 	"github.com/lyj404/gin-api-template/domain/repositories"
 	"github.com/lyj404/gin-api-template/domain/services"
 	"github.com/lyj404/gin-api-template/global"
+	"github.com/lyj404/gin-api-template/pkg/pagination"
 	"gorm.io/gorm"
 )
 
 type roleServiceImpl struct {
 	roleRepo repositories.RoleRepository
+	permSvc  services.PermissionService
 }
 
-func NewRoleService(roleRepo repositories.RoleRepository) services.RoleService {
+func NewRoleService(roleRepo repositories.RoleRepository, permSvc services.PermissionService) services.RoleService {
 	return &roleServiceImpl{
 		roleRepo: roleRepo,
+		permSvc:  permSvc,
 	}
 }
 
@@ -60,6 +64,20 @@ func (s *roleServiceImpl) DeleteRole(id uint64, operatorID uint64) error {
 
 		if role.IsSystem {
 			return fmt.Errorf("系统角色不能删除")
+		}
+
+		// 清理关联记录
+		if err := tx.Where("role_id = ?", id).Delete(&entity.RoleResource{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("role_id = ?", id).Delete(&entity.RoleOrgScope{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("role_id = ?", id).Delete(&entity.RoleMenu{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("role_id = ?", id).Delete(&entity.UserRole{}).Error; err != nil {
+			return err
 		}
 
 		if err := tx.Delete(&entity.Role{}, id).Error; err != nil {
@@ -192,6 +210,61 @@ func (s *roleServiceImpl) UnbindMenu(roleID, menuID uint64, operatorID uint64) e
 
 func (s *roleServiceImpl) GetRoleMenus(roleID uint64) ([]entity.RoleMenu, error) {
 	return s.roleRepo.GetRoleMenus(roleID)
+}
+
+func (s *roleServiceImpl) ListRoles(req *dto.PaginationRequest, userID uint64) ([]entity.Role, int64, error) {
+	orgScope, err := s.permSvc.GetUserOrgScope(userID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("获取组织范围失败: %w", err)
+	}
+	orgIDs := CollectOrgIDs(orgScope)
+
+	orderBy := req.OrderBy
+	if orderBy == "" {
+		orderBy = "id"
+	}
+	orderBy += " " + req.Sort
+
+	var roleIDs []uint64
+	global.G_DB.Model(&entity.UserRole{}).Select("role_id").Where("user_id = ?", userID).Find(&roleIDs)
+	hasSystemRole := false
+	if len(roleIDs) > 0 {
+		var cnt int64
+		global.G_DB.Model(&entity.Role{}).Where("id IN ? AND is_system = ?", roleIDs, true).Count(&cnt)
+		hasSystemRole = cnt > 0
+	}
+
+	var roles []entity.Role
+	builder := pagination.NewPaginationBuilder(global.G_DB).
+		Model(&entity.Role{}).
+		SetPage(req.Page).
+		SetPageSize(req.PageSize).
+		OrderBy(orderBy)
+
+	builder = builder.
+		Distinct().
+		Joins(`JOIN role_org_scope ON role_org_scope.role_id = "role".id AND role_org_scope.deleted_at IS NULL`).
+		Where("role_org_scope.org_unit_id IN ?", orgIDs)
+
+	if req.Keyword != "" {
+		kw := "%" + req.Keyword + "%"
+		builder = builder.Where(`"role".name LIKE ? OR "role".description LIKE ?`, kw, kw)
+	}
+
+	if !hasSystemRole {
+		builder = builder.Where(`"role".is_system = ?`, false)
+	}
+
+	if !hasSystemRole {
+		builder = builder.Where("role.is_system = ?", false)
+	}
+
+	paginationResult, err := builder.Build(&roles)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return roles, paginationResult.Total, nil
 }
 
 func (s *roleServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint64, action, targetType string, targetID uint64, beforeData, afterData, description string) error {

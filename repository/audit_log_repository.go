@@ -4,6 +4,7 @@ import (
 	"github.com/lyj404/gin-api-template/domain/entity"
 	"github.com/lyj404/gin-api-template/domain/repositories"
 	"github.com/lyj404/gin-api-template/global"
+	"gorm.io/gorm"
 )
 
 type auditLogRepository struct{}
@@ -25,63 +26,93 @@ func (r *auditLogRepository) GetByID(id uint64) (*entity.AuditLog, error) {
 	return &auditLog, nil
 }
 
-func (r *auditLogRepository) GetByOperator(operatorID uint64, page, pageSize int) ([]entity.AuditLog, int64, error) {
+func (r *auditLogRepository) GetByOperator(operatorID uint64, page, pageSize int, orgIDs []uint64) ([]entity.AuditLog, int64, error) {
 	var auditLogs []entity.AuditLog
 	var total int64
 
 	offset := (page - 1) * pageSize
-	err := global.G_DB.Model(&entity.AuditLog{}).
-		Where("operator_id = ?", operatorID).
-		Order("created_at DESC").
+	query := r.scopedQuery(orgIDs).
+		Order("audit_log.created_at DESC").
 		Limit(pageSize).
-		Offset(offset).
-		Find(&auditLogs).Error
+		Offset(offset)
 
-	global.G_DB.Model(&entity.AuditLog{}).Where("operator_id = ?", operatorID).Count(&total)
+	if operatorID != 0 {
+		query = query.Where("audit_log.operator_id = ?", operatorID)
+	}
 
-	return auditLogs, total, err
+	err := query.Find(&auditLogs).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	countQuery := r.scopedQuery(orgIDs)
+	if operatorID != 0 {
+		countQuery = countQuery.Where("audit_log.operator_id = ?", operatorID)
+	}
+	countQuery.Count(&total)
+
+	return auditLogs, total, nil
 }
 
-func (r *auditLogRepository) GetByTarget(targetType string, targetID uint64, page, pageSize int) ([]entity.AuditLog, int64, error) {
+func (r *auditLogRepository) GetByTarget(targetType string, targetID uint64, page, pageSize int, orgIDs []uint64) ([]entity.AuditLog, int64, error) {
 	var auditLogs []entity.AuditLog
 	var total int64
 
 	offset := (page - 1) * pageSize
-	err := global.G_DB.Model(&entity.AuditLog{}).
-		Where("target_type = ? AND target_id = ?", targetType, targetID).
-		Order("created_at DESC").
+	err := r.scopedQuery(orgIDs).
+		Where("audit_log.target_type = ? AND audit_log.target_id = ?", targetType, targetID).
+		Order("audit_log.created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&auditLogs).Error
+	if err != nil {
+		return nil, 0, err
+	}
 
-	global.G_DB.Model(&entity.AuditLog{}).
-		Where("target_type = ? AND target_id = ?", targetType, targetID).
+	r.scopedQuery(orgIDs).
+		Where("audit_log.target_type = ? AND audit_log.target_id = ?", targetType, targetID).
 		Count(&total)
 
-	return auditLogs, total, err
+	return auditLogs, total, nil
 }
 
-func (r *auditLogRepository) GetByTimeRange(startTime, endTime string, page, pageSize int) ([]entity.AuditLog, int64, error) {
+func (r *auditLogRepository) GetByTimeRange(startTime, endTime string, page, pageSize int, orgIDs []uint64) ([]entity.AuditLog, int64, error) {
 	var auditLogs []entity.AuditLog
 	var total int64
 
 	offset := (page - 1) * pageSize
-	query := global.G_DB.Model(&entity.AuditLog{})
+	query := r.scopedQuery(orgIDs)
 
 	if startTime != "" {
-		query = query.Where("created_at >= ?", startTime)
+		query = query.Where("audit_log.created_at >= ?", startTime)
 	}
 	if endTime != "" {
-		query = query.Where("created_at <= ?", endTime)
+		query = query.Where("audit_log.created_at <= ?", endTime)
 	}
 
 	err := query.
-		Order("created_at DESC").
+		Order("audit_log.created_at DESC").
 		Limit(pageSize).
 		Offset(offset).
 		Find(&auditLogs).Error
+	if err != nil {
+		return nil, 0, err
+	}
 
-	query.Count(&total)
+	countQuery := r.scopedQuery(orgIDs)
+	if startTime != "" {
+		countQuery = countQuery.Where("audit_log.created_at >= ?", startTime)
+	}
+	if endTime != "" {
+		countQuery = countQuery.Where("audit_log.created_at <= ?", endTime)
+	}
+	countQuery.Count(&total)
 
-	return auditLogs, total, err
+	return auditLogs, total, nil
+}
+
+func (r *auditLogRepository) scopedQuery(orgIDs []uint64) *gorm.DB {
+	// 使用 WHERE EXISTS 子查询替代 JOIN，避免操作者有多角色时产生重复行
+	return global.G_DB.Model(&entity.AuditLog{}).
+		Where(`EXISTS (SELECT 1 FROM user_role WHERE user_role.user_id = audit_log.operator_id AND user_role.org_unit_id IN ? AND user_role.deleted_at IS NULL)`, orgIDs)
 }

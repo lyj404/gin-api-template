@@ -345,6 +345,23 @@ func seedResources() {
 				return fmt.Errorf("同步资源到 super_admin 角色失败: %w", err)
 			}
 			fmt.Println("已同步资源到 super_admin 角色")
+
+			// 3. 确保 super_admin 角色有全组织范围（修复旧数据无 RoleOrgScope 的问题）
+			var rootOrg entity.OrgUnit
+			if err := tx.Where("name = ? AND parent_id IS NULL", "root").First(&rootOrg).Error; err == nil {
+				var scopeCount int64
+				tx.Model(&entity.RoleOrgScope{}).Where("role_id = ?", superAdminRole.ID).Count(&scopeCount)
+				if scopeCount == 0 {
+					if err := tx.Create(&entity.RoleOrgScope{
+						RoleID:             superAdminRole.ID,
+						OrgUnitID:          rootOrg.ID,
+						IncludeDescendants: true,
+					}).Error; err != nil {
+						return fmt.Errorf("绑定组织范围到 super_admin 角色失败: %w", err)
+					}
+					fmt.Println("已绑定全组织范围到 super_admin 角色")
+				}
+			}
 		}
 
 		return nil

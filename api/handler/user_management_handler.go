@@ -38,7 +38,8 @@ func (h *UserManagementHandler) ListUsers(c *gin.Context) {
 	}
 	req.SetDefaults()
 
-	users, roleIDsMap, roleNamesMap, total, err := h.userMgmt.List(req.Page, req.PageSize, req.Keyword)
+	userID, _ := c.Get("user_id")
+	users, roleIDsMap, roleNamesMap, total, err := h.userMgmt.List(req.Page, req.PageSize, req.Keyword, userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

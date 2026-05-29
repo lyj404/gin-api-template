@@ -1,6 +1,7 @@
 package services
 
 import (
+	"github.com/lyj404/gin-api-template/domain/dto"
 	"github.com/lyj404/gin-api-template/domain/entity"
 )
 
@@ -10,6 +11,7 @@ type RoleService interface {
 	DeleteRole(id uint64, operatorID uint64) error
 	GetRoleByID(id uint64) (*entity.Role, error)
 	GetAllRoles() ([]entity.Role, error)
+	ListRoles(req *dto.PaginationRequest, userID uint64) ([]entity.Role, int64, error)
 	BindResource(roleID, resourceID uint64, isWrite bool, operatorID uint64) error
 	UnbindResource(roleID, resourceID uint64, operatorID uint64) error
 	BindOrgScope(roleID, orgUnitID uint64, includeDescendants bool, operatorID uint64) error

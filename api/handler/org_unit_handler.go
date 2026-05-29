@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lyj404/gin-api-template/domain/dto"
@@ -10,7 +11,6 @@ import (
 	"github.com/lyj404/gin-api-template/domain/result"
 	"github.com/lyj404/gin-api-template/domain/services"
 	"github.com/lyj404/gin-api-template/global"
-	"github.com/lyj404/gin-api-template/pkg/pagination"
 )
 
 // OrgUnitHandler 组织单元处理器，处理组织相关的HTTP请求
@@ -144,8 +144,9 @@ func (h *OrgUnitHandler) DeleteOrgUnit(c *gin.Context) {
 // @Router /org-units/:id [get]
 func (h *OrgUnitHandler) GetOrgUnit(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
+	userID, _ := c.Get("user_id")
 
-	orgUnit, err := h.orgService.GetOrgUnitByID(id)
+	orgUnit, err := h.orgService.GetOrgUnitByID(id, userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "组织节点不存在")
 		return
@@ -182,32 +183,39 @@ func (h *OrgUnitHandler) ListOrgUnits(c *gin.Context) {
 	}
 	req.SetDefaults()
 
-	orderBy := req.OrderBy
-	if orderBy == "" {
-		orderBy = "id"
-	}
-	orderBy += " " + req.Sort
-
-	var orgs []entity.OrgUnit
-	builder := pagination.NewPaginationBuilder(global.G_DB).
-		Model(&entity.OrgUnit{}).
-		SetPage(req.Page).
-		SetPageSize(req.PageSize).
-		OrderBy(orderBy)
-
-	// 如果有关键词搜索，添加搜索条件
-	if req.Keyword != "" {
-		builder = builder.Where("name LIKE ?", "%"+req.Keyword+"%")
-	}
-
-	paginationResult, err := builder.Build(&orgs)
+	userID, _ := c.Get("user_id")
+	allOrgs, err := h.orgService.GetAllOrgUnits(userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	responses := make([]dto.OrgUnitResponse, len(orgs))
-	for i, org := range orgs {
+	// 关键词过滤
+	var filtered []entity.OrgUnit
+	if req.Keyword != "" {
+		kw := req.Keyword
+		for _, org := range allOrgs {
+			if strings.Contains(org.Name, kw) {
+				filtered = append(filtered, org)
+			}
+		}
+	} else {
+		filtered = allOrgs
+	}
+
+	total := len(filtered)
+	offset := (req.Page - 1) * req.PageSize
+	end := offset + req.PageSize
+	if offset > total {
+		offset = total
+	}
+	if end > total {
+		end = total
+	}
+	pageData := filtered[offset:end]
+
+	responses := make([]dto.OrgUnitResponse, len(pageData))
+	for i, org := range pageData {
 		responses[i] = dto.OrgUnitResponse{
 			ID:       org.ID,
 			Name:     org.Name,
@@ -218,9 +226,9 @@ func (h *OrgUnitHandler) ListOrgUnits(c *gin.Context) {
 	}
 
 	result.SuccessResponse(c, "获取组织节点列表成功", dto.NewPaginationResponse(
-		paginationResult.Page,
-		paginationResult.PageSize,
-		paginationResult.Total,
+		req.Page,
+		req.PageSize,
+		int64(total),
 		responses,
 	))
 }
@@ -233,7 +241,8 @@ func (h *OrgUnitHandler) ListOrgUnits(c *gin.Context) {
 // @Success 200 {object} result.ResponseResult[[]dto.OrgUnitResponse] "获取成功"
 // @Router /org-units/tree [get]
 func (h *OrgUnitHandler) GetOrgTree(c *gin.Context) {
-	orgs, err := h.orgService.GetOrgTree()
+	userID, _ := c.Get("user_id")
+	orgs, err := h.orgService.GetOrgTree(userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

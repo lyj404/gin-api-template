@@ -261,7 +261,7 @@ func (u *UserHandler) GenerateMathCaptcha(c *gin.Context) {
 func (u *UserHandler) Logout(c *gin.Context) {
 	userID := c.GetUint64("user_id")
 
-	user, err := u.RefreshTokenUseCase.GetUserByID(c, strconv.FormatUint(uint64(userID), 16))
+	user, err := u.RefreshTokenUseCase.GetUserByID(c, strconv.FormatUint(userID, 10))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, "获取用户信息失败")
 		return

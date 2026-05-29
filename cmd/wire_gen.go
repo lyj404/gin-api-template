@@ -37,58 +37,59 @@ func InitializeApp() (*App, error) {
 	loginService := service.NewUserService(userRepo, duration)
 	refreshTokenService := service.NewRefreshTokenService(userRepo, duration)
 	auditLogRepository := repository.NewAuditLogRepository()
-	auditLogService := service.NewAuditLogService(auditLogRepository)
+	permissionService := service.NewPermissionService()
+	auditLogService := service.NewAuditLogService(auditLogRepository, permissionService)
 	userHandler := handler.NewUserHandler(loginService, refreshTokenService, auditLogService)
 	refreshTokenHandler := handler.NewRefreshTokenHandler(refreshTokenService)
 	roleRepository := repository.NewRoleRepository()
-	roleService := service.NewRoleService(roleRepository)
+	roleService := service.NewRoleService(roleRepository, permissionService)
 	roleHandler := handler.NewRoleHandler(roleService)
 	orgUnitRepository := repository.NewOrgUnitRepository()
-	orgUnitService := service.NewOrgUnitService(orgUnitRepository)
+	orgUnitService := service.NewOrgUnitService(orgUnitRepository, permissionService)
 	orgUnitHandler := handler.NewOrgUnitHandler(orgUnitService)
 	auditLogHandler := handler.NewAuditLogHandler(auditLogService)
-	permissionService := service.NewPermissionService()
 	userPermissionHandler := handler.NewUserPermissionHandler(permissionService)
-	userProfileService := service.NewUserProfileService()
-	userProfileHandler := handler.NewUserProfileHandler(userProfileService)
+	profileService := service.NewUserProfileService()
+	userProfileHandler := handler.NewUserProfileHandler(profileService)
 	menuRepository := repository.NewMenuRepository()
 	menuService := service.NewMenuService(menuRepository)
 	menuHandler := handler.NewMenuHandler(menuService)
 	userRepository := repository.NewUserManagementRepository()
-	userManagementService := service.NewUserManagementService(userRepository)
+	userManagementService := service.NewUserManagementService(userRepository, permissionService)
 	userManagementHandler := handler.NewUserManagementHandler(userManagementService)
 	resourceRepository := repository.NewResourceRepository()
 	resourceService := service.NewResourceService(resourceRepository)
 	resourceHandler := handler.NewResourceHandler(resourceService)
-	dashboardHandler := handler.NewDashboardHandler()
+	dashboardService := service.NewDashboardService(permissionService)
+	dashboardHandler := handler.NewDashboardHandler(dashboardService)
 	dictionaryRepo := repository.NewDictionaryRepo(db)
 	dictionaryService := service.NewDictionaryService(dictionaryRepo)
 	dictionaryHandler := handler.NewDictionaryHandler(dictionaryService)
 	rbacMiddleware := middleware.NewRBACMiddleware(permissionService)
-	v := provideRouteRegistration(engine, userHandler, refreshTokenHandler, roleHandler, orgUnitHandler, auditLogHandler, userPermissionHandler, userProfileHandler, menuHandler, userManagementHandler, resourceHandler, dashboardHandler, dictionaryHandler)
+	v := provideRouteRegistration(engine, userHandler, refreshTokenHandler, roleHandler, orgUnitHandler, auditLogHandler, userPermissionHandler, userProfileHandler, menuHandler, userManagementHandler, resourceHandler, dashboardHandler, dictionaryHandler, rbacMiddleware)
 	app := &App{
-		DB:             db,
-		Redis:          client,
-		Logger:         logger,
-		Router:         engine,
-		UserRepo:       userRepo,
-		UserSvc:        loginService,
-		TokenSvc:       refreshTokenService,
-		UserHdlr:       userHandler,
-		RefreshHdlr:    refreshTokenHandler,
-		RoleHdlr:       roleHandler,
-		OrgHdlr:        orgUnitHandler,
-		AuditHdlr:      auditLogHandler,
-		UserPermHdlr:   userPermissionHandler,
+		DB:              db,
+		Redis:           client,
+		Logger:          logger,
+		Router:          engine,
+		UserRepo:        userRepo,
+		UserSvc:         loginService,
+		TokenSvc:        refreshTokenService,
+		UserHdlr:        userHandler,
+		RefreshHdlr:     refreshTokenHandler,
+		RoleHdlr:        roleHandler,
+		OrgHdlr:         orgUnitHandler,
+		AuditHdlr:       auditLogHandler,
+		UserPermHdlr:    userPermissionHandler,
 		UserProfileHdlr: userProfileHandler,
-		MenuHdlr:       menuHandler,
-		UserMgmtHdlr:   userManagementHandler,
-		ResourceHdlr:   resourceHandler,
-		DashboardHdlr:  dashboardHandler,
-		DictHdlr:       dictionaryHandler,
-		RBACMiddleware: rbacMiddleware,
-		PermSvc:        permissionService,
-		RegisterRoutes: v,
+		MenuHdlr:        menuHandler,
+		UserMgmtHdlr:    userManagementHandler,
+		ResourceHdlr:    resourceHandler,
+		DashboardHdlr:   dashboardHandler,
+		DictHdlr:        dictionaryHandler,
+		RBACMiddleware:  rbacMiddleware,
+		PermSvc:         permissionService,
+		RegisterRoutes:  v,
 	}
 	return app, nil
 }
@@ -97,28 +98,28 @@ func InitializeApp() (*App, error) {
 
 // App 应用结构体，包含所有依赖
 type App struct {
-	DB             *gorm.DB
-	Redis          *redis.Client
-	Logger         *zap.Logger
-	Router         *gin.Engine
-	UserRepo       domain.UserRepo
-	UserSvc        domain.LoginService
-	TokenSvc       domain.RefreshTokenService
-	UserHdlr       *handler.UserHandler
-	RefreshHdlr    *handler.RefreshTokenHandler
-	RoleHdlr       *handler.RoleHandler
-	OrgHdlr        *handler.OrgUnitHandler
-	AuditHdlr      *handler.AuditLogHandler
-	UserPermHdlr   *handler.UserPermissionHandler
+	DB              *gorm.DB
+	Redis           *redis.Client
+	Logger          *zap.Logger
+	Router          *gin.Engine
+	UserRepo        domain.UserRepo
+	UserSvc         domain.LoginService
+	TokenSvc        domain.RefreshTokenService
+	UserHdlr        *handler.UserHandler
+	RefreshHdlr     *handler.RefreshTokenHandler
+	RoleHdlr        *handler.RoleHandler
+	OrgHdlr         *handler.OrgUnitHandler
+	AuditHdlr       *handler.AuditLogHandler
+	UserPermHdlr    *handler.UserPermissionHandler
 	UserProfileHdlr *handler.UserProfileHandler
-	MenuHdlr       *handler.MenuHandler
-	UserMgmtHdlr   *handler.UserManagementHandler
-	ResourceHdlr   *handler.ResourceHandler
-	DashboardHdlr  *handler.DashboardHandler
-	DictHdlr       *handler.DictionaryHandler
-	RBACMiddleware *middleware.RBACMiddleware
-	PermSvc        services.PermissionService
-	RegisterRoutes func()
+	MenuHdlr        *handler.MenuHandler
+	UserMgmtHdlr    *handler.UserManagementHandler
+	ResourceHdlr    *handler.ResourceHandler
+	DashboardHdlr   *handler.DashboardHandler
+	DictHdlr        *handler.DictionaryHandler
+	RBACMiddleware  *middleware.RBACMiddleware
+	PermSvc         services.PermissionService
+	RegisterRoutes  func()
 }
 
 // provideDB 提供 DB 实例
@@ -156,6 +157,7 @@ func provideRouteRegistration(
 	resourceHdlr *handler.ResourceHandler,
 	dashboardHdlr *handler.DashboardHandler,
 	dictHdlr *handler.DictionaryHandler,
+	rbac *middleware.RBACMiddleware,
 ) func() {
 	return func() {
 
@@ -165,14 +167,14 @@ func provideRouteRegistration(
 
 		protectedGroup := router.Group("")
 		protectedGroup.Use(route.JwtAuthMiddleware())
-		route.NewRoleRouter(roleHdlr, protectedGroup)
-		route.NewOrgUnitRouter(orgHdlr, protectedGroup)
-		route.NewAuditLogRouter(auditHdlr, protectedGroup)
+		route.NewRoleRouter(roleHdlr, rbac, protectedGroup)
+		route.NewOrgUnitRouter(orgHdlr, rbac, protectedGroup)
+		route.NewAuditLogRouter(auditHdlr, rbac, protectedGroup)
 		route.NewUserPermissionRouter(userPermHdlr, userProfileHdlr, protectedGroup)
-		route.NewMenuRouter(menuHdlr, protectedGroup)
-		route.NewUserManagementRouter(userMgmtHdlr, protectedGroup)
-		route.NewResourceRouter(resourceHdlr, protectedGroup)
-		route.NewDashboardRouter(dashboardHdlr, protectedGroup)
+		route.NewMenuRouter(menuHdlr, rbac, protectedGroup)
+		route.NewUserManagementRouter(userMgmtHdlr, rbac, protectedGroup)
+		route.NewResourceRouter(resourceHdlr, rbac, protectedGroup)
+		route.NewDashboardRouter(dashboardHdlr, rbac, protectedGroup)
 		route.NewDictionaryRouter(dictHdlr, protectedGroup)
 	}
 }
@@ -189,5 +191,5 @@ var providerSet = wire.NewSet(
 	provideLogger,
 	provideRouter,
 	provideRouteRegistration,
-	provideTimeout, repository.NewUserRepo, repository.NewRoleRepository, repository.NewOrgUnitRepository, repository.NewAuditLogRepository, repository.NewMenuRepository, repository.NewUserManagementRepository, repository.NewResourceRepository, repository.NewDictionaryRepo, service.NewUserService, service.NewRefreshTokenService, service.NewPermissionService, service.NewRoleService, service.NewOrgUnitService, service.NewAuditLogService, service.NewMenuService, service.NewUserManagementService, service.NewUserProfileService, service.NewResourceService, service.NewDictionaryService, middleware.NewRBACMiddleware, handler.NewUserHandler, handler.NewRefreshTokenHandler, handler.NewRoleHandler, handler.NewOrgUnitHandler, handler.NewUserPermissionHandler, handler.NewUserProfileHandler, handler.NewAuditLogHandler, handler.NewMenuHandler, handler.NewUserManagementHandler, handler.NewResourceHandler, handler.NewDashboardHandler, handler.NewDictionaryHandler,
+	provideTimeout, repository.NewUserRepo, repository.NewRoleRepository, repository.NewOrgUnitRepository, repository.NewAuditLogRepository, repository.NewMenuRepository, repository.NewUserManagementRepository, repository.NewResourceRepository, repository.NewDictionaryRepo, service.NewUserService, service.NewRefreshTokenService, service.NewPermissionService, service.NewRoleService, service.NewOrgUnitService, service.NewAuditLogService, service.NewMenuService, service.NewUserManagementService, service.NewUserProfileService, service.NewResourceService, service.NewDictionaryService, service.NewDashboardService, middleware.NewRBACMiddleware, handler.NewUserHandler, handler.NewRefreshTokenHandler, handler.NewRoleHandler, handler.NewOrgUnitHandler, handler.NewUserPermissionHandler, handler.NewUserProfileHandler, handler.NewAuditLogHandler, handler.NewMenuHandler, handler.NewUserManagementHandler, handler.NewResourceHandler, handler.NewDashboardHandler, handler.NewDictionaryHandler,
 )

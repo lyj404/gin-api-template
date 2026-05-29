@@ -8,7 +8,7 @@ type OrgUnitService interface {
 	CreateOrgUnit(orgUnit *entity.OrgUnit, operatorID uint64) error
 	UpdateOrgUnit(orgUnit *entity.OrgUnit, operatorID uint64) error
 	DeleteOrgUnit(id uint64, operatorID uint64) error
-	GetOrgUnitByID(id uint64) (*entity.OrgUnit, error)
-	GetAllOrgUnits() ([]entity.OrgUnit, error)
-	GetOrgTree() ([]entity.OrgUnit, error)
+	GetOrgUnitByID(id uint64, userID uint64) (*entity.OrgUnit, error)
+	GetAllOrgUnits(userID uint64) ([]entity.OrgUnit, error)
+	GetOrgTree(userID uint64) ([]entity.OrgUnit, error)
 }

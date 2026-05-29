@@ -42,6 +42,15 @@
             maxlength="32"
           />
         </n-form-item>
+        <n-form-item label="组织" path="org_unit_id">
+          <n-tree-select
+            v-model:value="form.org_unit_id"
+            :options="orgTreeOptions"
+            placeholder="选择所属组织（留空则用根组织）"
+            clearable
+            cascade
+          />
+        </n-form-item>
         <n-form-item label="角色" path="role_ids">
           <n-select
             v-model:value="form.role_ids"
@@ -64,11 +73,11 @@
 import { ref, reactive, h, onMounted } from 'vue'
 import {
   NButton, NDataTable, NModal, NForm, NFormItem, NInput, NH2, NCard,
-  NTag, NSpace, NSelect, useMessage, useDialog
+  NTag, NSpace, NSelect, NTreeSelect, useMessage, useDialog
 } from 'naive-ui'
-import type { DataTableColumns, FormRules } from 'naive-ui'
-import { getUsers, createUser, updateUser, deleteUser, getRoles } from '@/api'
-import type { UserResponse, RoleResponse } from '@/types'
+import type { DataTableColumns, FormRules, TreeSelectOption } from 'naive-ui'
+import { getUsers, createUser, updateUser, deleteUser, getRoles, getOrgTree } from '@/api'
+import type { UserResponse, RoleResponse, OrgUnitResponse } from '@/types'
 
 const message = useMessage()
 const dialog = useDialog()
@@ -85,10 +94,38 @@ const form = reactive<{
   email: string
   password: string
   role_ids: string[]
-}>({ name: '', email: '', password: '', role_ids: [] })
+  org_unit_id: string | null
+}>({ name: '', email: '', password: '', role_ids: [], org_unit_id: null })
 
 const data = ref<UserResponse[]>([])
 const roleOptions = ref<{ label: string; value: string }[]>([])
+const orgTreeOptions = ref<TreeSelectOption[]>([])
+
+const buildOrgTree = (list: OrgUnitResponse[]) => {
+  const map = new Map<string, TreeSelectOption>()
+  list.forEach(org => {
+    map.set(org.id, { key: org.id, label: org.name, children: [] })
+  })
+  const roots: TreeSelectOption[] = []
+  list.forEach(org => {
+    if (org.parent_id) {
+      map.get(org.parent_id)?.children?.push(map.get(org.id)!)
+    } else {
+      roots.push(map.get(org.id)!)
+    }
+  })
+  return roots
+}
+
+const fetchOrgs = async () => {
+  try {
+    const res = await getOrgTree()
+    const list: OrgUnitResponse[] = (res.data as any)?.data || []
+    orgTreeOptions.value = buildOrgTree(list)
+  } catch (e) {
+    // ignore
+  }
+}
 
 const pagination = reactive({
   page: 1,
@@ -201,6 +238,7 @@ const openModal = (row?: UserResponse) => {
     form.email = ''
     form.password = ''
     form.role_ids = []
+    form.org_unit_id = null
   }
   showModal.value = true
 }
@@ -219,16 +257,19 @@ const handleSave = async () => {
         email: form.email,
         role_ids: form.role_ids
       }
+      if (form.org_unit_id) payload.org_unit_id = form.org_unit_id
       if (form.password) payload.password = form.password
       await updateUser(editingId.value, payload)
       message.success('更新成功')
     } else {
-      await createUser({
+      const payload: any = {
         name: form.name,
         email: form.email,
         password: form.password,
         role_ids: form.role_ids
-      })
+      }
+      if (form.org_unit_id) payload.org_unit_id = form.org_unit_id
+      await createUser(payload)
       message.success('创建成功')
     }
     showModal.value = false
@@ -260,6 +301,7 @@ const handleDelete = (row: UserResponse) => {
 
 onMounted(() => {
   fetchRoles()
+  fetchOrgs()
   fetchData()
 })
 </script>

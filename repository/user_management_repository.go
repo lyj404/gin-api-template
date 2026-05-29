@@ -13,22 +13,34 @@ func NewUserManagementRepository() repositories.UserRepository {
 	return &userManagementRepository{}
 }
 
-func (r *userManagementRepository) List(page, pageSize int, keyword string) ([]entity.User, int64, error) {
+func (r *userManagementRepository) List(page, pageSize int, keyword string, orgIDs []uint64) ([]entity.User, int64, error) {
 	var users []entity.User
 	var total int64
 
-	query := global.G_DB.Model(&entity.User{})
+	// "user" 是 PostgreSQL 保留字，在原始 SQL 中必须用双引号包裹
+	query := global.G_DB.Model(&entity.User{}).
+		Joins(`JOIN user_role ON user_role.user_id = "user".id AND user_role.deleted_at IS NULL`).
+		Where("user_role.org_unit_id IN ?", orgIDs)
 	if keyword != "" {
 		like := "%" + keyword + "%"
-		query = query.Where("name LIKE ? OR email LIKE ?", like, like)
+		query = query.Where(`"user".name LIKE ? OR "user".email LIKE ?`, like, like)
 	}
 
-	if err := query.Count(&total).Error; err != nil {
+	// 使用 WHERE id IN (子查询) 方式计数，避免 DISTINCT+Count/子查询表名引用 在 PostgreSQL 下的兼容问题
+	userIDs2 := global.G_DB.Model(&entity.User{}).
+		Joins(`JOIN user_role ON user_role.user_id = "user".id AND user_role.deleted_at IS NULL`).
+		Where("user_role.org_unit_id IN ?", orgIDs)
+	if keyword != "" {
+		like := "%" + keyword + "%"
+		userIDs2 = userIDs2.Where(`"user".name LIKE ? OR "user".email LIKE ?`, like, like)
+	}
+	userIDs2 = userIDs2.Select(`DISTINCT "user".id`)
+	if err := global.G_DB.Model(&entity.User{}).Where(`"user".id IN (?)`, userIDs2).Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
-	if err := query.Order("id DESC").Offset(offset).Limit(pageSize).Find(&users).Error; err != nil {
+	if err := query.Distinct().Order(`"user".id DESC`).Offset(offset).Limit(pageSize).Find(&users).Error; err != nil {
 		return nil, 0, err
 	}
 	return users, total, nil
@@ -89,7 +101,7 @@ func (r *userManagementRepository) ReplaceUserRoles(tx *gorm.DB, userID, orgUnit
 func (r *userManagementRepository) HasSystemRole(userID uint64) (bool, error) {
 	var count int64
 	err := global.G_DB.Model(&entity.UserRole{}).
-		Joins("JOIN role ON role.id = user_role.role_id").
+		Joins(`JOIN role ON role.id = user_role.role_id AND role.deleted_at IS NULL`).
 		Where("user_role.user_id = ? AND role.is_system = ?", userID, true).
 		Count(&count).Error
 	return count > 0, err

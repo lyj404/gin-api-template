@@ -1,7 +1,6 @@
 package pagination
 
 import (
-	"fmt"
 	"math"
 	"strings"
 
@@ -18,6 +17,7 @@ type PaginationBuilder struct {
 	preloads    []string    // 预加载关系
 	joins       []string    // 连接查询
 	selects     []string    // 查询字段
+	distinct    bool        // 是否启用 DISTINCT
 	conditions  []Condition // 查询条件
 	orderFields []string    // 排序字段
 	groups      []string    // 分组字段
@@ -36,6 +36,18 @@ func NewPaginationBuilder(db *gorm.DB) *PaginationBuilder {
 		page:     1,
 		pageSize: 10,
 	}
+}
+
+// Joins 添加JOIN查询
+func (p *PaginationBuilder) Joins(query string) *PaginationBuilder {
+	p.joins = append(p.joins, query)
+	return p
+}
+
+// Distinct 启用 DISTINCT 查询（去重）
+func (p *PaginationBuilder) Distinct() *PaginationBuilder {
+	p.distinct = true
+	return p
 }
 
 // Build 执行分页查询并构建结果
@@ -77,17 +89,26 @@ func (p *PaginationBuilder) Build(result interface{}) (*Pagination, error) {
 	}
 
 	// 计算总记录数
-	// 如果有JOIN或多表查询，使用子查询确保COUNT准确
+	// 存在JOIN或多表查询时，用 WHERE id IN (子查询) 避免重复行 + 避免 Distinct().Count()/子查询表名引用 在 PostgreSQL 下的兼容问题
 	if p.needDistinctCount() {
-		countQuery, err := p.buildCountQuery()
-		if err != nil {
-			return nil, err
+		tableName := p.resolveTableName()
+		subQuery := p.db.Model(p.model).Select(tableName + ".id")
+		for _, join := range p.joins {
+			subQuery = subQuery.Joins(join)
 		}
-		if err := countQuery.Count(&total).Error; err != nil {
+		for _, condition := range p.conditions {
+			subQuery = subQuery.Where(condition.Query, condition.Args...)
+		}
+		for _, group := range p.groups {
+			subQuery = subQuery.Group(group)
+		}
+		for _, having := range p.havings {
+			subQuery = subQuery.Having(having.Query, having.Args...)
+		}
+		if err := p.db.Model(p.model).Where(tableName+".id IN (?)", subQuery).Count(&total).Error; err != nil {
 			return nil, err
 		}
 	} else {
-		// 无复杂查询时直接COUNT
 		if err := query.Count(&total).Error; err != nil {
 			return nil, err
 		}
@@ -99,6 +120,11 @@ func (p *PaginationBuilder) Build(result interface{}) (*Pagination, error) {
 	// 应用SELECT字段
 	if len(p.selects) > 0 {
 		dataQuery = dataQuery.Select(strings.Join(p.selects, ","))
+	}
+
+	// 应用 DISTINCT
+	if p.distinct {
+		dataQuery = dataQuery.Distinct()
 	}
 
 	// 应用连接查询
@@ -157,50 +183,17 @@ func (p *PaginationBuilder) needDistinctCount() bool {
 	return len(p.joins) > 0 || len(p.groups) > 0
 }
 
-// buildCountQuery 构建用于计数的子查询
-// 使用子查询确保多表JOIN时的计数准确性
-func (p *PaginationBuilder) buildCountQuery() (*gorm.DB, error) {
-	// 获取模型对应的表名
-	var tableName string
+// resolveTableName 解析模型对应的数据库表名
+// 返回带双引号的表名，以兼容 PostgreSQL 保留字（如 "user"）
+func (p *PaginationBuilder) resolveTableName() string {
 	switch m := p.model.(type) {
 	case string:
-		tableName = m
+		return m
 	default:
-		// 使用 stmt 解析模型获取表名
 		stmt := &gorm.Statement{DB: p.db}
 		if err := stmt.Parse(p.model); err != nil {
-			return nil, err
+			return ""
 		}
-		tableName = stmt.Schema.Table
-		if tableName == "" {
-			return nil, fmt.Errorf("无法确定表名")
-		}
+		return `"` + stmt.Schema.Table + `"`
 	}
-
-	// 构建子查询：SELECT DISTINCT 主键 FROM 表 WHERE 条件
-	countSQL := fmt.Sprintf("SELECT COUNT(DISTINCT %s.id) FROM %s", tableName, tableName)
-
-	// 添加WHERE条件
-	if len(p.conditions) > 0 {
-		whereClause := ""
-		args := []interface{}{}
-		for i, condition := range p.conditions {
-			if i > 0 {
-				whereClause += " AND "
-			}
-			switch q := condition.Query.(type) {
-			case string:
-				whereClause += q
-				args = append(args, condition.Args...)
-			default:
-				return nil, fmt.Errorf("不支持的查询条件类型")
-			}
-		}
-		if whereClause != "" {
-			countSQL += " WHERE " + whereClause
-		}
-	}
-
-	// 使用原生SQL构建计数查询
-	return p.db.Raw(countSQL), nil
 }

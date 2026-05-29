@@ -17,14 +17,16 @@ import (
 
 type userManagementServiceImpl struct {
 	userRepo repositories.UserRepository
+	permSvc  services.PermissionService
 }
 
-func NewUserManagementService(userRepo repositories.UserRepository) services.UserManagementService {
-	return &userManagementServiceImpl{userRepo: userRepo}
+func NewUserManagementService(userRepo repositories.UserRepository, permSvc services.PermissionService) services.UserManagementService {
+	return &userManagementServiceImpl{userRepo: userRepo, permSvc: permSvc}
 }
 
-func (s *userManagementServiceImpl) List(page, pageSize int, keyword string) ([]entity.User, map[uint64][]uint64, map[uint64][]string, int64, error) {
-	users, total, err := s.userRepo.List(page, pageSize, keyword)
+func (s *userManagementServiceImpl) List(page, pageSize int, keyword string, userID uint64) ([]entity.User, map[uint64][]uint64, map[uint64][]string, int64, error) {
+	orgIDs := s.getOrgIDs(userID)
+	users, total, err := s.userRepo.List(page, pageSize, keyword, orgIDs)
 	if err != nil {
 		return nil, nil, nil, 0, err
 	}
@@ -200,6 +202,14 @@ func (s *userManagementServiceImpl) Delete(id uint64, operatorID uint64) error {
 		beforeJSON, _ := json.Marshal(map[string]any{"name": user.Name, "email": user.Email})
 		return s.audit(tx, operatorID, "delete", id, string(beforeJSON), "", fmt.Sprintf("删除用户: %s", user.Email))
 	})
+}
+
+func (s *userManagementServiceImpl) getOrgIDs(userID uint64) []uint64 {
+	scope, err := s.permSvc.GetUserOrgScope(userID)
+	if err != nil {
+		return nil
+	}
+	return CollectOrgIDs(scope)
 }
 
 func (s *userManagementServiceImpl) audit(tx *gorm.DB, operatorID uint64, action string, targetID uint64, before, after, description string) error {

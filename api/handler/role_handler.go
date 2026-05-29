@@ -10,7 +10,6 @@ import (
 	"github.com/lyj404/gin-api-template/domain/result"
 	"github.com/lyj404/gin-api-template/domain/services"
 	"github.com/lyj404/gin-api-template/global"
-	"github.com/lyj404/gin-api-template/pkg/pagination"
 )
 
 type RoleHandler struct {
@@ -86,10 +85,18 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	}
 
 	role := &entity.Role{
-		G_MODEL:     global.G_MODEL{ID: id},
+		G_MODEL: global.G_MODEL{ID: id},
 		Name:        request.Name,
 		Description: request.Description,
 	}
+
+	// 保留 IsSystem 原值，避免 Save 清零
+	existing, err := h.roleService.GetRoleByID(id)
+	if err != nil {
+		result.ErrorResponse(c, http.StatusNotFound, "角色不存在")
+		return
+	}
+	role.IsSystem = existing.IsSystem
 
 	operatorID := c.GetUint64("user_id")
 	if err := h.roleService.UpdateRole(role, operatorID); err != nil {
@@ -402,41 +409,8 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 	}
 	req.SetDefaults()
 
-	orderBy := req.OrderBy
-	if orderBy == "" {
-		orderBy = "id"
-	}
-	orderBy += " " + req.Sort
-
-	operatorID := c.GetUint64("user_id")
-
-	var roleIDs []uint64
-	global.G_DB.Model(&entity.UserRole{}).Select("role_id").Where("user_id = ?", operatorID).Find(&roleIDs)
-	hasSystemRole := false
-	if len(roleIDs) > 0 {
-		var cnt int64
-		global.G_DB.Model(&entity.Role{}).Where("id IN ? AND is_system = ?", roleIDs, true).Count(&cnt)
-		hasSystemRole = cnt > 0
-	}
-
-	var roles []entity.Role
-	builder := pagination.NewPaginationBuilder(global.G_DB).
-		Model(&entity.Role{}).
-		SetPage(req.Page).
-		SetPageSize(req.PageSize).
-		OrderBy(orderBy)
-
-	if req.Keyword != "" {
-		kw := "%" + req.Keyword + "%"
-		builder = builder.Where("name LIKE ? OR description LIKE ?", kw, kw)
-	}
-
-	// 非系统角色只能看到非系统角色
-	if !hasSystemRole {
-		builder = builder.Where("is_system = ?", false)
-	}
-
-	paginationResult, err := builder.Build(&roles)
+	userID, _ := c.Get("user_id")
+	roles, total, err := h.roleService.ListRoles(&req, userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -453,9 +427,9 @@ func (h *RoleHandler) ListRoles(c *gin.Context) {
 	}
 
 	result.SuccessResponse(c, "获取角色列表成功", dto.NewPaginationResponse(
-		paginationResult.Page,
-		paginationResult.PageSize,
-		paginationResult.Total,
+		req.Page,
+		req.PageSize,
+		total,
 		responses,
 	))
 }

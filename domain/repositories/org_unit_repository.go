@@ -2,10 +2,11 @@ package repositories
 
 import (
 	"github.com/lyj404/gin-api-template/domain/entity"
+	"gorm.io/gorm"
 )
 
 type OrgUnitRepository interface {
-	Create(orgUnit *entity.OrgUnit) error
+	Create(tx *gorm.DB, orgUnit *entity.OrgUnit) error
 	Update(orgUnit *entity.OrgUnit) error
 	Delete(id uint64) error
 	GetByID(id uint64) (*entity.OrgUnit, error)

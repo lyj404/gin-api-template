@@ -92,6 +92,7 @@ func provideRouteRegistration(
 	resourceHdlr *handler.ResourceHandler,
 	dashboardHdlr *handler.DashboardHandler,
 	dictHdlr *handler.DictionaryHandler,
+	rbac *middleware.RBACMiddleware,
 ) func() {
 	return func() {
 		// 注册公共路由（根路径）
@@ -102,14 +103,14 @@ func provideRouteRegistration(
 		// 注册受保护的路由
 		protectedGroup := router.Group("")
 		protectedGroup.Use(route.JwtAuthMiddleware())
-		route.NewRoleRouter(roleHdlr, protectedGroup)
-		route.NewOrgUnitRouter(orgHdlr, protectedGroup)
-		route.NewAuditLogRouter(auditHdlr, protectedGroup)
+		route.NewRoleRouter(roleHdlr, rbac, protectedGroup)
+		route.NewOrgUnitRouter(orgHdlr, rbac, protectedGroup)
+		route.NewAuditLogRouter(auditHdlr, rbac, protectedGroup)
 		route.NewUserPermissionRouter(userPermHdlr, userProfileHdlr, protectedGroup)
-		route.NewMenuRouter(menuHdlr, protectedGroup)
-		route.NewUserManagementRouter(userMgmtHdlr, protectedGroup)
-		route.NewResourceRouter(resourceHdlr, protectedGroup)
-		route.NewDashboardRouter(dashboardHdlr, protectedGroup)
+		route.NewMenuRouter(menuHdlr, rbac, protectedGroup)
+		route.NewUserManagementRouter(userMgmtHdlr, rbac, protectedGroup)
+		route.NewResourceRouter(resourceHdlr, rbac, protectedGroup)
+		route.NewDashboardRouter(dashboardHdlr, rbac, protectedGroup)
 		route.NewDictionaryRouter(dictHdlr, protectedGroup)
 	}
 }
@@ -150,6 +151,7 @@ var providerSet = wire.NewSet(
 	service.NewUserProfileService,
 	service.NewResourceService,
 	service.NewDictionaryService,
+	service.NewDashboardService,
 	middleware.NewRBACMiddleware,
 
 	// Handler 层

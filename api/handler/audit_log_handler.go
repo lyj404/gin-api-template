@@ -22,12 +22,12 @@ func NewAuditLogHandler(auditLogService domainservices.AuditLogService) *AuditLo
 	}
 }
 
-// GetAuditLogsByOperator 按操作者查询审计日志，不传操作者ID时返回全部
+// GetAuditLogsByOperator 按操作者查询审计日志，仅返回当前用户组织范围内的日志
 // @Summary 按操作者查询审计日志
-// @Description 根据操作者ID分页查询审计日志，不传操作者ID时返回全部日志
+// @Description 根据操作者ID分页查询审计日志，仅返回当前用户组织范围内的日志
 // @Tags 审计
 // @Produce json
-// @Param operator_id query int false "操作者ID，不传时返回全部"
+// @Param operator_id query int false "操作者ID，不传时返回全部（组织范围内）"
 // @Param page query int false "页码，默认1"
 // @Param page_size query int false "每页数量，默认10，最大100"
 // @Success 200 {object} result.ResponseResult[dto.PaginationResponse] "查询成功"
@@ -42,24 +42,10 @@ func (h *AuditLogHandler) GetAuditLogsByOperator(c *gin.Context) {
 	}
 	req.SetDefaults()
 
+	userID, _ := c.Get("user_id")
 	operatorID, _ := strconv.ParseUint(c.Query("operator_id"), 10, 64)
-	if operatorID != 0 {
-		logs, total, err := h.auditLogService.GetAuditLogsByOperator(operatorID, req.Page, req.PageSize)
-		if err != nil {
-			result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
-			return
-		}
-		result.SuccessResponse(c, "查询审计日志成功", dto.NewPaginationResponse(
-			req.Page,
-			req.PageSize,
-			total,
-			logs,
-		))
-		return
-	}
 
-	// 不传操作者ID时返回全部日志
-	logs, total, err := h.auditLogService.GetAuditLogsByTimeRange("", "", req.Page, req.PageSize)
+	logs, total, err := h.auditLogService.GetAuditLogsByOperator(operatorID, req.Page, req.PageSize, userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -74,7 +60,7 @@ func (h *AuditLogHandler) GetAuditLogsByOperator(c *gin.Context) {
 
 // GetAuditLogsByTarget 按目标查询审计日志
 // @Summary 按目标查询审计日志
-// @Description 根据目标类型和ID分页查询审计日志
+// @Description 根据目标类型和ID分页查询审计日志，仅返回当前用户组织范围内的日志
 // @Tags 审计
 // @Produce json
 // @Param target_type query string true "目标类型"
@@ -105,7 +91,8 @@ func (h *AuditLogHandler) GetAuditLogsByTarget(c *gin.Context) {
 		return
 	}
 
-	logs, total, err := h.auditLogService.GetAuditLogsByTarget(targetType, targetID, req.Page, req.PageSize)
+	userID, _ := c.Get("user_id")
+	logs, total, err := h.auditLogService.GetAuditLogsByTarget(targetType, targetID, req.Page, req.PageSize, userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -121,7 +108,7 @@ func (h *AuditLogHandler) GetAuditLogsByTarget(c *gin.Context) {
 
 // GetAuditLogsByTimeRange 按时间范围查询审计日志
 // @Summary 按时间范围查询审计日志
-// @Description 根据时间范围分页查询审计日志
+// @Description 根据时间范围分页查询审计日志，仅返回当前用户组织范围内的日志
 // @Tags 审计
 // @Produce json
 // @Param start_time query string false "开始时间"
@@ -142,7 +129,8 @@ func (h *AuditLogHandler) GetAuditLogsByTimeRange(c *gin.Context) {
 	startTime := c.Query("start_time")
 	endTime := c.Query("end_time")
 
-	logs, total, err := h.auditLogService.GetAuditLogsByTimeRange(startTime, endTime, req.Page, req.PageSize)
+	userID, _ := c.Get("user_id")
+	logs, total, err := h.auditLogService.GetAuditLogsByTimeRange(startTime, endTime, req.Page, req.PageSize, userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

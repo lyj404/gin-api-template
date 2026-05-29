@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/lyj404/gin-api-template/domain/entity"
 	"github.com/lyj404/gin-api-template/domain/repositories"
@@ -13,17 +14,20 @@ import (
 
 type orgUnitServiceImpl struct {
 	orgRepo repositories.OrgUnitRepository
+	permSvc services.PermissionService
 }
 
-func NewOrgUnitService(orgRepo repositories.OrgUnitRepository) services.OrgUnitService {
+func NewOrgUnitService(orgRepo repositories.OrgUnitRepository, permSvc services.PermissionService) services.OrgUnitService {
 	return &orgUnitServiceImpl{
 		orgRepo: orgRepo,
+		permSvc: permSvc,
 	}
 }
 
 func (s *orgUnitServiceImpl) CreateOrgUnit(orgUnit *entity.OrgUnit, operatorID uint64) error {
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(orgUnit).Error; err != nil {
+		// 通过 repository 创建，正确计算 Path 和 Level
+		if err := s.orgRepo.Create(tx, orgUnit); err != nil {
 			return err
 		}
 
@@ -68,16 +72,60 @@ func (s *orgUnitServiceImpl) DeleteOrgUnit(id uint64, operatorID uint64) error {
 	})
 }
 
-func (s *orgUnitServiceImpl) GetOrgUnitByID(id uint64) (*entity.OrgUnit, error) {
-	return s.orgRepo.GetByID(id)
+func (s *orgUnitServiceImpl) GetOrgUnitByID(id uint64, userID uint64) (*entity.OrgUnit, error) {
+	org, err := s.orgRepo.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	scope, err := s.permSvc.GetUserOrgScope(userID)
+	if err != nil || !s.orgInScope(org, scope) {
+		return nil, fmt.Errorf("组织不存在")
+	}
+	return org, nil
 }
 
-func (s *orgUnitServiceImpl) GetAllOrgUnits() ([]entity.OrgUnit, error) {
-	return s.orgRepo.GetAll()
+func (s *orgUnitServiceImpl) GetAllOrgUnits(userID uint64) ([]entity.OrgUnit, error) {
+	all, err := s.orgRepo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	return s.filterByScope(all, userID), nil
 }
 
-func (s *orgUnitServiceImpl) GetOrgTree() ([]entity.OrgUnit, error) {
-	return s.orgRepo.GetAll()
+func (s *orgUnitServiceImpl) GetOrgTree(userID uint64) ([]entity.OrgUnit, error) {
+	all, err := s.orgRepo.GetAll()
+	if err != nil {
+		return nil, err
+	}
+	return s.filterByScope(all, userID), nil
+}
+
+func (s *orgUnitServiceImpl) filterByScope(orgs []entity.OrgUnit, userID uint64) []entity.OrgUnit {
+	scope, err := s.permSvc.GetUserOrgScope(userID)
+	if err != nil || len(scope) == 0 {
+		return nil
+	}
+
+	result := make([]entity.OrgUnit, 0, len(orgs))
+	for _, org := range orgs {
+		if s.orgInScope(&org, scope) {
+			result = append(result, org)
+		}
+	}
+	return result
+}
+
+func (s *orgUnitServiceImpl) orgInScope(org *entity.OrgUnit, scope []services.OrgScopeInfo) bool {
+	for _, sc := range scope {
+		if sc.IncludeDescendants {
+			if org.ID == sc.OrgUnitID || strings.HasPrefix(org.Path, sc.Path+"/") {
+				return true
+			}
+		} else if org.ID == sc.OrgUnitID {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *orgUnitServiceImpl) createAuditLog(tx *gorm.DB, operatorID uint64, action, targetType string, targetID uint64, beforeData, afterData, description string) error {
