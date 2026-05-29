@@ -134,7 +134,9 @@ const columns: DataTableColumns<UserResponse> = [
     render: (row) => h(NSpace, null, {
       default: () => [
         h(NButton, { size: 'small', onClick: () => openModal(row) }, { default: () => '编辑' }),
-        h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
+        row.roles?.includes('super_admin')
+          ? h(NButton, { size: 'small', disabled: true, type: 'error' }, { default: () => '删除' })
+          : h(NButton, { size: 'small', type: 'error', onClick: () => handleDelete(row) }, { default: () => '删除' })
       ]
     })
   }

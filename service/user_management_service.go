@@ -184,6 +184,14 @@ func (s *userManagementServiceImpl) Delete(id uint64, operatorID uint64) error {
 		return err
 	}
 
+	hasSystemRole, err := s.userRepo.HasSystemRole(id)
+	if err != nil {
+		return err
+	}
+	if hasSystemRole {
+		return errors.New("系统管理员用户不能被删除")
+	}
+
 	return global.G_DB.Transaction(func(tx *gorm.DB) error {
 		if err := s.userRepo.Delete(tx, id); err != nil {
 			return err

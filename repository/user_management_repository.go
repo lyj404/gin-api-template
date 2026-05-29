@@ -86,6 +86,15 @@ func (r *userManagementRepository) ReplaceUserRoles(tx *gorm.DB, userID, orgUnit
 	return tx.Create(&rows).Error
 }
 
+func (r *userManagementRepository) HasSystemRole(userID uint64) (bool, error) {
+	var count int64
+	err := global.G_DB.Model(&entity.UserRole{}).
+		Joins("JOIN role ON role.id = user_role.role_id").
+		Where("user_role.user_id = ? AND role.is_system = ?", userID, true).
+		Count(&count).Error
+	return count > 0, err
+}
+
 func (r *userManagementRepository) GetRoleNamesByUserID(userID uint64) ([]string, error) {
 	var names []string
 	err := global.G_DB.Table("user_role").

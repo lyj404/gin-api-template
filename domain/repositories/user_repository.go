@@ -16,4 +16,5 @@ type UserRepository interface {
 	GetRoleIDsByUserID(userID uint64) ([]uint64, error)
 	ReplaceUserRoles(tx *gorm.DB, userID, orgUnitID uint64, roleIDs []uint64) error
 	GetRoleNamesByUserID(userID uint64) ([]string, error)
+	HasSystemRole(userID uint64) (bool, error)
 }
