@@ -17,5 +17,5 @@ type AuditTrendItem struct {
 // DashboardService 仪表盘服务接口，所有统计根据用户权限/组织范围过滤
 type DashboardService interface {
 	GetStats(userID uint64) (*DashboardStats, error)
-	GetAuditTrend() ([]AuditTrendItem, error)
+	GetAuditTrend(userID uint64) ([]AuditTrendItem, error)
 }

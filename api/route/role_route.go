@@ -7,15 +7,15 @@ import (
 )
 
 func NewRoleRouter(roleHdlr *handler.RoleHandler, rbac *middleware.RBACMiddleware, group *gin.RouterGroup) {
-	group.POST("/roles", roleHdlr.CreateRole)
-	group.PUT("/roles/:id", roleHdlr.UpdateRole)
-	group.DELETE("/roles/:id", roleHdlr.DeleteRole)
+	group.POST("/roles", rbac.CheckPermission("role:manage"), roleHdlr.CreateRole)
+	group.PUT("/roles/:id", rbac.CheckPermission("role:manage"), roleHdlr.UpdateRole)
+	group.DELETE("/roles/:id", rbac.CheckPermission("role:manage"), roleHdlr.DeleteRole)
 	group.GET("/roles/:id", rbac.CheckPermission("role:manage"), roleHdlr.GetRole)
 	group.GET("/roles", rbac.CheckPermission("role:manage"), roleHdlr.ListRoles)
-	group.POST("/roles/:id/resources", roleHdlr.BindResource)
-	group.DELETE("/roles/:id/resources/:resourceId", roleHdlr.UnbindResource)
+	group.POST("/roles/:id/resources", rbac.CheckPermission("role:manage"), roleHdlr.BindResource)
+	group.DELETE("/roles/:id/resources/:resourceId", rbac.CheckPermission("role:manage"), roleHdlr.UnbindResource)
 	group.GET("/roles/:id/resources", rbac.CheckPermission("role:list-resources"), roleHdlr.GetRoleResources)
-	group.POST("/roles/:id/menus", roleHdlr.BindMenu)
-	group.DELETE("/roles/:id/menus/:menuId", roleHdlr.UnbindMenu)
-	group.GET("/roles/:id/menus", roleHdlr.GetRoleMenus)
+	group.POST("/roles/:id/menus", rbac.CheckPermission("role:manage"), roleHdlr.BindMenu)
+	group.DELETE("/roles/:id/menus/:menuId", rbac.CheckPermission("role:manage"), roleHdlr.UnbindMenu)
+	group.GET("/roles/:id/menus", rbac.CheckPermission("role:manage"), roleHdlr.GetRoleMenus)
 }

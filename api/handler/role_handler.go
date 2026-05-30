@@ -91,14 +91,14 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	}
 
 	// 保留 IsSystem 原值，避免 Save 清零
-	existing, err := h.roleService.GetRoleByID(id)
+	operatorID := c.GetUint64("user_id")
+	existing, err := h.roleService.GetRoleByID(id, operatorID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "角色不存在")
 		return
 	}
 	role.IsSystem = existing.IsSystem
 
-	operatorID := c.GetUint64("user_id")
 	if err := h.roleService.UpdateRole(role, operatorID); err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -149,13 +149,14 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 func (h *RoleHandler) GetRole(c *gin.Context) {
 	id, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	role, err := h.roleService.GetRoleByID(id)
+	userID := c.GetUint64("user_id")
+	role, err := h.roleService.GetRoleByID(id, userID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "角色不存在")
 		return
 	}
 
-	resources, _ := h.roleService.GetRoleResources(id)
+	resources, _ := h.roleService.GetRoleResources(id, userID)
 	resourceResponses := make([]dto.RoleResourceResponse, len(resources))
 	for i, rr := range resources {
 		resourceResponses[i] = dto.RoleResourceResponse{
@@ -177,7 +178,7 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 		}
 	}
 
-	roleMenus, _ := h.roleService.GetRoleMenus(id)
+	roleMenus, _ := h.roleService.GetRoleMenus(id, userID)
 	menuResponses := make([]dto.RoleMenuResponse, len(roleMenus))
 	for i, rm := range roleMenus {
 		menuResponses[i] = dto.RoleMenuResponse{
@@ -270,7 +271,8 @@ func (h *RoleHandler) UnbindResource(c *gin.Context) {
 func (h *RoleHandler) GetRoleResources(c *gin.Context) {
 	roleID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	resources, err := h.roleService.GetRoleResources(roleID)
+	userID := c.GetUint64("user_id")
+	resources, err := h.roleService.GetRoleResources(roleID, userID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
@@ -365,7 +367,8 @@ func (h *RoleHandler) UnbindMenu(c *gin.Context) {
 func (h *RoleHandler) GetRoleMenus(c *gin.Context) {
 	roleID, _ := strconv.ParseUint(c.Param("id"), 10, 64)
 
-	roleMenus, err := h.roleService.GetRoleMenus(roleID)
+	userID := c.GetUint64("user_id")
+	roleMenus, err := h.roleService.GetRoleMenus(roleID, userID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return

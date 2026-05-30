@@ -60,7 +60,16 @@ func (s *userManagementServiceImpl) List(page, pageSize int, keyword string, use
 	return users, roleIDsMap, roleNamesMap, total, nil
 }
 
-func (s *userManagementServiceImpl) GetByID(id uint64) (*entity.User, []uint64, []string, error) {
+func (s *userManagementServiceImpl) GetByID(id uint64, operatorID uint64) (*entity.User, []uint64, []string, error) {
+	isSuper, err := s.userRepo.HasSystemRole(operatorID)
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	if !isSuper {
+		if err := s.checkUserOrgScope(id, operatorID); err != nil {
+			return nil, nil, nil, err
+		}
+	}
 	user, err := s.userRepo.GetByID(id)
 	if err != nil {
 		return nil, nil, nil, err
@@ -77,6 +86,10 @@ func (s *userManagementServiceImpl) GetByID(id uint64) (*entity.User, []uint64, 
 }
 
 func (s *userManagementServiceImpl) Create(req *dto.CreateUserRequest, operatorID uint64) (*entity.User, error) {
+	if err := s.checkOrgUnitInScope(req.OrgUnitID, operatorID); err != nil {
+		return nil, err
+	}
+
 	hashed, err := util.HashPassword(req.Password)
 	if err != nil {
 		return nil, fmt.Errorf("密码加密失败: %w", err)
@@ -129,9 +142,19 @@ func (s *userManagementServiceImpl) Create(req *dto.CreateUserRequest, operatorI
 }
 
 func (s *userManagementServiceImpl) Update(id uint64, req *dto.UpdateUserRequest, operatorID uint64) (*entity.User, error) {
+	if err := s.checkUserOrgScope(id, operatorID); err != nil {
+		return nil, err
+	}
+
 	old, err := s.userRepo.GetByID(id)
 	if err != nil {
 		return nil, err
+	}
+
+	if req.OrgUnitID != 0 {
+		if err := s.checkOrgUnitInScope(req.OrgUnitID, operatorID); err != nil {
+			return nil, err
+		}
 	}
 
 	updated := *old
@@ -191,6 +214,11 @@ func (s *userManagementServiceImpl) Delete(id uint64, operatorID uint64) error {
 	if id == operatorID {
 		return errors.New("不能删除自己")
 	}
+
+	if err := s.checkUserOrgScope(id, operatorID); err != nil {
+		return err
+	}
+
 	user, err := s.userRepo.GetByID(id)
 	if err != nil {
 		return err
@@ -227,6 +255,53 @@ func (s *userManagementServiceImpl) getOrgIDs(userID uint64) ([]uint64, error) {
 		}
 	}
 	return orgIDs, nil
+}
+
+// checkUserOrgScope 检查目标用户是否在操作者的组织范围内
+func (s *userManagementServiceImpl) checkUserOrgScope(targetUserID, operatorID uint64) error {
+	isSuper, err := s.userRepo.HasSystemRole(operatorID)
+	if err != nil {
+		return err
+	}
+	if isSuper {
+		return nil
+	}
+	operatorOrgIDs, err := s.getOrgIDs(operatorID)
+	if err != nil {
+		return err
+	}
+	var count int64
+	global.G_DB.Model(&entity.UserRole{}).
+		Where("user_id = ? AND org_unit_id IN ?", targetUserID, operatorOrgIDs).
+		Count(&count)
+	if count == 0 {
+		return errors.New("无权操作该组织范围外的用户")
+	}
+	return nil
+}
+
+// checkOrgUnitInScope 检查指定组织ID是否在操作者的组织范围内
+func (s *userManagementServiceImpl) checkOrgUnitInScope(orgUnitID, operatorID uint64) error {
+	if orgUnitID == 0 {
+		return nil
+	}
+	isSuper, err := s.userRepo.HasSystemRole(operatorID)
+	if err != nil {
+		return err
+	}
+	if isSuper {
+		return nil
+	}
+	operatorOrgIDs, err := s.getOrgIDs(operatorID)
+	if err != nil {
+		return err
+	}
+	for _, id := range operatorOrgIDs {
+		if id == orgUnitID {
+			return nil
+		}
+	}
+	return errors.New("无权操作该组织范围")
 }
 
 func (s *userManagementServiceImpl) audit(tx *gorm.DB, operatorID uint64, action string, targetID uint64, before, after, description string) error {

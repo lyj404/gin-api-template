@@ -81,7 +81,8 @@ func (h *UserManagementHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, roleIDs, roleNames, err := h.userMgmt.GetByID(id)
+	operatorID := c.GetUint64("user_id")
+	user, roleIDs, roleNames, err := h.userMgmt.GetByID(id, operatorID)
 	if err != nil {
 		result.ErrorResponse(c, http.StatusNotFound, "用户不存在")
 		return

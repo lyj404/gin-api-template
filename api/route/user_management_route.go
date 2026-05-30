@@ -9,7 +9,7 @@ import (
 func NewUserManagementRouter(h *handler.UserManagementHandler, rbac *middleware.RBACMiddleware, group *gin.RouterGroup) {
 	group.GET("/users", rbac.CheckPermission("user:read"), h.ListUsers)
 	group.GET("/users/:id", rbac.CheckPermission("user:read:detail"), h.GetUser)
-	group.POST("/users", h.CreateUser)
-	group.PUT("/users/:id", h.UpdateUser)
-	group.DELETE("/users/:id", h.DeleteUser)
+	group.POST("/users", rbac.CheckPermission("user:manage"), h.CreateUser)
+	group.PUT("/users/:id", rbac.CheckPermission("user:manage"), h.UpdateUser)
+	group.DELETE("/users/:id", rbac.CheckPermission("user:manage"), h.DeleteUser)
 }

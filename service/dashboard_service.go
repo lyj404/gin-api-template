@@ -74,7 +74,12 @@ func (s *dashboardServiceImpl) GetStats(userID uint64) (*services.DashboardStats
 	return &stats, nil
 }
 
-func (s *dashboardServiceImpl) GetAuditTrend() ([]services.AuditTrendItem, error) {
+func (s *dashboardServiceImpl) GetAuditTrend(userID uint64) ([]services.AuditTrendItem, error) {
+	isSuper, err := s.permSvc.HasSystemRole(userID)
+	if err != nil {
+		return nil, fmt.Errorf("检查系统角色失败: %w", err)
+	}
+
 	type row struct {
 		LogDate string `gorm:"column:log_date"`
 		Count   int64
@@ -83,19 +88,35 @@ func (s *dashboardServiceImpl) GetAuditTrend() ([]services.AuditTrendItem, error
 	dialect := global.G_DB.Dialector.Name()
 	var dateExpr string
 	if dialect == "postgres" {
-		dateExpr = "TO_CHAR(created_at, 'YYYY-MM-DD')"
+		dateExpr = "TO_CHAR(audit_log.created_at, 'YYYY-MM-DD')"
 	} else {
-		dateExpr = "DATE_FORMAT(created_at, '%Y-%m-%d')"
+		dateExpr = "DATE_FORMAT(audit_log.created_at, '%Y-%m-%d')"
 	}
 
 	cutoff := time.Now().AddDate(0, 0, -6).Truncate(24 * time.Hour)
 
-	if err := global.G_DB.Model(&entity.AuditLog{}).
+	query := global.G_DB.Model(&entity.AuditLog{}).
 		Select(dateExpr+" as log_date, COUNT(*) as count").
-		Where("created_at >= ?", cutoff).
-		Group("log_date").
-		Order("log_date ASC").
-		Scan(&rows).Error; err != nil {
+		Where("audit_log.created_at >= ?", cutoff)
+
+	if !isSuper {
+		orgScope, err := s.permSvc.GetUserOrgScope(userID)
+		if err != nil {
+			return nil, fmt.Errorf("获取组织范围失败: %w", err)
+		}
+		orgIDs := CollectOrgIDs(orgScope)
+		if len(orgIDs) == 0 {
+			var userRole entity.UserRole
+			if err := global.G_DB.Where("user_id = ?", userID).First(&userRole).Error; err == nil {
+				orgIDs = []uint64{userRole.OrgUnitID}
+			}
+		}
+		if len(orgIDs) > 0 {
+			query = query.Where(`EXISTS (SELECT 1 FROM user_role WHERE user_role.user_id = audit_log.operator_id AND user_role.org_unit_id IN ? AND user_role.deleted_at IS NULL)`, orgIDs)
+		}
+	}
+
+	if err := query.Group("log_date").Order("log_date ASC").Scan(&rows).Error; err != nil {
 		return nil, err
 	}
 

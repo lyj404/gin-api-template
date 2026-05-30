@@ -48,7 +48,8 @@ func (h *DashboardHandler) Stats(c *gin.Context) {
 // @Failure 500 {object} result.ResponseResult[string] "服务器内部错误"
 // @Router /dashboard/audit-trend [get]
 func (h *DashboardHandler) AuditTrend(c *gin.Context) {
-	items, err := h.dashboardSvc.GetAuditTrend()
+	userID, _ := c.Get("user_id")
+	items, err := h.dashboardSvc.GetAuditTrend(userID.(uint64))
 	if err != nil {
 		result.ErrorResponse(c, http.StatusInternalServerError, err.Error())
 		return
