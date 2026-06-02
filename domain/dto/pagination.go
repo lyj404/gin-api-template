@@ -18,7 +18,7 @@ func (p *PaginationRequest) SetDefaults() {
 		p.PageSize = 10
 	}
 	if p.PageSize > 100 {
-		p.PageSize = 100 // 最大每页100条
+		p.PageSize = 100
 	}
 }
 

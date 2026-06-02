@@ -68,9 +68,9 @@
               <n-space wrap class="mb-12">
                 <n-button size="tiny" @click="selectAllResources(true)">全选</n-button>
                 <n-button size="tiny" @click="selectAllResources(false)">取消全选</n-button>
-                <span class="text-sm text-gray-400">已选 {{ selectedResCount }} / {{ allResources.length }}</span>
+                <span class="text-sm text-gray-400">已选 {{ selectedResCount }} / {{ resPagination.itemCount }}</span>
               </n-space>
-              <n-data-table :columns="resColumns" :data="allResources" :loading="resLoading" :scroll-x="900" bordered single-column />
+              <n-data-table :columns="resColumns" :data="resPageData" :loading="resLoading" :pagination="resPagination" :scroll-x="900" bordered single-column remote @update:page="handleResPageChange" @update:page-size="handleResPageSizeChange" />
               <n-space wrap class="mt-16">
                 <n-button type="primary" :loading="resSaving" @click="saveResources">保存资源权限</n-button>
                 <n-button @click="loadRoleConfig(configRole!.id)">重置</n-button>
@@ -114,8 +114,39 @@ const checkedMenuIds = ref<string[]>([])
 const menuLoading = ref(false)
 const menuSaving = ref(false)
 const allResources = ref<ResourceResponse[]>([])
+const resPageData = ref<ResourceResponse[]>([])
 const resLoading = ref(false)
 const resSaving = ref(false)
+const resPagination = reactive({ page: 1, pageSize: 10, pageCount: 1, itemCount: 0, pageSizes: [10, 20, 50, 100], showSizePicker: true })
+
+const fetchResPage = async () => {
+  resLoading.value = true
+  try {
+    const res = await getResources({ page: resPagination.page, page_size: resPagination.pageSize })
+    const p = res.data.data
+    resPageData.value = p?.data || []
+    const merged = new Map(allResources.value.map(r => [r.id, r]))
+    for (const r of resPageData.value) {
+      merged.set(r.id, r)
+    }
+    allResources.value = Array.from(merged.values())
+    resPagination.itemCount = p?.total || 0
+    resPagination.pageCount = p?.total_page || 1
+  } finally {
+    resLoading.value = false
+  }
+}
+
+const handleResPageChange = (page: number) => {
+  resPagination.page = page
+  fetchResPage()
+}
+
+const handleResPageSizeChange = (pageSize: number) => {
+  resPagination.pageSize = pageSize
+  resPagination.page = 1
+  fetchResPage()
+}
 // 资源勾选状态: key=resource_id, value={checked, is_write}
 const resourceChecked = ref<Record<string, { checked: boolean; is_write: boolean }>>({})
 
@@ -262,6 +293,7 @@ const openConfig = async (row: RoleResponse) => {
 const loadRoleConfig = async (roleId: string) => {
   checkedMenuIds.value = []
   resourceChecked.value = {}
+  allResources.value = []
 
   // 加载菜单树
   menuLoading.value = true
@@ -272,14 +304,9 @@ const loadRoleConfig = async (roleId: string) => {
     menuLoading.value = false
   }
 
-  // 加载资源列表
-  resLoading.value = true
-  try {
-    const resRes = await getResources({ page: 1, page_size: 200 })
-    allResources.value = resRes.data.data?.data || []
-  } finally {
-    resLoading.value = false
-  }
+  // 加载资源列表（第一页）
+  resPagination.page = 1
+  await fetchResPage()
 
   // 加载角色当前绑定
   try {
@@ -306,11 +333,11 @@ const selectedResCount = computed(() => Object.values(resourceChecked.value).fil
 
 const selectAllResources = (select: boolean) => {
   const rc: Record<string, { checked: boolean; is_write: boolean }> = {}
-  for (const res of allResources.value) {
+  for (const res of resPageData.value) {
     const perms = getResourcePerms(res)
     rc[res.id] = { checked: select, is_write: perms.write }
   }
-  resourceChecked.value = rc
+  resourceChecked.value = { ...resourceChecked.value, ...rc }
 }
 
 const collectMenuIds = (nodes: TreeOption[]): string[] => {

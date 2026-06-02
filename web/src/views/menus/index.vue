@@ -166,7 +166,7 @@ const fetchData = async () => {
 const fetchAllResources = async () => {
   resourcesLoading.value = true
   try {
-    const res = await getResources({ page: 1, page_size: 200 })
+    const res = await getResources({ page: 1, page_size: 100 })
     allResourceOptions.value = (res.data.data?.data || []).map((r: ResourceResponse) => ({ label: `${r.description} (${r.name})`, value: r.id }))
   } catch { /* ignore */ }
   finally { resourcesLoading.value = false }
